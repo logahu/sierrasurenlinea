@@ -1,0 +1,12 @@
+// Despliegue del frontend como Worker con assets estáticos en Cloudflare.
+// Build: `npm run build`  ·  Deploy: `npx wrangler deploy` (raíz del proyecto: frontend)
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "turamohoy",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./dist/frontend/browser",
+    // Angular es una SPA: rutas como /producto/5 deben responder con index.html.
+    "not_found_handling": "single-page-application"
+  }
+}

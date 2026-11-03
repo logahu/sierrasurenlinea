@@ -66,6 +66,20 @@ y haz commit + push.
 
 4. **Save and Deploy**. Tu sitio quedará en `https://turamohoy.pages.dev`.
 
+### Alternativa: como Worker (lo que Cloudflare propone por defecto)
+
+Si al crear el proyecto Cloudflare te lleva a **Workers** (pide un *Deploy command*),
+el repo ya incluye `frontend/wrangler.jsonc`. En **Settings → Build** usa:
+
+| Campo | Valor |
+|---|---|
+| Root directory | `frontend` |
+| Build command | `npm run build` |
+| Deploy command | `npx wrangler deploy` |
+
+El sitio quedará en `https://turamohoy.<tu-cuenta>.workers.dev`; `render.yaml`
+ya permite ese dominio en CORS.
+
 > Si el nombre `turamohoy` ya existe en Pages y te asignan otro (p. ej.
 > `turamohoy-abc.pages.dev`), cambia `turamohoy` por ese nombre en la variable
 > `CORS_ORIGINS` (Render → tu servicio → Environment) y redepliega el backend.
