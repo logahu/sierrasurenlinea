@@ -1,0 +1,53 @@
+/* Paleta inspirada en Oaxaca: rosa mexicano, cempasúchil, terracota y verde follaje. */
+:root {
+  --rosa: #d6336c;
+  --rosa-oscuro: #a61e4d;
+  --cempasuchil: #f5a524;
+  --terracota: #b5562f;
+  --follaje: #2f6b4f;
+
+  --fondo: #fbf7f2;
+  --fondo-alt: #f3ebe1;
+  --superficie: #ffffff;
+  --linea: #e8ddd0;
+  --tinta: #2a1f1a;
+  --tinta-suave: #6f625a;
+
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-body: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --rosa: #f06595;
+    --rosa-oscuro: #f783ac;
+    --fondo: #1a1412;
+    --fondo-alt: #261d19;
+    --superficie: #221a17;
+    --linea: #3a2e28;
+    --tinta: #f5ede6;
+    --tinta-suave: #b9aaa0;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body { margin: 0; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--fondo);
+  color: var(--tinta);
+  -webkit-font-smoothing: antialiased;
+}
+
+.contenedor {
+  width: 100%;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+img { max-width: 100%; }

@@ -1,0 +1,15 @@
+# Blueprint de Render: crea el backend como servicio web gratuito con Docker.
+services:
+  - type: web
+    name: turamohoy-api
+    runtime: docker
+    plan: free
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/categorias
+    autoDeploy: true
+    envVars:
+      # Acepta la URL principal y las vistas previas de Cloudflare Pages.
+      # Si tu proyecto de Pages no se llama "turamohoy", cambia el nombre aquí.
+      - key: CORS_ORIGINS
+        value: http://localhost:4200,/https://([a-z0-9-]+\.)?turamohoy\.pages\.dev/

@@ -1,0 +1,23 @@
+<a class="volver" routerLink="/">← Volver al catálogo</a>
+
+@if (producto.error()) {
+  <div class="estado" role="alert">
+    <p>No encontramos este producto o el servidor no responde.</p>
+    <a routerLink="/">Ver el catálogo</a>
+  </div>
+} @else if (producto.value(); as p) {
+  <article class="detalle">
+    <div class="foto">
+      <img [src]="p.imagenUrl" [alt]="p.nombre" width="800" height="800" />
+    </div>
+    <div class="info">
+      <a class="cat" routerLink="/" [queryParams]="{ categoria: p.categoriaSlug }">{{ p.categoriaNombre }}</a>
+      <h1>{{ p.nombre }}</h1>
+      <p class="precio">{{ p.precio | currency: 'MXN' : 'symbol-narrow' : '1.0-2' }}</p>
+      @if (p.descripcion) { <p class="desc">{{ p.descripcion }}</p> }
+      <p class="nota">Pronto podrás pedirlo y pagarlo en línea. Por ahora, contáctanos para apartarlo.</p>
+    </div>
+  </article>
+} @else {
+  <div class="estado" aria-busy="true">Cargando…</div>
+}

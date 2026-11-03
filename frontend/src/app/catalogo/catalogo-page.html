@@ -1,0 +1,52 @@
+<section class="hero">
+  <p class="eyebrow">Miahuatlán de Porfirio Díaz, Oaxaca</p>
+  <h1>Flores frescas para cada momento</h1>
+  <p class="lead">Ramos, arreglos y detalles hechos a mano. Explora el catálogo y elige el que más te guste.</p>
+</section>
+
+<nav class="chips" aria-label="Categorías">
+  <a class="chip" routerLink="/" [class.active]="!categoria()" [queryParams]="{}">Todo</a>
+  @for (c of categorias.value() ?? []; track c.id) {
+    <a class="chip" routerLink="/" [queryParams]="{ categoria: c.slug }"
+       [class.active]="categoria() === c.slug">{{ c.nombre }}</a>
+  }
+</nav>
+
+<h2 class="section-title">{{ titulo() }}</h2>
+
+@if (productos.error()) {
+  <div class="estado error" role="alert">
+    <p>No pudimos cargar el catálogo. Revisa tu conexión o que el servidor esté encendido.</p>
+    <button type="button" (click)="reintentar()">Reintentar</button>
+  </div>
+} @else if (productos.isLoading() && !productos.hasValue()) {
+  <ul class="grid" aria-busy="true">
+    @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+      <li class="card skeleton"><div class="img"></div><div class="body"><span></span><span></span></div></li>
+    }
+  </ul>
+  <p class="despertando">Estamos despertando el servidor; la primera visita puede tardar hasta un minuto…</p>
+} @else {
+  @let lista = productos.value() ?? [];
+  @if (lista.length === 0) {
+    <p class="estado">Por ahora no hay productos en esta categoría.</p>
+  } @else {
+    <ul class="grid">
+      @for (p of lista; track p.id) {
+        <li>
+          <a class="card" [routerLink]="['/producto', p.id]">
+            <div class="img">
+              <img [src]="p.imagenUrl" [alt]="p.nombre" loading="lazy" width="400" height="400" />
+              @if (p.destacado) { <span class="badge">Favorito</span> }
+            </div>
+            <div class="body">
+              <span class="cat">{{ p.categoriaNombre }}</span>
+              <h3>{{ p.nombre }}</h3>
+              <span class="precio">{{ p.precio | currency: 'MXN' : 'symbol-narrow' : '1.0-2' }}</span>
+            </div>
+          </a>
+        </li>
+      }
+    </ul>
+  }
+}

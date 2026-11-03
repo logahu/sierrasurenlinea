@@ -1,0 +1,37 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.barra {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: color-mix(in srgb, var(--fondo) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--linea);
+
+  .contenedor { display: flex; align-items: center; height: 3.75rem; }
+}
+
+.marca {
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  text-decoration: none;
+  color: var(--tinta);
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 600;
+  em { font-style: italic; color: var(--rosa-oscuro); font-weight: 500; }
+}
+
+main { flex: 1; width: 100%; padding-bottom: 3rem; }
+
+.pie {
+  border-top: 1px solid var(--linea);
+  padding: 1.25rem 0 calc(1.25rem + env(safe-area-inset-bottom));
+  color: var(--tinta-suave);
+  font-size: .85rem;
+}
