@@ -1,0 +1,101 @@
+@use 'sass:list';
+
+// Cosméticos
+// Idea: mostrador de belleza. Fondo rubor, tipografía Bodoni de alto contraste,
+// productos en cápsula sin marcos y filtros que parecen muestras de color.
+
+$tinta: #2b2230;
+// Tonos de muestra (labial nude, rosa, lila, dorado, vino) para las categorías.
+$muestras: #c98b7a, #e07aa0, #9c6bc7, #c9a24a, #7b2245;
+
+@mixin tokens {
+  --t-fondo: #fbf3f6;
+  --t-superficie: #ffffff;
+  --t-tinta: #{$tinta};
+  --t-tinta-suave: #77677d;
+  --t-linea: #ecdde5;
+  --t-acento-texto: #7e2a96;
+  --t-sobre-acento: #fff;
+  --t-img-fondo: #f3e6f0;
+  --t-caja: #ffffff;
+  --t-fuente-titulo: 'Bodoni Moda', 'Didot', Georgia, serif;
+  --t-fuente-texto: 'Jost', system-ui, sans-serif;
+  --t-peso-titulo: 500;
+  --t-radio-card: 0;
+  --t-radio-chip: 999px;
+  --t-radio-contacto: 0;
+  --t-borde-card: none;
+  --t-sombra-card: none;
+}
+
+@mixin catalogo {
+  @include tokens;
+
+  .encabezado {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    .volver { order: -1; }
+    padding: 2.5rem 0 2rem;
+    h1, .eslogan, .lead { margin-inline: auto; }
+    h1 { color: var(--t-tinta); font-size: clamp(2.8rem, 9vw, 4.6rem); letter-spacing: -.01em; }
+    .eslogan { font-weight: 400; font-style: italic; font-family: var(--t-fuente-titulo); font-size: 1.3rem; }
+  }
+  // Cinco muestras de color, como en un probador.
+  .adorno {
+    display: block;
+    width: 11rem;
+    height: 1.5rem;
+    margin: 0 auto 1rem;
+    background:
+      radial-gradient(circle at 10% 50%, list.nth($muestras, 1) .6rem, transparent .65rem),
+      radial-gradient(circle at 30% 50%, list.nth($muestras, 2) .6rem, transparent .65rem),
+      radial-gradient(circle at 50% 50%, list.nth($muestras, 3) .6rem, transparent .65rem),
+      radial-gradient(circle at 70% 50%, list.nth($muestras, 4) .6rem, transparent .65rem),
+      radial-gradient(circle at 90% 50%, list.nth($muestras, 5) .6rem, transparent .65rem);
+  }
+
+  .chips { justify-content: safe center; }
+  .chip {
+    border-color: transparent;
+    background: transparent;
+    &::before {
+      content: '';
+      width: .8rem;
+      height: .8rem;
+      border-radius: 50%;
+      background: var(--muestra, #{$tinta});
+    }
+    &.active { background: $tinta; border-color: $tinta; color: #fff; }
+    &:first-child::before { display: none; }
+    @for $i from 1 through list.length($muestras) {
+      &:nth-child(#{$i + 1}) { --muestra: #{list.nth($muestras, $i)}; }
+    }
+  }
+
+  .section-title { text-align: center; font-style: italic; font-weight: 400; }
+
+  .grid { gap: 2rem 1.25rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 13rem), 1fr)); }
+  @media (max-width: 480px) { .grid { grid-template-columns: repeat(2, 1fr); gap: 1.5rem .75rem; } }
+  .card {
+    background: transparent;
+    overflow: visible;
+    text-align: center;
+    .img { aspect-ratio: 3 / 4; border-radius: 999px; }
+    .body { align-items: center; padding: .9rem .25rem 0; }
+    h3 { font-family: var(--t-fuente-texto); font-weight: 400; font-size: 1rem; }
+    .precio { color: var(--t-tinta); font-weight: 500; letter-spacing: .02em; }
+  }
+  .badge { left: 50%; translate: -50% 0; top: .9rem; background: #fff; color: $tinta; font-weight: 500; }
+}
+
+@mixin producto {
+  @include tokens;
+  .foto { border-radius: 999px; aspect-ratio: 4 / 5; max-width: 26rem; margin-inline: auto; width: 100%; }
+  .info {
+    h1 { font-size: clamp(2.2rem, 6vw, 3.2rem); }
+    .precio { color: var(--t-tinta); font-weight: 500; }
+  }
+  .caracteristicas { border: 1px solid var(--t-linea); }
+}

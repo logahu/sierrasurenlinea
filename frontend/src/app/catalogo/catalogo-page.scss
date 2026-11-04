@@ -1,37 +1,82 @@
-:host { display: block; --acento: var(--rosa); }
+@use './temas/turamohoy' as turamohoy;
+@use './temas/cosmeticos' as cosmeticos;
+@use './temas/inflables' as inflables;
+@use './temas/vinateria' as vinateria;
 
-.encabezado {
-  padding: 1.5rem 0 1.25rem;
-  max-width: 44rem;
+// Catálogo de un negocio. Todo lo visual sale de tokens --t-*; cada negocio los
+// redefine (y ajusta piezas concretas) en src/temas/. Estos son los valores base,
+// los que toma un negocio que todavía no tiene tema propio.
+:host {
+  --t-fondo: var(--fondo);
+  --t-superficie: var(--superficie);
+  --t-tinta: var(--tinta);
+  --t-tinta-suave: var(--tinta-suave);
+  --t-linea: var(--linea);
+  --t-acento-texto: var(--acento-texto);
+  --t-sobre-acento: #fff;
+  --t-img-fondo: var(--fondo-alt);
+  --t-fuente-titulo: var(--font-display);
+  --t-fuente-texto: var(--font-body);
+  --t-peso-titulo: 600;
+  --t-radio-card: 1rem;
+  --t-radio-img: 0;
+  --t-radio-chip: 999px;
+  --t-borde-card: 1px solid var(--t-linea);
+  --t-sombra-card: none;
 
-  .volver {
-    display: inline-block;
-    margin-bottom: .9rem;
-    color: var(--tinta-suave);
-    text-decoration: none;
-    font-size: .9rem;
-    &:hover { color: var(--acento-texto); }
-  }
-  h1 {
-    font-family: var(--font-display);
-    font-size: clamp(2rem, 6vw, 3rem);
-    line-height: 1.05;
-    margin: 0 0 .35rem;
-    color: var(--acento-texto);
-    &.placeholder { color: var(--linea); }
-  }
-  .eslogan { margin: 0 0 .5rem; font-weight: 600; font-size: 1.05rem; }
-  .lead { margin: 0; color: var(--tinta-suave); }
+  display: block;
+  --acento: var(--rosa);
+  font-family: var(--t-fuente-texto);
+  color: var(--t-tinta);
+  // Fondo del tema de orilla a orilla de la pantalla.
+  margin-inline: calc(50% - 50vw);
+  padding-inline: max(1rem, calc(50vw - 36rem));
+  background: var(--t-fondo);
+  margin-bottom: -3rem;
+  padding-bottom: 3rem;
+  min-height: 70vh;
 }
 
+h1, h2, h3 { font-family: var(--t-fuente-titulo); font-weight: var(--t-peso-titulo); }
+
+.encabezado {
+  position: relative;
+  padding: 1.5rem 0 1.25rem;
+
+  .volver {
+    position: relative;
+    display: inline-block;
+    margin-bottom: .9rem;
+    color: var(--t-tinta-suave);
+    text-decoration: none;
+    font-size: .92rem;
+    &:hover { color: var(--t-acento-texto); }
+  }
+  h1 {
+    position: relative;
+    font-size: clamp(2.2rem, 6.5vw, 3.4rem);
+    line-height: 1.02;
+    margin: 0 0 .4rem;
+    color: var(--t-acento-texto);
+    max-width: 44rem;
+    &.placeholder { color: var(--t-linea); }
+  }
+  .eslogan { position: relative; margin: 0 0 .5rem; font-weight: 600; font-size: 1.1rem; max-width: 44rem; }
+  .lead { position: relative; margin: 0; color: var(--t-tinta-suave); max-width: 40rem; line-height: 1.55; }
+}
+
+.adorno { display: none; }
+
 .aviso-edad {
+  position: relative;
   margin: 1rem 0 0;
   padding: .75rem 1rem;
-  border-radius: .75rem;
-  background: color-mix(in srgb, var(--acento) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--acento) 35%, transparent);
-  font-size: .92rem;
-  font-weight: 500;
+  max-width: 40rem;
+  border-radius: .5rem;
+  background: color-mix(in srgb, var(--acento) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--acento) 40%, transparent);
+  font-size: .95rem;
+  font-weight: 600;
 }
 
 .chips {
@@ -44,21 +89,23 @@
 }
 .chip {
   flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
   padding: .5rem 1rem;
-  border-radius: 999px;
-  border: 1px solid var(--linea);
-  background: var(--superficie);
-  color: var(--tinta);
+  border-radius: var(--t-radio-chip);
+  border: 1px solid var(--t-linea);
+  background: var(--t-superficie);
+  color: var(--t-tinta);
   text-decoration: none;
-  font-size: .9rem;
-  transition: background .15s, color .15s, border-color .15s;
+  font-size: .92rem;
   &:hover { border-color: var(--acento); }
-  &.active { background: var(--acento); border-color: var(--acento); color: #fff; }
+  &.active { background: var(--acento); border-color: var(--acento); color: var(--t-sobre-acento); }
+  &:focus-visible { outline: 3px solid var(--acento); outline-offset: 2px; }
 }
 
 .section-title {
-  font-family: var(--font-display);
-  font-size: 1.4rem;
+  font-size: 1.45rem;
   margin: 1.25rem 0 1rem;
 }
 
@@ -67,7 +114,7 @@
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 1rem;
+  gap: 1.1rem;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
   @media (max-width: 480px) { grid-template-columns: repeat(2, 1fr); gap: .75rem; }
 }
@@ -76,19 +123,22 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--superficie);
-  border-radius: 1rem;
+  background: var(--t-superficie);
+  border-radius: var(--t-radio-card);
+  border: var(--t-borde-card);
+  box-shadow: var(--t-sombra-card);
   overflow: hidden;
   text-decoration: none;
   color: inherit;
-  border: 1px solid var(--linea);
-  transition: transform .2s, box-shadow .2s;
-  &:hover { transform: translateY(-3px); box-shadow: 0 12px 28px -14px rgb(0 0 0 / .35); }
+  &:focus-visible { outline: 3px solid var(--acento); outline-offset: 3px; }
+  &:hover h3 { text-decoration: underline; text-underline-offset: .15em; }
 
   .img {
     position: relative;
     aspect-ratio: 1;
-    background: var(--fondo-alt);
+    background: var(--t-img-fondo);
+    border-radius: var(--t-radio-img);
+    overflow: hidden;
     img { width: 100%; height: 100%; object-fit: cover; display: block; }
   }
   .badge {
@@ -96,9 +146,9 @@
     top: .6rem; left: .6rem;
     background: var(--cempasuchil);
     color: #2a1f1a;
-    font-size: .7rem;
+    font-size: .72rem;
     font-weight: 700;
-    padding: .25rem .55rem;
+    padding: .25rem .6rem;
     border-radius: 999px;
   }
   .body {
@@ -108,21 +158,23 @@
     gap: .2rem;
     flex: 1;
   }
-  .cat { font-size: .72rem; color: var(--tinta-suave); text-transform: uppercase; letter-spacing: .06em; }
-  h3 { margin: 0; font-size: 1rem; font-weight: 600; line-height: 1.3; }
-  .precio { margin-top: auto; padding-top: .35rem; font-weight: 700; color: var(--acento-texto); }
+  .cat { font-size: .8rem; color: var(--t-tinta-suave); }
+  h3 { margin: 0; font-size: 1.02rem; line-height: 1.3; }
+  .dato { display: none; font-size: .85rem; color: var(--t-tinta-suave); }
+  .precio { margin-top: auto; padding-top: .4rem; font-weight: 700; color: var(--t-acento-texto); }
 }
 
 .skeleton {
-  .img, .body span { background: linear-gradient(90deg, var(--fondo-alt), var(--linea), var(--fondo-alt)); background-size: 200% 100%; animation: brillo 1.2s infinite; }
+  .img, .body span { background: linear-gradient(90deg, var(--t-img-fondo), var(--t-linea), var(--t-img-fondo)); background-size: 200% 100%; animation: brillo 1.2s infinite; }
   .body span { display: block; height: .8rem; border-radius: .3rem; &:last-child { width: 40%; } }
 }
 @keyframes brillo { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .skeleton .img, .skeleton .body span { animation: none; } }
 
-/* Aviso para el arranque en frío del plan gratuito: aparece solo si la carga tarda. */
+// Aviso para el arranque en frío del plan gratuito: aparece solo si la carga tarda.
 .despertando {
   text-align: center;
-  color: var(--tinta-suave);
+  color: var(--t-tinta-suave);
   font-size: .9rem;
   margin: 1.25rem 0 0;
   opacity: 0;
@@ -133,16 +185,22 @@
 .estado {
   padding: 2rem 1rem;
   text-align: center;
-  color: var(--tinta-suave);
+  color: var(--t-tinta-suave);
   p { margin: 0 0 1rem; }
-  a { color: var(--acento-texto); }
+  a { color: var(--t-acento-texto); }
   button {
     font: inherit;
     padding: .6rem 1.2rem;
     border-radius: 999px;
     border: 0;
     background: var(--acento);
-    color: #fff;
+    color: var(--t-sobre-acento);
     cursor: pointer;
   }
 }
+
+// --- Tema propio de cada negocio (src/app/catalogo/temas/) -------------------
+:host([data-tema='turamohoy']) { @include turamohoy.catalogo; }
+:host([data-tema='cosmeticos']) { @include cosmeticos.catalogo; }
+:host([data-tema='inflables']) { @include inflables.catalogo; }
+:host([data-tema='vinateria']) { @include vinateria.catalogo; }

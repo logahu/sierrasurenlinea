@@ -1,0 +1,91 @@
+// Vinatería
+// Idea: etiqueta de mezcal en una cantina de noche. Siempre oscuro, papel de
+// etiqueta color hueso, marcos dobles en dorado y tipografía de cartel antiguo.
+
+$noche: #17110d;
+$papel: #efe3cc;
+$barro: #8a3b12;
+$oro: #c9a227;
+
+@mixin tokens {
+  --t-fondo: #{$noche};
+  --t-superficie: #221913;
+  --t-tinta: #{$papel};
+  --t-tinta-suave: #bfae92;
+  --t-linea: #4a3a2c;
+  --t-acento-texto: #e0a96d;
+  --t-sobre-acento: #fff;
+  --t-img-fondo: #{$papel};
+  --t-caja: #221913;
+  --t-fuente-titulo: 'Abril Fatface', 'Bodoni 72', Georgia, serif;
+  --t-fuente-texto: 'Work Sans', system-ui, sans-serif;
+  --t-peso-titulo: 400;
+  --t-radio-card: 0;
+  --t-radio-chip: 0;
+  --t-radio-contacto: 0;
+  --t-borde-card: none;
+  --t-sombra-card: none;
+  color-scheme: dark;
+}
+
+// Marco doble de etiqueta: papel, filete de barro y otra franja de papel.
+@mixin marco-etiqueta {
+  box-shadow: inset 0 0 0 .4rem $papel, inset 0 0 0 .5rem $barro, inset 0 0 0 .75rem $papel, inset 0 0 0 .82rem $barro;
+}
+
+@mixin catalogo {
+  @include tokens;
+  padding-top: 1.25rem;
+
+  .encabezado {
+    text-align: center;
+    padding: 2rem 1.25rem 2.25rem;
+    border: 3px double $oro;
+    h1, .eslogan, .lead, .aviso-edad { margin-inline: auto; }
+    h1 { color: $papel; font-size: clamp(2.8rem, 9vw, 4.8rem); letter-spacing: .01em; }
+    .eslogan { color: $oro; font-style: italic; font-weight: 500; }
+    .volver { color: var(--t-tinta-suave); }
+  }
+  .aviso-edad {
+    background: transparent;
+    border: 2px solid $oro;
+    color: $papel;
+    font-weight: 600;
+  }
+
+  .chips { justify-content: safe center; margin-top: 1rem; }
+  .chip {
+    border-color: var(--t-linea);
+    background: transparent;
+    color: var(--t-tinta);
+    &.active { background: $papel; border-color: $papel; color: $noche; }
+  }
+  .section-title { text-align: center; color: $oro; font-size: 1.6rem; }
+
+  .card {
+    background: $papel;
+    color: #2a1d14;
+    text-align: center;
+    padding: 1.1rem;
+    @include marco-etiqueta;
+    .img { background: transparent; aspect-ratio: 4 / 5; }
+    .body { align-items: center; padding: .5rem .25rem .4rem; }
+    .cat { color: $barro; font-style: italic; }
+    h3 { font-family: var(--t-fuente-titulo); font-weight: 400; font-size: 1.15rem; }
+    .precio { color: $barro; font-family: var(--t-fuente-titulo); font-weight: 400; font-size: 1.3rem; }
+  }
+  .badge { background: $barro; color: $papel; left: 50%; translate: -50% 0; border-radius: 0; }
+  .estado a { color: $oro; }
+}
+
+@mixin producto {
+  @include tokens;
+  .foto { border-radius: 0; padding: 1.1rem; @include marco-etiqueta; }
+  .info {
+    .cat { color: $oro; font-style: italic; }
+    h1 { font-size: clamp(2.3rem, 6vw, 3.4rem); color: $papel; }
+    .precio { color: #e0a96d; font-family: var(--t-fuente-titulo); font-weight: 400; font-size: 1.9rem; }
+  }
+  .caracteristicas { border: 1px solid $oro; }
+  .aviso-edad { background: transparent; border: 2px solid $oro; color: $papel; }
+}

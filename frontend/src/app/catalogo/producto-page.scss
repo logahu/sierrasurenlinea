@@ -1,11 +1,44 @@
-:host { display: block; padding-top: 1.25rem; --acento: var(--rosa); }
+@use './temas/turamohoy' as turamohoy;
+@use './temas/cosmeticos' as cosmeticos;
+@use './temas/inflables' as inflables;
+@use './temas/vinateria' as vinateria;
+
+// Detalle de producto. Usa los mismos tokens --t-* que el catálogo; cada negocio
+// los redefine en src/temas/.
+:host {
+  --t-fondo: var(--fondo);
+  --t-superficie: var(--superficie);
+  --t-tinta: var(--tinta);
+  --t-tinta-suave: var(--tinta-suave);
+  --t-linea: var(--linea);
+  --t-acento-texto: var(--acento-texto);
+  --t-sobre-acento: #fff;
+  --t-img-fondo: var(--fondo-alt);
+  --t-fuente-titulo: var(--font-display);
+  --t-fuente-texto: var(--font-body);
+  --t-peso-titulo: 600;
+  --t-radio-img: 1.25rem;
+  --t-caja: var(--fondo-alt);
+
+  display: block;
+  --acento: var(--rosa);
+  font-family: var(--t-fuente-texto);
+  color: var(--t-tinta);
+  margin-inline: calc(50% - 50vw);
+  padding: 1.25rem max(1rem, calc(50vw - 36rem)) 3rem;
+  background: var(--t-fondo);
+  margin-bottom: -3rem;
+  min-height: 70vh;
+}
+
+h1 { font-family: var(--t-fuente-titulo); font-weight: var(--t-peso-titulo); }
 
 .volver {
   display: inline-block;
   margin-bottom: 1rem;
-  color: var(--tinta-suave);
+  color: var(--t-tinta-suave);
   text-decoration: none;
-  &:hover { color: var(--acento-texto); }
+  &:hover { color: var(--t-acento-texto); }
 }
 
 .detalle {
@@ -16,56 +49,61 @@
 }
 
 .foto {
-  border-radius: 1.25rem;
+  border-radius: var(--t-radio-img);
   overflow: hidden;
-  background: var(--fondo-alt);
+  background: var(--t-img-fondo);
   aspect-ratio: 1;
   img { width: 100%; height: 100%; object-fit: cover; display: block; }
 }
 
 .info {
   .cat {
-    font-size: .8rem;
-    text-transform: uppercase;
-    letter-spacing: .08em;
-    color: var(--acento-texto);
+    font-size: .9rem;
+    color: var(--t-acento-texto);
     text-decoration: none;
     font-weight: 600;
   }
   h1 {
-    font-family: var(--font-display);
-    font-size: clamp(1.75rem, 5vw, 2.5rem);
-    line-height: 1.1;
+    font-size: clamp(1.9rem, 5vw, 2.7rem);
+    line-height: 1.08;
     margin: .4rem 0 .6rem;
   }
-  .precio { font-size: 1.5rem; font-weight: 700; color: var(--acento-texto); margin: 0 0 1rem; }
-  .desc { line-height: 1.6; margin: 0 0 1rem; }
-  .nota { color: var(--tinta-suave); font-size: .88rem; margin: .75rem 0 0; }
+  .precio { font-size: 1.55rem; font-weight: 700; color: var(--t-acento-texto); margin: 0 0 1rem; }
+  .desc { line-height: 1.6; margin: 0 0 1rem; max-width: 34rem; }
+  .nota { color: var(--t-tinta-suave); font-size: .9rem; margin: .75rem 0 0; }
 }
 
 .caracteristicas {
   margin: 0 0 1.25rem;
   padding: .9rem 1rem .9rem 2.1rem;
   border-radius: .75rem;
-  background: var(--fondo-alt);
+  background: var(--t-caja);
   li { margin: .2rem 0; }
-  li::marker { color: var(--acento-texto); }
+  li::marker { color: var(--acento); }
 }
 
 .aviso-edad {
   margin: 0 0 1rem;
   padding: .65rem .9rem;
-  border-radius: .75rem;
-  background: color-mix(in srgb, var(--acento) 12%, transparent);
-  font-size: .92rem;
-  font-weight: 500;
+  border-radius: .5rem;
+  background: color-mix(in srgb, var(--acento) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--acento) 40%, transparent);
+  font-size: .95rem;
+  font-weight: 600;
 }
 
 .acciones { display: flex; flex-wrap: wrap; gap: .6rem; }
+.btn.secundario { color: var(--t-tinta); border-color: var(--t-linea); }
 
 .estado {
   padding: 3rem 1rem;
   text-align: center;
-  color: var(--tinta-suave);
-  a { color: var(--acento-texto); }
+  color: var(--t-tinta-suave);
+  a { color: var(--t-acento-texto); }
 }
+
+// --- Tema propio de cada negocio (src/app/catalogo/temas/) -------------------
+:host([data-tema='turamohoy']) { @include turamohoy.producto; }
+:host([data-tema='cosmeticos']) { @include cosmeticos.producto; }
+:host([data-tema='inflables']) { @include inflables.producto; }
+:host([data-tema='vinateria']) { @include vinateria.producto; }

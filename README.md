@@ -59,6 +59,13 @@ Todo vive en `backend/src/main/resources/import.sql`:
 - **Productos de renta**: `unidad_precio` (`por día`, `por evento`) y `caracteristicas`
   separadas por `|` (`Medidas: 4 × 4 m|Capacidad: 8 niños`).
 
+## Diseño de cada negocio
+La portada tiene su propio estilo ("la calle de los rótulos") y cada negocio tiene un
+tema visual en `frontend/src/app/catalogo/temas/` (`_turamohoy.scss`, `_cosmeticos.scss`,
+`_inflables.scss`, `_vinateria.scss`). El tema se elige por el `slug` del negocio; un
+negocio nuevo usa el estilo base hasta que se le cree su archivo de tema y se agregue
+en `catalogo-page.scss` y `producto-page.scss`.
+
 ## Cambiar las imágenes
 Las imágenes de ejemplo están en `frontend/public/img/*.svg`. Pon tus fotos
 (idealmente cuadradas, 800×800, en `.jpg` o `.webp`) en esa carpeta y

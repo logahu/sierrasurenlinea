@@ -13,7 +13,11 @@ import { precioConUnidad } from './contacto';
   imports: [RouterLink, ContactoNegocio],
   templateUrl: './catalogo-page.html',
   styleUrl: './catalogo-page.scss',
-  host: { '[style.--acento]': 'negocio.value()?.colorPrimario' },
+  host: {
+    '[style.--acento]': 'negocio.value()?.colorPrimario',
+    // Cada negocio tiene su propio tema visual (src/temas/).
+    '[attr.data-tema]': 'negocio.value()?.slug',
+  },
 })
 export class CatalogoPage {
   private readonly api = inject(CatalogoService);

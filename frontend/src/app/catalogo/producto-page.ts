@@ -12,7 +12,10 @@ import { enlaceTelefono, enlaceWhatsapp, mensajeProducto, precioConUnidad } from
   imports: [RouterLink, ContactoNegocio],
   templateUrl: './producto-page.html',
   styleUrl: './producto-page.scss',
-  host: { '[style.--acento]': 'negocio.value()?.colorPrimario' },
+  host: {
+    '[style.--acento]': 'negocio.value()?.colorPrimario',
+    '[attr.data-tema]': 'negocio.value()?.slug',
+  },
 })
 export class ProductoPage {
   private readonly api = inject(CatalogoService);

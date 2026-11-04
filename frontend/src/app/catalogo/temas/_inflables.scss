@@ -1,0 +1,89 @@
+// Renta de Inflables
+// Idea: fiesta infantil. Cielo azul, banderines, tarjetas "infladas" con borde grueso
+// y sombra sólida. Las medidas del inflable se ven desde el catálogo.
+
+$tinta: #10345c;
+$cielo: #e7f5ff;
+$globo: #ffd43b;
+
+// Banderines de fiesta en cuatro colores (SVG en línea, se repite a lo ancho).
+$banderines: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='192' height='44' viewBox='0 0 192 44'%3E%3Cpath d='M0 4 Q96 14 192 4' stroke='%2310345c' stroke-width='2' fill='none'/%3E%3Cpath d='M6 5 L42 8 L22 40Z' fill='%23fa5252'/%3E%3Cpath d='M54 9 L90 11 L70 42Z' fill='%23ffd43b'/%3E%3Cpath d='M102 11 L138 9 L118 42Z' fill='%2312b886'/%3E%3Cpath d='M150 8 L186 5 L166 40Z' fill='%23ae3ec9'/%3E%3C/svg%3E";
+
+@mixin tokens {
+  --t-fondo: #{$cielo};
+  --t-superficie: #ffffff;
+  --t-tinta: #{$tinta};
+  --t-tinta-suave: #3f5f80;
+  --t-linea: #{$tinta};
+  --t-acento-texto: #1864ab;
+  --t-sobre-acento: #fff;
+  --t-img-fondo: #d0ebff;
+  --t-caja: #ffffff;
+  --t-fuente-titulo: 'Baloo 2', 'Arial Rounded MT Bold', system-ui, sans-serif;
+  --t-fuente-texto: 'Nunito', system-ui, sans-serif;
+  --t-peso-titulo: 800;
+  --t-radio-card: 1.75rem;
+  --t-radio-chip: 999px;
+  --t-radio-contacto: 1.75rem;
+  --t-borde-card: 3px solid #{$tinta};
+  --t-sombra-card: .4rem .4rem 0 #{$tinta};
+}
+
+@mixin pastilla {
+  display: inline-block;
+  align-self: flex-start;
+  padding: .2rem .8rem;
+  border-radius: 999px;
+  background: $globo;
+  color: $tinta;
+  border: 2px solid $tinta;
+  font-weight: 800;
+}
+
+@mixin catalogo {
+  @include tokens;
+
+  .encabezado {
+    padding: 4.25rem 0 1.5rem;
+    h1 { font-size: clamp(2.6rem, 8vw, 4.4rem); line-height: .95; color: #1864ab; }
+    .eslogan { font-family: var(--t-fuente-titulo); font-size: 1.45rem; font-weight: 700; }
+  }
+  .adorno {
+    display: block;
+    position: absolute;
+    top: .25rem;
+    left: calc(50% - 50vw);
+    right: calc(50% - 50vw);
+    height: 44px;
+    background: url($banderines) repeat-x left top / auto 44px;
+  }
+
+  .chip {
+    border: 2px solid $tinta;
+    font-weight: 700;
+    &.active { background: $globo; border-color: $tinta; color: $tinta; }
+  }
+
+  .grid { gap: 1.5rem 1.25rem; }
+  .card {
+    transition: transform .15s, box-shadow .15s;
+    &:hover { transform: translate(-2px, -2px); box-shadow: .6rem .6rem 0 $tinta; }
+    &:hover h3 { text-decoration: none; }
+    .img { margin: .6rem .6rem 0; border-radius: 1.25rem; }
+    h3 { font-size: 1.25rem; line-height: 1.1; }
+    .dato { display: block; }
+    .precio { @include pastilla; margin-top: .6rem; }
+  }
+  .badge { background: #fa5252; color: #fff; border: 2px solid $tinta; }
+  @media (prefers-reduced-motion: reduce) { .card { transition: none; } }
+}
+
+@mixin producto {
+  @include tokens;
+  .foto { border: 3px solid $tinta; box-shadow: .5rem .5rem 0 $tinta; border-radius: 2rem; }
+  .info {
+    h1 { font-size: clamp(2.3rem, 6vw, 3.4rem); line-height: 1; }
+    .precio { @include pastilla; font-size: 1.4rem; padding: .3rem 1rem; }
+  }
+  .caracteristicas { border: 3px solid $tinta; border-radius: 1.25rem; font-weight: 700; }
+}

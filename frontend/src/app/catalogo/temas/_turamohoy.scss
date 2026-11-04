@@ -1,0 +1,78 @@
+// TuRamoHoy · florería
+// Idea: papel kraft, listón y etiqueta de regalo. Fotos con arco, como vitrina de florería.
+
+$kraft: #e6d2b0;
+$liston: #b0244f;
+
+@mixin tokens {
+  --t-fondo: #fff8f3;
+  --t-superficie: #ffffff;
+  --t-tinta: #3a1d27;
+  --t-tinta-suave: #7d5a66;
+  --t-linea: #f0d9df;
+  --t-acento-texto: #{$liston};
+  --t-sobre-acento: #fff;
+  --t-img-fondo: #fde8ee;
+  --t-caja: #fdf0f3;
+  --t-fuente-titulo: 'Young Serif', Georgia, serif;
+  --t-fuente-texto: 'DM Sans', system-ui, sans-serif;
+  --t-peso-titulo: 400;
+  --t-radio-card: .3rem;
+  --t-radio-chip: .3rem;
+  --t-radio-contacto: .3rem;
+  --t-borde-card: none;
+  --t-sombra-card: 0 1px 0 #{$kraft};
+}
+
+// Precio como etiqueta de regalo colgante, con su orificio.
+@mixin etiqueta {
+  display: inline-block;
+  align-self: flex-start;
+  padding: .3rem .8rem .3rem 1.25rem;
+  background:
+    radial-gradient(circle at .6rem 50%, var(--t-fondo) .18rem, transparent .2rem),
+    $liston;
+  color: #fff;
+  clip-path: polygon(.55rem 0, 100% 0, 100% 100%, .55rem 100%, 0 50%);
+}
+
+@mixin catalogo {
+  @include tokens;
+
+  .encabezado {
+    padding: 2.25rem 0 2.5rem;
+    margin-bottom: 1.25rem;
+    .volver { color: #5c4630; }
+    .lead { color: #5c4630; }
+    h1 { color: $liston; font-size: clamp(2.6rem, 8vw, 4.2rem); }
+  }
+  // Papel kraft con rayas de envoltura y el listón abajo.
+  .adorno {
+    display: block;
+    position: absolute;
+    inset: 0 calc(50% - 50vw);
+    background:
+      repeating-linear-gradient(115deg, rgb(255 255 255 / .16) 0 1.1rem, transparent 1.1rem 2.2rem),
+      $kraft;
+    border-bottom: .45rem solid $liston;
+  }
+
+  .chip.active { background: $liston; border-color: $liston; }
+
+  .card {
+    padding: .7rem .7rem 0;
+    .img { border-radius: 999px 999px .2rem .2rem; }
+    .body { padding: .8rem .2rem 1rem; }
+    h3 { font-family: var(--t-fuente-titulo); font-weight: 400; font-size: 1.08rem; }
+    .precio { @include etiqueta; margin-top: auto; }
+  }
+  // Centrada, para que el arco de la foto no la corte.
+  .badge { background: $liston; color: #fff; left: 50%; translate: -50% 0; top: .9rem; }
+}
+
+@mixin producto {
+  @include tokens;
+  .foto { border-radius: 50% 50% .4rem .4rem / 34% 34% .4rem .4rem; }
+  .info .precio { @include etiqueta; font-size: 1.35rem; padding-left: 1.6rem; }
+  .info h1 { color: var(--t-tinta); }
+}
