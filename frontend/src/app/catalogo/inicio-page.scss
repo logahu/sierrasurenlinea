@@ -1,110 +1,296 @@
-:host { display: block; }
+// Portada "La calle de los rótulos". Paleta y tipografía propias de esta página:
+// las páginas de cada negocio tendrán su propio estilo.
+:host {
+  --cal: #fbfbf8;
+  --anil: #1e2a5a;
+  --anil-suave: #4a5585;
+  --cantera: #7a9a7e;
+  --cantera-oscura: #5d7a61;
+  --sol: #f2c94c;
+  --rotulo: 'Alfa Slab One', 'Rockwell', Georgia, serif;
+  --texto: 'Atkinson Hyperlegible', system-ui, sans-serif;
 
-.hero {
-  padding: 2.75rem 0 1.75rem;
-  max-width: 44rem;
-
-  .eyebrow {
-    margin: 0 0 .5rem;
-    font-size: .8rem;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    color: var(--terracota);
-    font-weight: 600;
-  }
-  h1 {
-    font-family: var(--font-display);
-    font-size: clamp(2rem, 6vw, 3.25rem);
-    line-height: 1.05;
-    margin: 0 0 .75rem;
-  }
-  .lead { margin: 0; color: var(--tinta-suave); font-size: 1.05rem; }
+  display: block;
+  font-family: var(--texto);
+  color: var(--anil);
+  // Toda la portada es "la calle": fondo de cal de lado a lado de la pantalla.
+  margin-inline: calc(50% - 50vw);
+  padding-inline: max(1rem, calc(50vw - 36rem));
+  background: var(--cal);
+  margin-bottom: -3rem;
+  padding-bottom: 3rem;
 }
 
-.negocios {
+@media (prefers-color-scheme: dark) {
+  :host {
+    --cal: #141a33;
+    --anil: #eef0f8;
+    --anil-suave: #b4bad3;
+    --cantera: #4f6a53;
+    --cantera-oscura: #3c5240;
+  }
+}
+
+// La banqueta llega de orilla a orilla, más allá del ancho del contenido.
+%ancho-completo {
+  margin-inline: calc(50% - 50vw);
+}
+
+h1, h2 { font-family: var(--rotulo); font-weight: 400; letter-spacing: .005em; margin: 0; }
+
+// --- La calle ----------------------------------------------------------------
+.calle-seccion {
+  padding-top: clamp(2rem, 6vw, 3.5rem);
+}
+
+.intro {
+  max-width: 38rem;
+  margin-bottom: clamp(1.75rem, 5vw, 3rem);
+
+  h1 { font-size: clamp(2.1rem, 6.5vw, 3.6rem); line-height: 1.02; }
+  p { margin: 1rem 0 0; font-size: 1.125rem; line-height: 1.55; color: var(--anil-suave); max-width: 32rem; }
+}
+
+.calle {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
-  @media (max-width: 480px) { grid-template-columns: repeat(2, 1fr); gap: .75rem; }
+  grid-template-columns: repeat(4, 1fr);
+  align-items: end;
+  gap: 0;
+  animation: levantar .6s cubic-bezier(.2, .7, .2, 1) both;
 }
 
-.tarjeta {
+.fachada {
+  --pintura: #b9b2a6;
+  --sombra-pintura: color-mix(in srgb, var(--pintura) 72%, #000);
+  // Alturas distintas, como una cuadra real: unas casas de un piso, otras con pretil alto.
+  &.f0 { --alto: 26.5rem; }
+  &.f1 { --alto: 23.5rem; }
+  &.f2 { --alto: 25.5rem; }
+  &.f3 { --alto: 23rem; }
+}
+
+.muro {
+  position: relative;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  min-height: 14rem;
-  border-radius: 1.1rem;
-  overflow: hidden;
-  background: var(--superficie);
-  border: 1px solid var(--linea);
-  color: inherit;
+  align-items: center;
+  gap: .9rem;
+  min-height: var(--alto);
+  padding: 1.6rem 1.1rem 4.2rem;
+  color: #fff;
   text-decoration: none;
-  transition: transform .2s, box-shadow .2s;
-  &:hover { transform: translateY(-3px); box-shadow: 0 14px 30px -16px rgb(0 0 0 / .4); }
+  // Guardapolvo: la franja pintada más oscura en la parte baja del muro.
+  background:
+    linear-gradient(to top, var(--sombra-pintura) 0 3.2rem, transparent 3.2rem),
+    var(--pintura);
+  border-right: 2px solid color-mix(in srgb, var(--pintura) 60%, #000);
+  outline-offset: -6px;
 
-  .portada {
-    position: relative;
-    aspect-ratio: 4 / 3;
-    background: var(--fondo-alt);
-    border-bottom: 4px solid var(--acento);
-    img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .f0 & { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
+  // Pretil escalonado
+  .f1 & { clip-path: polygon(0 1.4rem, 18% 1.4rem, 18% 0, 82% 0, 82% 1.4rem, 100% 1.4rem, 100% 100%, 0 100%); padding-top: 2.6rem; }
+  // Frontón curvo
+  .f2 & { clip-path: polygon(0 1.6rem, 30% .3rem, 50% 0, 70% .3rem, 100% 1.6rem, 100% 100%, 0 100%); padding-top: 2.8rem; }
+  .f3 & { border-right: 0; }
+
+  &:focus-visible { outline: 3px solid var(--sol); }
+}
+
+.rotulo {
+  font-family: var(--rotulo);
+  font-size: clamp(1.35rem, 2.4vw, 2rem);
+  line-height: 1;
+  text-align: center;
+  // Sombra de rotulista: un segundo trazo desplazado, sin difuminar.
+  text-shadow: .09em .09em 0 var(--sombra-pintura);
+  overflow-wrap: anywhere;
+}
+
+.ventana {
+  width: min(9.5rem, 70%);
+  aspect-ratio: 4 / 5;
+  border: .45rem solid #fff;
+  border-radius: 4.75rem 4.75rem .3rem .3rem;
+  overflow: hidden;
+  background: #fff;
+  img { width: 100%; height: 100%; object-fit: cover; display: block; }
+}
+
+.letrero {
+  font-size: .95rem;
+  line-height: 1.3;
+  text-align: center;
+  max-width: 14rem;
+}
+
+.aviso {
+  position: absolute;
+  bottom: .75rem;
+  left: 50%;
+  translate: -50% 0;
+  white-space: nowrap;
+  padding: .3rem .7rem;
+  background: var(--sol);
+  color: #1e2a5a;
+  font-weight: 700;
+  font-size: .82rem;
+  border-radius: .2rem;
+  transform: rotate(-2deg);
+}
+
+.banqueta {
+  @extend %ancho-completo;
+  height: 1.6rem;
+  background:
+    linear-gradient(var(--cantera-oscura) 0 .35rem, transparent .35rem),
+    repeating-linear-gradient(90deg, var(--cantera) 0 5.5rem, var(--cantera-oscura) 5.5rem calc(5.5rem + 2px));
+}
+
+// En el celular la calle se vuelve una columna de letreros.
+@media (max-width: 760px) {
+  .calle { grid-template-columns: 1fr; gap: .6rem; }
+  .muro {
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 6.5rem 1fr;
+    grid-template-areas: 'ventana rotulo' 'ventana letrero';
+    align-items: center;
+    column-gap: 1rem;
+    row-gap: .35rem;
+    padding: 1rem 1rem 1.4rem;
+    min-height: 9rem;
+    clip-path: none !important;
+    border-right: 0;
+    border-radius: .35rem;
+    background: linear-gradient(to top, var(--sombra-pintura) 0 .8rem, transparent .8rem), var(--pintura);
   }
-  .etiqueta {
-    position: absolute;
-    top: .6rem;
-    right: .6rem;
-    background: var(--acento);
-    color: #fff;
-    font-size: .72rem;
-    font-weight: 700;
-    padding: .25rem .6rem;
-    border-radius: 999px;
-    & + .etiqueta { right: auto; left: .6rem; }
+  .rotulo { grid-area: rotulo; text-align: left; align-self: end; font-size: 1.6rem; }
+  .letrero { grid-area: letrero; text-align: left; align-self: start; }
+  .ventana { grid-area: ventana; width: 100%; border-width: .3rem; border-radius: 3.25rem 3.25rem .25rem .25rem; }
+  .aviso { left: auto; right: .75rem; bottom: auto; top: -.5rem; translate: none; }
+  .banqueta { margin-top: .9rem; }
+}
+
+// Esqueleto mientras carga
+.cargando .muro {
+  background: color-mix(in srgb, var(--anil) 8%, var(--cal));
+  animation: respirar 1.4s ease-in-out infinite alternate;
+}
+@keyframes respirar { to { opacity: .55; } }
+
+// Única animación de la página: la cuadra "se levanta" al cargar.
+@keyframes levantar { from { opacity: 0; transform: translateY(1.5rem); } }
+@media (prefers-reduced-motion: reduce) {
+  .calle, .cargando .muro { animation: none; }
+}
+
+// --- Cómo pedir ---------------------------------------------------------------
+.pasos {
+  padding-top: clamp(2.5rem, 7vw, 4rem);
+  padding-bottom: clamp(2rem, 6vw, 3rem);
+
+  h2 { font-size: clamp(1.6rem, 4vw, 2.2rem); margin-bottom: 1.5rem; }
+
+  ol {
+    list-style: none;
+    counter-reset: paso;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+    gap: 1.5rem 2.5rem;
   }
-  .texto {
-    padding: .85rem 1rem 1.1rem;
+  li {
+    counter-increment: paso;
+    display: grid;
+    grid-template-columns: 3rem 1fr;
+    column-gap: .9rem;
+    row-gap: .25rem;
+    &::before {
+      content: counter(paso);
+      grid-row: span 2;
+      display: grid;
+      place-items: center;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      background: var(--anil);
+      color: var(--cal);
+      font-family: var(--rotulo);
+      font-size: 1.4rem;
+    }
+  }
+  strong { font-size: 1.1rem; align-self: end; }
+  span { color: var(--anil-suave); line-height: 1.5; max-width: 22rem; }
+}
+
+// --- Lo más pedido -------------------------------------------------------------
+.pedidos {
+  padding: clamp(2rem, 6vw, 3rem) 0 1rem;
+
+  h2 { font-size: clamp(1.6rem, 4vw, 2.2rem); margin-bottom: 1.25rem; }
+}
+
+.tira {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 .75rem;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(11rem, 13rem);
+  gap: 1.1rem;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+
+  li { scroll-snap-align: start; }
+  a {
     display: flex;
     flex-direction: column;
-    gap: .25rem;
-    flex: 1;
+    gap: .2rem;
+    color: var(--anil);
+    text-decoration: none;
+    &:focus-visible { outline: 3px solid var(--sol); outline-offset: 3px; border-radius: .5rem; }
+    &:hover .nombre { text-decoration: underline; text-underline-offset: .15em; }
   }
-  h2 { font-family: var(--font-display); font-size: 1.25rem; margin: 0; line-height: 1.15; }
-  p { margin: 0; color: var(--tinta-suave); font-size: .92rem; }
-  .ver { margin-top: auto; padding-top: .5rem; font-weight: 600; font-size: .9rem; color: var(--acento-texto); }
+  img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: .5rem;
+    border-bottom: .3rem solid var(--pintura, var(--anil));
+    margin-bottom: .45rem;
+  }
+  .de { font-size: .85rem; font-weight: 700; color: var(--pintura, var(--anil-suave)); }
+  .nombre { font-size: 1rem; line-height: 1.3; }
+  .precio { font-weight: 700; }
 }
 
-.skeleton {
-  background: linear-gradient(90deg, var(--fondo-alt), var(--linea), var(--fondo-alt));
-  background-size: 200% 100%;
-  animation: brillo 1.2s infinite;
-}
-@keyframes brillo { to { background-position: -200% 0; } }
-
+// --- Estados -------------------------------------------------------------------
 .despertando {
-  text-align: center;
-  color: var(--tinta-suave);
-  font-size: .9rem;
-  margin: 1.25rem 0 0;
+  color: var(--anil-suave);
+  font-size: .95rem;
+  margin: 1rem 0 0;
   opacity: 0;
   animation: aparecer .4s ease 3s forwards;
 }
 @keyframes aparecer { to { opacity: 1; } }
 
 .estado {
-  padding: 2rem 1rem;
-  text-align: center;
-  color: var(--tinta-suave);
+  padding: 2rem 0;
+  color: var(--anil-suave);
   p { margin: 0 0 1rem; }
   button {
     font: inherit;
-    padding: .6rem 1.2rem;
-    border-radius: 999px;
+    font-weight: 700;
+    padding: .65rem 1.3rem;
+    border-radius: .3rem;
     border: 0;
-    background: var(--rosa);
-    color: #fff;
+    background: var(--anil);
+    color: var(--cal);
     cursor: pointer;
   }
 }

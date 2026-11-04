@@ -44,6 +44,9 @@
 
 html, body { margin: 0; }
 
+/* Las secciones de ancho completo usan 100vw; evita el scroll horizontal por la barra de desplazamiento. */
+body { overflow-x: clip; }
+
 body {
   font-family: var(--font-body);
   background: var(--fondo);

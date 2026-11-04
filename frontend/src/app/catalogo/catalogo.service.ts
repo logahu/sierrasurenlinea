@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, shareReplay } from 'rxjs';
+import { Observable, map, shareReplay } from 'rxjs';
 import { Negocio, Producto } from './catalogo.model';
 import { environment } from '../../environments/environment';
 
@@ -21,6 +21,13 @@ export class CatalogoService {
 
   negocios(): Observable<Negocio[]> {
     return this.negocios$;
+  }
+
+  /** Productos marcados como favoritos en todos los negocios (para la portada). */
+  destacados(): Observable<Producto[]> {
+    return this.http
+      .get<Producto[]>(`${this.base}/productos`)
+      .pipe(map((lista) => lista.filter((p) => p.destacado)));
   }
 
   negocio(slug: string): Observable<Negocio> {

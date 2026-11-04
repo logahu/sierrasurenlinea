@@ -1,36 +1,71 @@
-<section class="hero">
-  <p class="eyebrow">Miahuatlán de Porfirio Díaz · Sierra Sur de Oaxaca</p>
-  <h1>Todo lo que buscas en la Sierra Sur, en un solo lugar</h1>
-  <p class="lead">Flores, belleza, renta para tus fiestas y mezcal de la región. Elige un negocio y pide directo por WhatsApp.</p>
+<section class="calle-seccion">
+  <div class="intro">
+    <h1>Los negocios de Miahuatlán, a un mensaje de distancia</h1>
+    <p>Entra a un negocio, revisa su catálogo y pide directo por WhatsApp.</p>
+  </div>
+
+  @if (negocios.error()) {
+    <div class="estado" role="alert">
+      <p>No pudimos cargar los negocios. Revisa tu conexión e inténtalo de nuevo.</p>
+      <button type="button" (click)="negocios.reload()">Reintentar</button>
+    </div>
+  } @else if (negocios.isLoading() && !negocios.hasValue()) {
+    <ul class="calle cargando" aria-busy="true" aria-label="Cargando negocios">
+      @for (i of [0, 1, 2, 3]; track i) { <li class="fachada" [class]="'f' + i"><span class="muro"></span></li> }
+    </ul>
+    <p class="despertando">Estamos despertando el servidor; la primera visita puede tardar hasta un minuto.</p>
+  } @else {
+    <ul class="calle">
+      @for (n of negocios.value() ?? []; track n.id; let i = $index) {
+        <li class="fachada" [class]="'f' + (i % 4)" [style.--pintura]="n.colorPrimario">
+          <a class="muro" [routerLink]="['/', n.slug]">
+            <span class="rotulo">{{ n.nombre }}</span>
+            <span class="ventana"><img [src]="n.portadaUrl" alt="" width="400" height="400" /></span>
+            @if (n.eslogan) { <span class="letrero">{{ n.eslogan }}</span> }
+            @if (n.tipo === 'RENTA') { <span class="aviso">Se rentan</span> }
+            @if (n.soloMayoresEdad) { <span class="aviso">Solo mayores de 18</span> }
+          </a>
+        </li>
+      }
+    </ul>
+  }
+  <div class="banqueta" aria-hidden="true"></div>
 </section>
 
-@if (negocios.error()) {
-  <div class="estado" role="alert">
-    <p>No pudimos cargar los negocios. Revisa tu conexión e inténtalo de nuevo.</p>
-    <button type="button" (click)="negocios.reload()">Reintentar</button>
-  </div>
-} @else if (negocios.isLoading() && !negocios.hasValue()) {
-  <ul class="negocios" aria-busy="true">
-    @for (i of [1, 2, 3, 4]; track i) { <li class="tarjeta skeleton"></li> }
-  </ul>
-  <p class="despertando">Estamos despertando el servidor; la primera visita puede tardar hasta un minuto…</p>
-} @else {
-  <ul class="negocios">
-    @for (n of negocios.value() ?? []; track n.id) {
-      <li>
-        <a class="tarjeta" [routerLink]="['/', n.slug]" [style.--acento]="n.colorPrimario">
-          <div class="portada">
-            <img [src]="n.portadaUrl" [alt]="n.nombre" width="400" height="400" loading="lazy" />
-            @if (n.tipo === 'RENTA') { <span class="etiqueta">Renta</span> }
-            @if (n.soloMayoresEdad) { <span class="etiqueta">+18</span> }
-          </div>
-          <div class="texto">
-            <h2>{{ n.nombre }}</h2>
-            @if (n.eslogan) { <p>{{ n.eslogan }}</p> }
-            <span class="ver">Ver catálogo →</span>
-          </div>
-        </a>
-      </li>
-    }
-  </ul>
+<section class="pasos" aria-labelledby="titulo-pasos">
+  <h2 id="titulo-pasos">Cómo pedir</h2>
+  <ol>
+    <li>
+      <strong>Elige un negocio</strong>
+      <span>Flores, cosméticos, inflables o vinatería: cada uno tiene su catálogo con precios.</span>
+    </li>
+    <li>
+      <strong>Escríbele por WhatsApp</strong>
+      <span>El botón de cada producto abre WhatsApp con tu pedido ya escrito.</span>
+    </li>
+    <li>
+      <strong>Recibe o aparta</strong>
+      <span>El negocio te confirma disponibilidad, entrega y forma de pago.</span>
+    </li>
+  </ol>
+</section>
+
+@if (destacados.value(); as lista) {
+  @if (lista.length) {
+    <section class="pedidos" aria-labelledby="titulo-pedidos">
+      <h2 id="titulo-pedidos">Lo más pedido</h2>
+      <ul class="tira">
+        @for (p of lista; track p.id) {
+          <li>
+            <a [routerLink]="['/', p.negocioSlug, 'producto', p.id]" [style.--pintura]="colorDe(p.negocioSlug)">
+              <img [src]="p.imagenUrl" [alt]="p.nombre" width="400" height="400" loading="lazy" />
+              <span class="de">{{ p.negocioNombre }}</span>
+              <span class="nombre">{{ p.nombre }}</span>
+              <span class="precio">{{ precio(p) }}</span>
+            </a>
+          </li>
+        }
+      </ul>
+    </section>
+  }
 }
