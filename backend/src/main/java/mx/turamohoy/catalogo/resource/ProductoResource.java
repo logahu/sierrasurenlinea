@@ -5,7 +5,6 @@ import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import mx.turamohoy.catalogo.dto.ProductoDto;
 import mx.turamohoy.catalogo.model.Producto;
@@ -16,21 +15,16 @@ import java.util.List;
 @Produces(MediaType.APPLICATION_JSON)
 public class ProductoResource {
 
-    /**
-     * Lista los productos disponibles. Con {@code ?categoria=ramos} filtra por categoría.
-     */
+    /** Todos los productos disponibles de todos los negocios. */
     @GET
-    public List<ProductoDto> listar(@QueryParam("categoria") String categoria) {
-        List<Producto> productos = (categoria == null || categoria.isBlank())
-                ? Producto.disponibles()
-                : Producto.disponiblesPorCategoria(categoria.trim());
-        return productos.stream().map(ProductoDto::de).toList();
+    public List<ProductoDto> listar() {
+        return Producto.disponibles().stream().map(ProductoDto::de).toList();
     }
 
     @GET
     @Path("/{id}")
     public ProductoDto obtener(@PathParam("id") Long id) {
-        Producto p = Producto.buscarConCategoria(id);
+        Producto p = Producto.buscarCompleto(id);
         if (p == null || !p.disponible) {
             throw new NotFoundException("Producto no encontrado: " + id);
         }

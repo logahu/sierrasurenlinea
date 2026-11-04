@@ -6,18 +6,16 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import mx.turamohoy.catalogo.dto.CategoriaDto;
 import mx.turamohoy.catalogo.model.Categoria;
-import io.quarkus.panache.common.Sort;
 
 import java.util.List;
 
+/** Todas las categorías de todos los negocios (las del sitio usan /api/negocios/{slug}). */
 @Path("/api/categorias")
 @Produces(MediaType.APPLICATION_JSON)
 public class CategoriaResource {
 
     @GET
     public List<CategoriaDto> listar() {
-        return Categoria.<Categoria>listAll(Sort.by("orden")).stream()
-                .map(CategoriaDto::de)
-                .toList();
+        return Categoria.todas().stream().map(CategoriaDto::de).toList();
     }
 }

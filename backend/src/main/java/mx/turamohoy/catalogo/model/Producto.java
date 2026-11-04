@@ -13,11 +13,15 @@ import java.math.BigDecimal;
 import java.util.List;
 
 /**
- * Un artículo visible en el catálogo (un ramo, un arreglo, una flor por pieza...).
+ * Un artículo visible en el catálogo de un negocio: un ramo, un labial,
+ * un brincolín en renta, una botella de mezcal...
  */
 @Entity
 @Table(name = "producto")
 public class Producto extends PanacheEntityBase {
+
+    private static final String BASE = "select p from Producto p join fetch p.categoria c join fetch c.negocio n ";
+    private static final String ORDEN = " order by p.destacado desc, p.nombre";
 
     @Id
     public Long id;
@@ -28,9 +32,23 @@ public class Producto extends PanacheEntityBase {
     @Column(length = 1000)
     public String descripcion;
 
-    /** Precio en MXN. En la fase 1 solo se muestra; aún no se cobra. */
+    /** Precio en MXN. Por ahora solo se muestra; aún no se cobra en línea. */
     @Column(nullable = false, precision = 10, scale = 2)
     public BigDecimal precio;
+
+    /**
+     * Unidad del precio cuando no es una venta simple, p. ej. "por día" o
+     * "por evento" en los negocios de renta. Nulo = precio de venta.
+     */
+    @Column(name = "unidad_precio", length = 30)
+    public String unidadPrecio;
+
+    /**
+     * Datos clave separados por "|", p. ej. "Medidas: 4 × 4 m|Capacidad: 8 niños".
+     * Se muestran como lista en el detalle del producto.
+     */
+    @Column(length = 500)
+    public String caracteristicas;
 
     /** Ruta de la imagen. Puede ser relativa al frontend (img/...) o una URL absoluta. */
     @Column(name = "imagen_url", nullable = false, length = 500)
@@ -47,18 +65,19 @@ public class Producto extends PanacheEntityBase {
     public boolean disponible;
 
     public static List<Producto> disponibles() {
-        return list("select p from Producto p join fetch p.categoria "
-                + "where p.disponible = true order by p.destacado desc, p.nombre");
+        return list(BASE + "where p.disponible = true" + ORDEN);
     }
 
-    public static List<Producto> disponiblesPorCategoria(String slugCategoria) {
-        return list("select p from Producto p join fetch p.categoria c "
-                + "where p.disponible = true and c.slug = ?1 order by p.destacado desc, p.nombre",
-                slugCategoria);
+    public static List<Producto> disponiblesDelNegocio(String slugNegocio) {
+        return list(BASE + "where p.disponible = true and n.slug = ?1" + ORDEN, slugNegocio);
     }
 
-    public static Producto buscarConCategoria(Long id) {
-        return find("select p from Producto p join fetch p.categoria where p.id = ?1", id)
-                .firstResult();
+    public static List<Producto> disponiblesDelNegocio(String slugNegocio, String slugCategoria) {
+        return list(BASE + "where p.disponible = true and n.slug = ?1 and c.slug = ?2" + ORDEN,
+                slugNegocio, slugCategoria);
+    }
+
+    public static Producto buscarCompleto(Long id) {
+        return find(BASE + "where p.id = ?1", id).firstResult();
     }
 }

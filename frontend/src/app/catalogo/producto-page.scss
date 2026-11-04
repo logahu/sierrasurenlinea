@@ -1,11 +1,11 @@
-:host { display: block; padding-top: 1.25rem; }
+:host { display: block; padding-top: 1.25rem; --acento: var(--rosa); }
 
 .volver {
   display: inline-block;
   margin-bottom: 1rem;
   color: var(--tinta-suave);
   text-decoration: none;
-  &:hover { color: var(--rosa); }
+  &:hover { color: var(--acento-texto); }
 }
 
 .detalle {
@@ -28,7 +28,7 @@
     font-size: .8rem;
     text-transform: uppercase;
     letter-spacing: .08em;
-    color: var(--terracota);
+    color: var(--acento-texto);
     text-decoration: none;
     font-weight: 600;
   }
@@ -38,21 +38,34 @@
     line-height: 1.1;
     margin: .4rem 0 .6rem;
   }
-  .precio { font-size: 1.5rem; font-weight: 700; color: var(--rosa-oscuro); margin: 0 0 1rem; }
-  .desc { color: var(--tinta); line-height: 1.6; margin: 0 0 1.25rem; }
-  .nota {
-    padding: .9rem 1rem;
-    border-radius: .75rem;
-    background: var(--fondo-alt);
-    color: var(--tinta-suave);
-    font-size: .92rem;
-    margin: 0;
-  }
+  .precio { font-size: 1.5rem; font-weight: 700; color: var(--acento-texto); margin: 0 0 1rem; }
+  .desc { line-height: 1.6; margin: 0 0 1rem; }
+  .nota { color: var(--tinta-suave); font-size: .88rem; margin: .75rem 0 0; }
 }
+
+.caracteristicas {
+  margin: 0 0 1.25rem;
+  padding: .9rem 1rem .9rem 2.1rem;
+  border-radius: .75rem;
+  background: var(--fondo-alt);
+  li { margin: .2rem 0; }
+  li::marker { color: var(--acento-texto); }
+}
+
+.aviso-edad {
+  margin: 0 0 1rem;
+  padding: .65rem .9rem;
+  border-radius: .75rem;
+  background: color-mix(in srgb, var(--acento) 12%, transparent);
+  font-size: .92rem;
+  font-weight: 500;
+}
+
+.acciones { display: flex; flex-wrap: wrap; gap: .6rem; }
 
 .estado {
   padding: 3rem 1rem;
   text-align: center;
   color: var(--tinta-suave);
-  a { color: var(--rosa); }
+  a { color: var(--acento-texto); }
 }

@@ -29,7 +29,15 @@
     --linea: #3a2e28;
     --tinta: #f5ede6;
     --tinta-suave: #b9aaa0;
+    --follaje: #63b38a;
   }
+}
+
+/* Color de acento de cada negocio (lo define la página con --acento).
+   Para texto se usa --acento-texto, que en modo oscuro se aclara para que se lea. */
+* { --acento-texto: var(--acento, var(--rosa)); }
+@media (prefers-color-scheme: dark) {
+  * { --acento-texto: color-mix(in srgb, var(--acento, var(--rosa)) 55%, #fff); }
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -51,3 +59,24 @@ body {
 }
 
 img { max-width: 100%; }
+
+/* Botones compartidos (contacto y detalle de producto). */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  padding: .6rem 1.1rem;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 600;
+  font-size: .95rem;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: filter .15s, background .15s;
+  &:hover { filter: brightness(1.06); }
+  &.grande { padding: .85rem 1.4rem; font-size: 1rem; flex: 1 1 12rem; }
+  &.whatsapp { background: #1fa855; color: #fff; }
+  &.secundario { background: transparent; color: var(--tinta); border-color: var(--linea); }
+}

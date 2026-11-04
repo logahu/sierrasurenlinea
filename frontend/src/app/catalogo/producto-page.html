@@ -1,23 +1,49 @@
-<a class="volver" routerLink="/">← Volver al catálogo</a>
-
 @if (producto.error()) {
+  <a class="volver" routerLink="/">← Todos los negocios</a>
   <div class="estado" role="alert">
     <p>No encontramos este producto o el servidor no responde.</p>
-    <a routerLink="/">Ver el catálogo</a>
+    <a [routerLink]="['/', slug()]">Ver el catálogo</a>
   </div>
 } @else if (producto.value(); as p) {
+  <a class="volver" [routerLink]="['/', p.negocioSlug]">← {{ p.negocioNombre }}</a>
+
   <article class="detalle">
     <div class="foto">
       <img [src]="p.imagenUrl" [alt]="p.nombre" width="800" height="800" />
     </div>
     <div class="info">
-      <a class="cat" routerLink="/" [queryParams]="{ categoria: p.categoriaSlug }">{{ p.categoriaNombre }}</a>
+      <a class="cat" [routerLink]="['/', p.negocioSlug]" [queryParams]="{ categoria: p.categoriaSlug }">
+        {{ p.negocioNombre }} · {{ p.categoriaNombre }}
+      </a>
       <h1>{{ p.nombre }}</h1>
-      <p class="precio">{{ p.precio | currency: 'MXN' : 'symbol-narrow' : '1.0-2' }}</p>
+      <p class="precio">{{ precio(p) }}</p>
       @if (p.descripcion) { <p class="desc">{{ p.descripcion }}</p> }
-      <p class="nota">Pronto podrás pedirlo y pagarlo en línea. Por ahora, contáctanos para apartarlo.</p>
+
+      @if (p.caracteristicas.length) {
+        <ul class="caracteristicas">
+          @for (c of p.caracteristicas; track c) { <li>{{ c }}</li> }
+        </ul>
+      }
+
+      @if (negocio.value()?.soloMayoresEdad) {
+        <p class="aviso-edad" role="note">🔞 Venta exclusiva para mayores de 18 años.</p>
+      }
+
+      <div class="acciones">
+        @if (whatsapp(); as wa) {
+          <a class="btn whatsapp grande" [href]="wa" target="_blank" rel="noopener">
+            {{ negocio.value()?.tipo === 'RENTA' ? 'Apartar por WhatsApp' : 'Pedir por WhatsApp' }}
+          </a>
+        }
+        @if (telefono(); as tel) {
+          <a class="btn secundario grande" [href]="tel">Llamar</a>
+        }
+      </div>
+      <p class="nota">Te respondemos por WhatsApp para confirmar disponibilidad, entrega y forma de pago.</p>
     </div>
   </article>
+
+  @if (negocio.value(); as n) { <app-contacto-negocio [negocio]="n" /> }
 } @else {
   <div class="estado" aria-busy="true">Cargando…</div>
 }

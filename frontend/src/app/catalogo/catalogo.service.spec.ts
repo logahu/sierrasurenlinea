@@ -20,16 +20,27 @@ describe('CatalogoService', () => {
 
   afterEach(() => http.verify());
 
-  it('pide todos los productos sin filtro', () => {
-    service.productos().subscribe();
-    const req = http.expectOne(`${api}/productos`);
+  it('pide la lista de negocios una sola vez aunque se use en varios lugares', () => {
+    service.negocios().subscribe();
+    service.negocios().subscribe();
+    http.expectOne(`${api}/negocios`).flush([]);
+  });
+
+  it('pide el detalle de un negocio', () => {
+    service.negocio('inflables').subscribe();
+    http.expectOne(`${api}/negocios/inflables`).flush({});
+  });
+
+  it('pide los productos de un negocio sin filtro', () => {
+    service.productos('turamohoy').subscribe();
+    const req = http.expectOne(`${api}/negocios/turamohoy/productos`);
     expect(req.request.params.has('categoria')).toBe(false);
     req.flush([]);
   });
 
   it('envía la categoría como query param', () => {
-    service.productos('ramos').subscribe();
-    const req = http.expectOne((r) => r.url === `${api}/productos`);
+    service.productos('turamohoy', 'ramos').subscribe();
+    const req = http.expectOne((r) => r.url === `${api}/negocios/turamohoy/productos`);
     expect(req.request.params.get('categoria')).toBe('ramos');
     req.flush([]);
   });

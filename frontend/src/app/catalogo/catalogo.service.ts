@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-import { Categoria, Producto } from './catalogo.model';
+import { Observable, shareReplay } from 'rxjs';
+import { Negocio, Producto } from './catalogo.model';
 import { environment } from '../../environments/environment';
 
 /**
@@ -14,16 +14,28 @@ export class CatalogoService {
   private readonly http = inject(HttpClient);
   private readonly base = environment.apiUrl;
 
-  categorias(): Observable<Categoria[]> {
-    return this.http.get<Categoria[]>(`${this.base}/categorias`);
+  /** La lista de negocios se usa en el encabezado y la portada: se pide una sola vez. */
+  private readonly negocios$ = this.http
+    .get<Negocio[]>(`${this.base}/negocios`)
+    .pipe(shareReplay({ bufferSize: 1, refCount: false }));
+
+  negocios(): Observable<Negocio[]> {
+    return this.negocios$;
   }
 
-  productos(categoria?: string | null): Observable<Producto[]> {
+  negocio(slug: string): Observable<Negocio> {
+    return this.http.get<Negocio>(`${this.base}/negocios/${encodeURIComponent(slug)}`);
+  }
+
+  productos(negocio: string, categoria?: string | null): Observable<Producto[]> {
     let params = new HttpParams();
     if (categoria) {
       params = params.set('categoria', categoria);
     }
-    return this.http.get<Producto[]>(`${this.base}/productos`, { params });
+    return this.http.get<Producto[]>(
+      `${this.base}/negocios/${encodeURIComponent(negocio)}/productos`,
+      { params },
+    );
   }
 
   producto(id: number): Observable<Producto> {

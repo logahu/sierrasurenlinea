@@ -1,6 +1,6 @@
 {
-  "name": "TuRamoHoy",
-  "short_name": "TuRamoHoy",
+  "name": "Sierra Sur en Línea",
+  "short_name": "Sierra Sur",
   "display": "standalone",
   "scope": "./",
   "start_url": "./",
@@ -54,8 +54,8 @@
       "purpose": "maskable any"
     }
   ],
-  "description": "Catálogo de flores, ramos y arreglos",
+  "description": "Florería, cosméticos, renta de inflables y vinatería en Miahuatlán, Oax.",
   "lang": "es-MX",
-  "theme_color": "#d6336c",
+  "theme_color": "#2f6b4f",
   "background_color": "#fbf7f2"
 }

@@ -1,0 +1,36 @@
+<section class="hero">
+  <p class="eyebrow">Miahuatlán de Porfirio Díaz · Sierra Sur de Oaxaca</p>
+  <h1>Todo lo que buscas en la Sierra Sur, en un solo lugar</h1>
+  <p class="lead">Flores, belleza, renta para tus fiestas y mezcal de la región. Elige un negocio y pide directo por WhatsApp.</p>
+</section>
+
+@if (negocios.error()) {
+  <div class="estado" role="alert">
+    <p>No pudimos cargar los negocios. Revisa tu conexión e inténtalo de nuevo.</p>
+    <button type="button" (click)="negocios.reload()">Reintentar</button>
+  </div>
+} @else if (negocios.isLoading() && !negocios.hasValue()) {
+  <ul class="negocios" aria-busy="true">
+    @for (i of [1, 2, 3, 4]; track i) { <li class="tarjeta skeleton"></li> }
+  </ul>
+  <p class="despertando">Estamos despertando el servidor; la primera visita puede tardar hasta un minuto…</p>
+} @else {
+  <ul class="negocios">
+    @for (n of negocios.value() ?? []; track n.id) {
+      <li>
+        <a class="tarjeta" [routerLink]="['/', n.slug]" [style.--acento]="n.colorPrimario">
+          <div class="portada">
+            <img [src]="n.portadaUrl" [alt]="n.nombre" width="400" height="400" loading="lazy" />
+            @if (n.tipo === 'RENTA') { <span class="etiqueta">Renta</span> }
+            @if (n.soloMayoresEdad) { <span class="etiqueta">+18</span> }
+          </div>
+          <div class="texto">
+            <h2>{{ n.nombre }}</h2>
+            @if (n.eslogan) { <p>{{ n.eslogan }}</p> }
+            <span class="ver">Ver catálogo →</span>
+          </div>
+        </a>
+      </li>
+    }
+  </ul>
+}
