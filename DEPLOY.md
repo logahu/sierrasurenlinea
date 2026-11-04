@@ -77,7 +77,7 @@ el repo ya incluye `frontend/wrangler.jsonc`. En **Settings → Build** usa:
 | Build command | `npm run build` |
 | Deploy command | `npx wrangler deploy` |
 
-El sitio quedará en `https://turamohoy.<tu-cuenta>.workers.dev`; `render.yaml`
+El sitio quedará en `https://sierrasurenlinea.<tu-cuenta>.workers.dev`; `render.yaml`
 ya permite ese dominio en CORS.
 
 > Si el nombre `turamohoy` ya existe en Pages y te asignan otro (p. ej.

@@ -9,8 +9,9 @@ services:
     healthCheckPath: /api/categorias
     autoDeploy: true
     envVars:
-      # Acepta Cloudflare Pages (*.pages.dev) y Workers (turamohoy.<cuenta>.workers.dev),
+      # Acepta Cloudflare Pages (*.pages.dev) y el Worker (sierrasurenlinea.<cuenta>.workers.dev;
+      # también el nombre anterior, turamohoy, mientras se hace el cambio),
       # incluidas sus vistas previas.
       # Si tu proyecto de Pages no se llama "turamohoy", cambia el nombre aquí.
       - key: CORS_ORIGINS
-        value: http://localhost:4200,/https://([a-z0-9-]+\.)?turamohoy\.pages\.dev/,/https://([a-z0-9-]+-)?turamohoy\.[a-z0-9-]+\.workers\.dev/
+        value: http://localhost:4200,/https://([a-z0-9-]+\.)?turamohoy\.pages\.dev/,/https://([a-z0-9-]+-)?(sierrasurenlinea|turamohoy)\.[a-z0-9-]+\.workers\.dev/

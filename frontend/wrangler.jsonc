@@ -2,7 +2,7 @@
 // Build: `npm run build`  ·  Deploy: `npx wrangler deploy` (raíz del proyecto: frontend)
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "turamohoy",
+  "name": "sierrasurenlinea",
   "compatibility_date": "2026-11-01",
   "assets": {
     "directory": "./dist/frontend/browser",
