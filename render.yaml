@@ -23,3 +23,12 @@ services:
         sync: false
       - key: QUARKUS_DATASOURCE_PASSWORD
         sync: false
+      # Panel de administración. JWT_SECRETO firma las sesiones: Render genera un valor
+      # aleatorio. ADMIN_CORREO y ADMIN_CONTRASENA crean la cuenta del dueño la primera
+      # vez que arranca (ver DEPLOY.md, sección Panel).
+      - key: JWT_SECRETO
+        generateValue: true
+      - key: ADMIN_CORREO
+        sync: false
+      - key: ADMIN_CONTRASENA
+        sync: false

@@ -2,6 +2,7 @@ package mx.turamohoy.catalogo.resource;
 
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.panache.common.Sort;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
@@ -9,6 +10,7 @@ import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
+import mx.turamohoy.admin.Rol;
 import mx.turamohoy.catalogo.model.Visita;
 
 import java.util.List;
@@ -48,8 +50,9 @@ public class VisitaResource {
         return new VisitaDto(ruta, v == null ? 0 : v.total);
     }
 
-    /** Totales de todas las páginas, de la más visitada a la menos. */
+    /** Totales de todas las páginas, de la más visitada a la menos. Solo el dueño, desde el panel. */
     @GET
+    @RolesAllowed(Rol.DUENO)
     public List<VisitaDto> listar() {
         return Visita.<Visita>listAll(Sort.descending("total")).stream()
                 .map(v -> new VisitaDto(v.ruta, v.total))

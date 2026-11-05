@@ -25,7 +25,7 @@ public class ProductoResource {
     @Path("/{id}")
     public ProductoDto obtener(@PathParam("id") Long id) {
         Producto p = Producto.buscarCompleto(id);
-        if (p == null || !p.disponible) {
+        if (p == null || !p.disponible || !p.categoria.negocio.visible) {
             throw new NotFoundException("Producto no encontrado: " + id);
         }
         return ProductoDto.de(p);

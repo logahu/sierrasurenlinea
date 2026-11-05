@@ -66,7 +66,16 @@ public class Negocio extends PanacheEntityBase {
     @Column(nullable = false)
     public int orden;
 
+    /** Si es false, el negocio no aparece en el sitio (se oculta desde el panel). */
+    @Column(nullable = false)
+    public boolean visible = true;
+
     public static Optional<Negocio> porSlug(String slug) {
         return find("slug", slug).firstResultOptional();
+    }
+
+    /** Solo si está visible en el sitio público. */
+    public static Optional<Negocio> visiblePorSlug(String slug) {
+        return find("slug = ?1 and visible = true", slug).firstResultOptional();
     }
 }

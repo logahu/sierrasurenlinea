@@ -24,7 +24,7 @@ public class NegocioResource {
     /** Negocios de la portada, en orden. */
     @GET
     public List<NegocioDto> listar() {
-        return Negocio.<Negocio>listAll(Sort.by("orden")).stream()
+        return Negocio.<Negocio>list("visible", Sort.by("orden"), true).stream()
                 .map(NegocioDto::resumen)
                 .toList();
     }
@@ -53,7 +53,7 @@ public class NegocioResource {
     }
 
     private static Negocio buscar(String slug) {
-        return Negocio.porSlug(slug)
+        return Negocio.visiblePorSlug(slug)
                 .orElseThrow(() -> new NotFoundException("Negocio no encontrado: " + slug));
     }
 }

@@ -1,6 +1,7 @@
 package mx.turamohoy.catalogo;
 
 import io.quarkus.test.junit.QuarkusTest;
+import mx.turamohoy.admin.Sesiones;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.Test;
 
@@ -45,7 +46,8 @@ class VisitaResourceTest {
         visitar("/turamohoy", true);
         long portada = visitar("/", true);
         assertEquals(portada, visitar("/", false));
-        given().when().get("/api/visitas")
+        given().when().get("/api/visitas").then().statusCode(401);
+        given().auth().oauth2(Sesiones.dueno()).when().get("/api/visitas")
                 .then().statusCode(200)
                 .body("ruta", hasItem("/turamohoy"))
                 .body("ruta", hasItem("/"));

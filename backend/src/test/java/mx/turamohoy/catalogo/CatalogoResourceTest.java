@@ -20,7 +20,7 @@ class CatalogoResourceTest {
         given().when().get("/api/negocios")
                 .then().statusCode(200)
                 .body("slug", contains("turamohoy", "cosmeticos", "inflables", "vinateria", "encarguitos"))
-                .body("[0].whatsapp", equalTo("5219510000000"))
+                .body("[0].whatsapp", equalTo("525540485363"))
                 .body("[0].categorias", empty());
     }
 
