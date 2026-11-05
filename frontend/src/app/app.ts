@@ -2,9 +2,9 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { SwUpdate } from '@angular/service-worker';
-import { filter, map, switchMap, tap } from 'rxjs';
+import { filter, map, of, switchMap, tap } from 'rxjs';
 import { CatalogoService } from './catalogo/catalogo.service';
-import { VisitasService, folio, rutaDeUrl } from './visitas';
+import { VisitasService, esRutaDelPanel, folio, rutaDeUrl } from './visitas';
 
 @Component({
   selector: 'app-root',
@@ -20,6 +20,8 @@ export class App {
   protected readonly anio = new Date().getFullYear();
   /** Visitas de la página actual, camufladas como folio en el pie (p. ej. SSL-000184). */
   protected readonly folio = signal<string | null>(null);
+  /** En /admin se oculta el menú de negocios: el panel tiene su propia barra. */
+  protected readonly enPanel = signal(false);
 
   constructor() {
     const visitas = inject(VisitasService);
@@ -27,8 +29,12 @@ export class App {
       .events.pipe(
         filter((e): e is NavigationEnd => e instanceof NavigationEnd),
         map((e) => rutaDeUrl(e.urlAfterRedirects)),
-        tap(() => this.folio.set(null)),
-        switchMap((ruta) => visitas.registrar(ruta)),
+        tap((ruta) => {
+          this.folio.set(null);
+          this.enPanel.set(esRutaDelPanel(ruta));
+        }),
+        // El panel no cuenta como visita.
+        switchMap((ruta) => (esRutaDelPanel(ruta) ? of(null) : visitas.registrar(ruta))),
         takeUntilDestroyed(),
       )
       .subscribe((total) => this.folio.set(total === null ? null : folio(total)));

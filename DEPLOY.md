@@ -65,6 +65,23 @@ iniciales los crea **Flyway** solo, la primera vez que arranca.
 > en `backend/src/main/resources/db/migration`, p. ej. `V3__whatsapp_reales.sql`.
 > No edites `V1` ni `V2`: ya se aplicaron y Flyway rechaza cambios en ellas.
 
+## 2.2 Panel de administración (`/admin`)
+
+El panel necesita tres variables más en Render → `turamohoy-api` → **Environment**:
+
+| Variable | Valor |
+|---|---|
+| `JWT_SECRETO` | Un valor aleatorio largo (mínimo 32 caracteres). Usa **Generate** de Render. Firma las sesiones; si lo cambias, todos tienen que volver a entrar. |
+| `ADMIN_CORREO` | Tu correo: con él entras como dueño. |
+| `ADMIN_CONTRASENA` | Tu contraseña inicial (mínimo 10 caracteres). |
+
+Sin `JWT_SECRETO` el backend nuevo no arranca (Render sigue sirviendo la versión anterior).
+La cuenta del dueño se crea sola en el primer arranque; después de eso `ADMIN_CONTRASENA` ya
+no se usa (puedes borrarla) y la contraseña se cambia en el panel, en **Mi cuenta**.
+
+Luego entra a `https://<tu-sitio>/admin`, y en **Encargados** da de alta a uno por negocio.
+**Nunca** pongas estos valores en el repositorio ni en el chat.
+
 ## 3. Apuntar el frontend a tu backend
 
 Si la URL de Render **no** es `turamohoy-api.onrender.com`, edita

@@ -51,19 +51,34 @@ Abre http://localhost:4200
 | GET | `/api/productos/{id}` | Detalle de un producto |
 | GET | `/api/productos` · `/api/categorias` | Todo, de todos los negocios |
 | POST | `/api/visitas` | Registra una visita a una página (`{ruta, contar}`) y devuelve su total |
-| GET | `/api/visitas` | Visitas de todas las páginas, de la más visitada a la menos |
+| GET | `/api/visitas` | Visitas de todas las páginas (solo el dueño, con sesión) |
+
+### Panel de administración (`/admin`)
+Requieren `Authorization: Bearer <token>` (lo obtiene `/api/auth/entrar`).
+
+| Método | Ruta | Quién | Descripción |
+|---|---|---|---|
+| POST | `/api/auth/entrar` | cualquiera | Correo y contraseña → token de 8 h. 5 intentos fallidos bloquean la cuenta 15 min |
+| GET | `/api/auth/yo` | con sesión | Mis datos |
+| PUT | `/api/auth/contrasena` | con sesión | Cambiar mi contraseña (`{actual, nueva}`) |
+| GET/PUT | `/api/admin/negocios[/{slug}]` | dueño; encargado solo el suyo | Ver y editar contacto, horario, presentación; el dueño también nombre, color y si se muestra |
+| GET/POST/PUT | `/api/admin/usuarios[/{id}]` | dueño | Encargados: alta, quitar o devolver acceso, contraseña nueva |
+
+Roles: **dueño** (todo) y **encargado** (uno por negocio, solo el suyo). En local entras con
+`dueno@sierrasur.local` / `dueno-local-123`. En producción, ver [DEPLOY.md](DEPLOY.md), sección 2.2.
 
 ### Visitas
 Cada página muestra en el pie, a la derecha y en tono tenue, un "folio" como
 `SSL-000184`: es su número de visitas (cada visitante cuenta una vez por sesión).
-Para ver todas juntas: `https://turamohoy-api.onrender.com/api/visitas`.
+Para ver todas juntas: `GET /api/visitas` con la sesión del dueño (en la fase 4 se verán en el panel).
 
 ## Base de datos
 - **Producción:** PostgreSQL en [Neon](https://neon.com) (plan gratuito). La conexión se
   configura con variables de entorno en Render; ver [DEPLOY.md](DEPLOY.md).
 - **Esquema y datos:** migraciones de Flyway en `backend/src/main/resources/db/migration`
   (`V1__esquema_inicial.sql`, `V2__datos_iniciales.sql`). Se aplican solas al arrancar.
-- **Para cambiar datos** (WhatsApp reales, precios, productos): crea una migración nueva
+- **Datos de contacto** (WhatsApp, horario, dirección): desde el panel, en `/admin`.
+- **Para cambiar otros datos** (precios, productos, hasta la fase 2 del panel): crea una migración nueva
   con el siguiente número, p. ej. `V3__whatsapp_reales.sql`. **No edites** migraciones que
   ya se aplicaron: Flyway las detecta y el backend no arranca.
 
@@ -71,7 +86,7 @@ Para ver todas juntas: `https://turamohoy-api.onrender.com/api/visitas`.
 Lo que define a cada negocio (en las migraciones, ver arriba):
 - **Nombre, eslogan, color, WhatsApp, teléfono, dirección y horario**: tabla `negocio`.
   El WhatsApp va con lada internacional y sin espacios (`5219511234567`).
-  ⚠️ Por ahora todos tienen el número de ejemplo `5219510000000`.
+  Todos usan por ahora el `525540485363`; se cambia por negocio desde el panel.
 - **Agregar un negocio nuevo**: un `INSERT` en `negocio` y sus categorías; el menú y la
   portada lo muestran solos. `tipo` es `VENTA` o `RENTA`; `solo_mayores_edad` muestra el aviso +18.
 - **Productos de renta**: `unidad_precio` (`por día`, `por evento`) y `caracteristicas`
@@ -96,7 +111,8 @@ backend con Maven (con H2 y contra un PostgreSQL real) y el frontend con Angular
 ## Próximas fases
 1. ✅ Catálogo con imágenes
 2. ✅ Varios negocios con contacto por WhatsApp
-3. Administración del catálogo (alta/edición de productos y fotos)
+3. Panel de administración: ✅ fase 1 (acceso, encargados, datos de cada negocio);
+   faltan catálogo y tarifas, fotos (Cloudflare R2), visitas y bitácora
 4. Carrito y pedidos (con fecha y dirección de entrega; disponibilidad de inflables)
 5. Pagos (Mercado Pago, transferencia, contra entrega)
 6. Dominio propio: `sierrasurenlinea.com.mx`

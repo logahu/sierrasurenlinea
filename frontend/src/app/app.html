@@ -9,7 +9,7 @@
       <span>Sierra Sur <em>en Línea</em></span>
     </a>
   </div>
-  @if (negocios.value(); as lista) {
+  @if (!enPanel() && negocios.value(); as lista) {
     <nav class="contenedor menu" aria-label="Negocios">
       @for (n of lista; track n.id) {
         <a [routerLink]="['/', n.slug]" routerLinkActive="activo" [style.--acento]="n.colorPrimario">{{ n.nombre }}</a>

@@ -32,6 +32,11 @@ export function rutaDeUrl(url: string): string {
   return limpia === '' ? '/' : limpia;
 }
 
+/** /admin y sus pantallas: no se cuentan como visitas. */
+export function esRutaDelPanel(ruta: string): boolean {
+  return ruta === '/admin' || ruta.startsWith('/admin/');
+}
+
 /** El total con apariencia de número de folio interno: SSL-000184. */
 export function folio(total: number): string {
   return `SSL-${String(total).padStart(6, '0')}`;
