@@ -42,9 +42,23 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-hibernate-orm-panache</artifactId>
         </dependency>
+        <!-- Producción: PostgreSQL (Neon). Desarrollo y pruebas: H2 en memoria. -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-jdbc-postgresql</artifactId>
+        </dependency>
         <dependency>
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-jdbc-h2</artifactId>
+        </dependency>
+        <!-- Migraciones versionadas del esquema y los datos (src/main/resources/db/migration) -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-flyway</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-flyway-postgresql</artifactId>
         </dependency>
         <!-- Documentación de la API (Swagger UI en /q/swagger-ui) -->
         <dependency>

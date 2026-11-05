@@ -21,6 +21,10 @@ jobs:
           cache: maven
       - name: Compilar y probar
         run: mvn -B verify
+      # Las mismas pruebas contra un PostgreSQL real (Quarkus Dev Services lo levanta en Docker),
+      # para asegurar que las migraciones de Flyway funcionan igual que en Neon.
+      - name: Probar contra PostgreSQL
+        run: mvn -B test -Dquarkus.test.profile=pg
 
   frontend:
     name: Frontend (Angular)

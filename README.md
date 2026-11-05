@@ -12,7 +12,7 @@ Cada negocio tiene su página, su color, su catálogo y su WhatsApp:
 
 ```
 turamohoy/
-├── backend/    Quarkus 3.40 · REST + Hibernate Panache · H2 en memoria
+├── backend/    Quarkus 3.40 · REST + Hibernate Panache · PostgreSQL (Neon) + Flyway
 └── frontend/   Angular 22 · PWA instalable en el celular
 ```
 
@@ -28,6 +28,7 @@ turamohoy/
 cd backend
 mvn quarkus:dev
 ```
+- En local usa H2 en memoria (no hay que instalar nada); en producción, PostgreSQL en Neon.
 - API: http://localhost:8080/api/negocios
 - Swagger UI: http://localhost:8080/q/swagger-ui
 - Pruebas: `mvn test`
@@ -49,8 +50,17 @@ Abre http://localhost:4200
 | GET | `/api/productos/{id}` | Detalle de un producto |
 | GET | `/api/productos` · `/api/categorias` | Todo, de todos los negocios |
 
+## Base de datos
+- **Producción:** PostgreSQL en [Neon](https://neon.com) (plan gratuito). La conexión se
+  configura con variables de entorno en Render; ver [DEPLOY.md](DEPLOY.md).
+- **Esquema y datos:** migraciones de Flyway en `backend/src/main/resources/db/migration`
+  (`V1__esquema_inicial.sql`, `V2__datos_iniciales.sql`). Se aplican solas al arrancar.
+- **Para cambiar datos** (WhatsApp reales, precios, productos): crea una migración nueva
+  con el siguiente número, p. ej. `V3__whatsapp_reales.sql`. **No edites** migraciones que
+  ya se aplicaron: Flyway las detecta y el backend no arranca.
+
 ## Personalizar los negocios
-Todo vive en `backend/src/main/resources/import.sql`:
+Lo que define a cada negocio (en las migraciones, ver arriba):
 - **Nombre, eslogan, color, WhatsApp, teléfono, dirección y horario**: tabla `negocio`.
   El WhatsApp va con lada internacional y sin espacios (`5219511234567`).
   ⚠️ Por ahora todos tienen el número de ejemplo `5219510000000`.
@@ -69,11 +79,11 @@ en `catalogo-page.scss` y `producto-page.scss`.
 ## Cambiar las imágenes
 Las imágenes de ejemplo están en `frontend/public/img/*.svg`. Pon tus fotos
 (idealmente cuadradas, 800×800, en `.jpg` o `.webp`) en esa carpeta y
-actualiza `imagen_url` (productos) o `portada_url` (negocios) en `import.sql`.
+actualiza `imagen_url` (productos) o `portada_url` (negocios) con una migración nueva.
 
 ## Calidad
 Cada push corre **GitHub Actions** (`.github/workflows/ci.yml`): compila y prueba el
-backend con Maven y el frontend con Angular.
+backend con Maven (con H2 y contra un PostgreSQL real) y el frontend con Angular.
 
 ## Próximas fases
 1. ✅ Catálogo con imágenes

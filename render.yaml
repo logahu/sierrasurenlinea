@@ -15,3 +15,11 @@ services:
       # Si tu proyecto de Pages no se llama "turamohoy", cambia el nombre aquí.
       - key: CORS_ORIGINS
         value: http://localhost:4200,/https://([a-z0-9-]+\.)?turamohoy\.pages\.dev/,/https://([a-z0-9-]+-)?(sierrasurenlinea|turamohoy)\.[a-z0-9-]+\.workers\.dev/
+      # Conexión a PostgreSQL (Neon). Los valores se capturan en el panel de Render
+      # (Environment); no van en el repositorio. Ver DEPLOY.md, sección 2.1.
+      - key: QUARKUS_DATASOURCE_JDBC_URL
+        sync: false
+      - key: QUARKUS_DATASOURCE_USERNAME
+        sync: false
+      - key: QUARKUS_DATASOURCE_PASSWORD
+        sync: false

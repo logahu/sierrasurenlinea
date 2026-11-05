@@ -3,6 +3,7 @@
 | Parte | Servicio | URL resultante |
 |---|---|---|
 | Backend (Quarkus) | Render, plan Free | `https://turamohoy-api.onrender.com` |
+| Base de datos (PostgreSQL) | Neon, plan Free | — |
 | Frontend (Angular PWA) | Cloudflare Pages | `https://turamohoy.pages.dev` |
 
 Ninguno de los dos pide tarjeta. Ambos despliegan solos cada vez que haces `git push`.
@@ -36,6 +37,33 @@ git push -u origin main
 4. Al terminar, abre `https://<tu-servicio>.onrender.com/api/categorias`; debes ver el JSON.
 5. **Anota la URL exacta** que te asignó Render. Si el nombre `turamohoy-api` ya
    estaba ocupado, será algo como `turamohoy-api-x7k2.onrender.com`.
+
+## 2.1 Base de datos en Neon (PostgreSQL gratis)
+
+El backend guarda negocios, categorías y productos en PostgreSQL. Las tablas y los datos
+iniciales los crea **Flyway** solo, la primera vez que arranca.
+
+1. Entra a https://neon.com y regístrate con tu cuenta de GitHub (el plan Free no pide tarjeta).
+2. Crea un proyecto `sierrasurenlinea`. En **Region** elige la más cercana a la región de
+   tu servicio en Render (Render → tu servicio → *Settings → Region*).
+3. En el proyecto, abre **Connect** y copia los datos de conexión: *host*, *database*,
+   *role* (usuario) y *password*.
+4. En Render → `turamohoy-api` → **Environment** agrega estas variables (como secretas):
+
+| Variable | Valor |
+|---|---|
+| `QUARKUS_DATASOURCE_JDBC_URL` | `jdbc:postgresql://<host>/<database>?sslmode=require` |
+| `QUARKUS_DATASOURCE_USERNAME` | `<role>` |
+| `QUARKUS_DATASOURCE_PASSWORD` | `<password>` |
+
+   El host es el de Neon, algo como `ep-xxxx-xxxx.us-east-2.aws.neon.tech`. **Nunca** pongas
+   estos valores en el repositorio ni en el chat.
+5. Guarda (Render redespliega). En el log del deploy debes ver que Flyway aplicó
+   `V1__esquema_inicial` y `V2__datos_iniciales`.
+
+> **Cambiar datos** (WhatsApp reales, precios, productos): se hace con una migración nueva
+> en `backend/src/main/resources/db/migration`, p. ej. `V3__whatsapp_reales.sql`.
+> No edites `V1` ni `V2`: ya se aplicaron y Flyway rechaza cambios en ellas.
 
 ## 3. Apuntar el frontend a tu backend
 
