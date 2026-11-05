@@ -1,9 +1,10 @@
-import { Component, DestroyRef, inject } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { SwUpdate } from '@angular/service-worker';
-import { filter } from 'rxjs';
+import { filter, map, switchMap, tap } from 'rxjs';
 import { CatalogoService } from './catalogo/catalogo.service';
+import { VisitasService, folio, rutaDeUrl } from './visitas';
 
 @Component({
   selector: 'app-root',
@@ -17,8 +18,21 @@ export class App {
   /** Negocios para el menú del encabezado. */
   protected readonly negocios = rxResource({ stream: () => this.api.negocios() });
   protected readonly anio = new Date().getFullYear();
+  /** Visitas de la página actual, camufladas como folio en el pie (p. ej. SSL-000184). */
+  protected readonly folio = signal<string | null>(null);
 
   constructor() {
+    const visitas = inject(VisitasService);
+    inject(Router)
+      .events.pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        map((e) => rutaDeUrl(e.urlAfterRedirects)),
+        tap(() => this.folio.set(null)),
+        switchMap((ruta) => visitas.registrar(ruta)),
+        takeUntilDestroyed(),
+      )
+      .subscribe((total) => this.folio.set(total === null ? null : folio(total)));
+
     // La PWA guarda la app en caché. Cuando se publica una versión nueva, el service
     // worker la descarga en segundo plano; recargamos para no mostrar la versión vieja
     // (que podría no entenderse con el backend actualizado).

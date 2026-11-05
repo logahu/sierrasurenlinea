@@ -50,6 +50,13 @@ Abre http://localhost:4200
 | GET | `/api/negocios/{slug}/productos?categoria={slug}` | Productos del negocio (filtro opcional) |
 | GET | `/api/productos/{id}` | Detalle de un producto |
 | GET | `/api/productos` · `/api/categorias` | Todo, de todos los negocios |
+| POST | `/api/visitas` | Registra una visita a una página (`{ruta, contar}`) y devuelve su total |
+| GET | `/api/visitas` | Visitas de todas las páginas, de la más visitada a la menos |
+
+### Visitas
+Cada página muestra en el pie, a la derecha y en tono tenue, un "folio" como
+`SSL-000184`: es su número de visitas (cada visitante cuenta una vez por sesión).
+Para ver todas juntas: `https://turamohoy-api.onrender.com/api/visitas`.
 
 ## Base de datos
 - **Producción:** PostgreSQL en [Neon](https://neon.com) (plan gratuito). La conexión se

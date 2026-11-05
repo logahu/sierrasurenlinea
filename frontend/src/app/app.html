@@ -23,5 +23,8 @@
 </main>
 
 <footer class="pie">
-  <div class="contenedor">© {{ anio }} Sierra Sur en Línea · Miahuatlán de Porfirio Díaz, Oax.</div>
+  <div class="contenedor fila-pie">
+    <span>© {{ anio }} Sierra Sur en Línea · Miahuatlán de Porfirio Díaz, Oax.</span>
+    @if (folio(); as f) { <span class="folio" aria-hidden="true">{{ f }}</span> }
+  </div>
 </footer>
