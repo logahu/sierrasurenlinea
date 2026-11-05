@@ -56,7 +56,9 @@ h1, h2 { font-family: var(--rotulo); font-weight: 400; letter-spacing: .005em; m
   margin: 0;
   padding: 0;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  // Una sola cuadra: tantas fachadas como negocios haya.
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
   align-items: end;
   gap: 0;
   animation: levantar .6s cubic-bezier(.2, .7, .2, 1) both;
@@ -70,6 +72,7 @@ h1, h2 { font-family: var(--rotulo); font-weight: 400; letter-spacing: .005em; m
   &.f1 { --alto: 23.5rem; }
   &.f2 { --alto: 25.5rem; }
   &.f3 { --alto: 23rem; }
+  &.f4 { --alto: 24.5rem; }
 }
 
 .muro {
@@ -94,19 +97,22 @@ h1, h2 { font-family: var(--rotulo); font-weight: 400; letter-spacing: .005em; m
   .f1 & { clip-path: polygon(0 1.4rem, 18% 1.4rem, 18% 0, 82% 0, 82% 1.4rem, 100% 1.4rem, 100% 100%, 0 100%); padding-top: 2.6rem; }
   // Frontón curvo
   .f2 & { clip-path: polygon(0 1.6rem, 30% .3rem, 50% 0, 70% .3rem, 100% 1.6rem, 100% 100%, 0 100%); padding-top: 2.8rem; }
-  .f3 & { border-right: 0; }
+  // Cornisa de dos escalones
+  .f4 & { clip-path: polygon(0 1rem, 8% 1rem, 8% .45rem, 92% .45rem, 92% 1rem, 100% 1rem, 100% 100%, 0 100%); padding-top: 2.4rem; }
+  .fachada:last-child & { border-right: 0; }
 
   &:focus-visible { outline: 3px solid var(--sol); }
 }
 
 .rotulo {
   font-family: var(--rotulo);
-  font-size: clamp(1.35rem, 2.4vw, 2rem);
+  // Escala con el ancho para que los nombres de una palabra (TuRamoHoy, Encarguitos)
+  // quepan completos en la fachada sin partirse.
+  font-size: clamp(1.15rem, 1.75vw, 1.85rem);
   line-height: 1;
   text-align: center;
   // Sombra de rotulista: un segundo trazo desplazado, sin difuminar.
   text-shadow: .09em .09em 0 var(--sombra-pintura);
-  overflow-wrap: anywhere;
 }
 
 .ventana {
@@ -151,7 +157,7 @@ h1, h2 { font-family: var(--rotulo); font-weight: 400; letter-spacing: .005em; m
 
 // En el celular la calle se vuelve una columna de letreros.
 @media (max-width: 760px) {
-  .calle { grid-template-columns: 1fr; gap: .6rem; }
+  .calle { grid-auto-flow: row; grid-template-columns: 1fr; gap: .6rem; }
   .muro {
     min-height: 0;
     display: grid;

@@ -9,6 +9,7 @@ Cada negocio tiene su página, su color, su catálogo y su WhatsApp:
 | Cosméticos | `/cosmeticos` | Venta |
 | Renta de Inflables | `/inflables` | Renta (precio por día / por evento) |
 | Vinatería | `/vinateria` | Venta, solo mayores de 18 |
+| Encarguitos | `/encarguitos` | Servicio: mandados en moto con formulario ("lista del mandado") y tarifas por zona |
 
 ```
 turamohoy/

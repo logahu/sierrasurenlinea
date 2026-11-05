@@ -1,0 +1,231 @@
+// Encarguitos: la "lista del mandado" en hoja de libreta rayada.
+// Los colores vienen de la bolsa del mandado (naranja, verde y azul).
+:host {
+  --naranja: #d9480f;
+  --verde: #2b8a3e;
+  --azul: #1864ab;
+  --papel: #fffef8;
+  --renglon: #d6e4f0;
+  --margen: #f08c8c;
+  --tinta-libreta: #1d2433;
+
+  display: block;
+}
+
+h2 { font-family: var(--t-fuente-titulo); font-weight: 700; margin: 0; }
+
+// --- La libreta ----------------------------------------------------------------
+.libreta {
+  position: relative;
+  max-width: 46rem;
+  margin: .5rem 0 0;
+  padding: 1.75rem 1.5rem 1.75rem 3.25rem;
+  color: var(--tinta-libreta);
+  // Hoja rayada con su margen rojo.
+  background:
+    linear-gradient(90deg, transparent 2.25rem, var(--margen) 2.25rem, var(--margen) calc(2.25rem + 2px), transparent calc(2.25rem + 2px)),
+    repeating-linear-gradient(var(--papel) 0 1.9rem, var(--renglon) 1.9rem calc(1.9rem + 1px)),
+    var(--papel);
+  border-radius: .2rem;
+  box-shadow: 0 1px 0 #e3e7ec, 0 14px 30px -22px rgb(29 36 51 / .5);
+  display: grid;
+  gap: 1.25rem;
+
+  @media (max-width: 560px) { padding: 1.4rem 1rem 1.4rem 2.4rem; background-position: -1rem 0, 0 0; }
+}
+
+.mano {
+  font-family: 'Caveat', 'Segoe Print', cursive;
+  font-weight: 700;
+  font-size: clamp(2rem, 6vw, 2.6rem);
+  line-height: 1;
+  color: var(--azul);
+}
+
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+
+.etiqueta, legend {
+  display: block;
+  font-weight: 700;
+  font-size: .98rem;
+  margin-bottom: .4rem;
+  padding: 0;
+}
+
+// --- Tipos de encargo ------------------------------------------------------------
+.opciones {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr));
+  gap: .6rem;
+  @media (max-width: 560px) { grid-template-columns: 1fr 1fr; }
+}
+.tipo {
+  position: relative;
+  display: grid;
+  gap: .15rem;
+  padding: .8rem .85rem;
+  border: 2px solid #cfd6de;
+  border-radius: .6rem;
+  background: #fff;
+  cursor: pointer;
+  color: var(--azul);
+  transition: border-color .12s, background .12s;
+
+  input { position: absolute; opacity: 0; pointer-events: none; }
+  strong { color: var(--tinta-libreta); font-size: 1.02rem; line-height: 1.15; margin-top: .25rem; }
+  span { font-size: .86rem; color: #5b6576; }
+  &:hover { border-color: var(--azul); }
+  &:has(input:focus-visible) { outline: 3px solid var(--azul); outline-offset: 2px; }
+  &.elegido {
+    border-color: var(--naranja);
+    background: #fff4ec;
+    color: var(--naranja);
+    box-shadow: inset 0 -4px 0 var(--naranja);
+  }
+}
+
+// --- Campos ----------------------------------------------------------------------
+.campo { display: block; }
+.par {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+}
+
+input[type='text'], input[type='time'], textarea, select {
+  width: 100%;
+  font: inherit;
+  font-size: 1rem;
+  color: var(--tinta-libreta);
+  padding: .6rem .75rem;
+  border: 2px solid #cfd6de;
+  border-radius: .45rem;
+  background: #fff;
+  &:focus { outline: none; border-color: var(--azul); box-shadow: 0 0 0 3px rgb(24 100 171 / .18); }
+  &::placeholder { color: #8a94a3; }
+}
+textarea { resize: vertical; min-height: 6.5rem; line-height: 1.5; }
+
+.con-error {
+  input, textarea, select { border-color: #c92a2a; }
+  .etiqueta, legend { color: #c92a2a; }
+}
+
+.fila { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.pastilla {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .5rem .85rem;
+  border: 2px solid #cfd6de;
+  border-radius: 999px;
+  background: #fff;
+  cursor: pointer;
+  font-size: .95rem;
+  input { accent-color: var(--naranja); margin: 0; }
+  &:has(input:checked) { border-color: var(--naranja); background: #fff4ec; }
+  &.larga { border-radius: .6rem; width: 100%; margin-bottom: .45rem; align-items: flex-start; line-height: 1.35; }
+}
+.hora { width: auto; min-width: 8rem; }
+
+.faltan {
+  margin: 0;
+  padding: .7rem .9rem;
+  border-radius: .45rem;
+  background: #fff0f0;
+  color: #a51111;
+  font-weight: 600;
+}
+
+.enviar {
+  justify-self: start;
+  font: inherit;
+  font-family: var(--t-fuente-titulo);
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: .01em;
+  padding: .85rem 1.6rem;
+  border: 0;
+  border-radius: .5rem;
+  background: #1fa855;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 4px 0 #157a3d;
+  &:hover { filter: brightness(1.05); }
+  &:active { transform: translateY(2px); box-shadow: 0 2px 0 #157a3d; }
+  &:focus-visible { outline: 3px solid var(--azul); outline-offset: 3px; }
+  @media (max-width: 560px) { justify-self: stretch; }
+}
+.nota { margin: -.5rem 0 0; font-size: .9rem; color: #5b6576; }
+
+// --- Tarifas -----------------------------------------------------------------------
+.tarifas {
+  margin-top: 2.75rem;
+  max-width: 46rem;
+
+  h2 { font-size: 1.9rem; margin-bottom: .75rem; }
+  ul { list-style: none; margin: 0; padding: 0; border-top: 3px solid var(--tinta-libreta); }
+  li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 1rem;
+    padding: .75rem 0;
+    border-bottom: 1px solid var(--t-linea);
+  }
+  .zona { display: grid; gap: .1rem; }
+  small { color: var(--t-tinta-suave); font-size: .88rem; }
+  .costo { font-family: var(--t-fuente-titulo); font-weight: 700; font-size: 1.3rem; color: var(--naranja); white-space: nowrap; }
+  .extra .costo { color: var(--t-tinta-suave); font-size: 1.1rem; }
+}
+
+// --- Cómo funciona -------------------------------------------------------------------
+.como {
+  margin-top: 2.75rem;
+  max-width: 46rem;
+
+  h2 { font-size: 1.9rem; margin-bottom: 1rem; }
+  ol {
+    list-style: none;
+    counter-reset: paso;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  }
+  li {
+    counter-increment: paso;
+    display: grid;
+    gap: .2rem;
+    padding-left: 3rem;
+    position: relative;
+    &::before {
+      content: counter(paso);
+      position: absolute;
+      left: 0;
+      top: -.1rem;
+      width: 2.3rem;
+      height: 2.3rem;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--naranja);
+      color: #fff;
+      font-family: var(--t-fuente-titulo);
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+  }
+  span { color: var(--t-tinta-suave); line-height: 1.45; }
+  .reglas {
+    margin: 1.25rem 0 0;
+    padding: .85rem 1rem;
+    border-left: 4px solid var(--verde);
+    background: #fff;
+    border-radius: 0 .4rem .4rem 0;
+    line-height: 1.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) { .tipo { transition: none; } }

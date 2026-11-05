@@ -17,13 +17,14 @@
   } @else {
     <ul class="calle">
       @for (n of negocios.value() ?? []; track n.id; let i = $index) {
-        <li class="fachada" [class]="'f' + (i % 4)" [style.--pintura]="n.colorPrimario">
+        <li class="fachada" [class]="'f' + (i % 5)" [style.--pintura]="n.colorPrimario">
           <a class="muro" [routerLink]="['/', n.slug]">
             <span class="rotulo">{{ n.nombre }}</span>
             <span class="ventana"><img [src]="n.portadaUrl" alt="" width="400" height="400" /></span>
             @if (n.eslogan) { <span class="letrero">{{ n.eslogan }}</span> }
             @if (n.tipo === 'RENTA') { <span class="aviso">Se rentan</span> }
             @if (n.soloMayoresEdad) { <span class="aviso">Solo mayores de 18</span> }
+            @if (n.tipo === 'SERVICIO') { <span class="aviso">En moto</span> }
           </a>
         </li>
       }
@@ -37,7 +38,7 @@
   <ol>
     <li>
       <strong>Elige un negocio</strong>
-      <span>Flores, cosméticos, inflables o vinatería: cada uno tiene su catálogo con precios.</span>
+      <span>Flores, cosméticos, inflables, vinatería o un mandado en moto: cada uno con sus precios.</span>
     </li>
     <li>
       <strong>Escríbele por WhatsApp</strong>

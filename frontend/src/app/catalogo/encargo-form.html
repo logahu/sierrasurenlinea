@@ -1,0 +1,134 @@
+<section class="pedir" aria-labelledby="titulo-lista">
+  <form class="libreta" [formGroup]="form" (ngSubmit)="enviar()" novalidate>
+    <h2 id="titulo-lista" class="mano">Tu lista del mandado</h2>
+
+    <fieldset class="tipos">
+      <legend>¿Qué necesitas?</legend>
+      <div class="opciones">
+        @for (t of tipos; track t.id) {
+          <label class="tipo" [class.elegido]="opcion().id === t.id">
+            <input type="radio" formControlName="tipo" [value]="t.id" />
+            <svg viewBox="0 0 32 32" width="34" height="34" aria-hidden="true">
+              @switch (t.id) {
+                @case ('super') {
+                  <path d="M7 11h18l-2 16H9Z" fill="currentColor" opacity=".18" />
+                  <path d="M7 11h18l-2 16H9Z M12 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" />
+                }
+                @case ('llevar') {
+                  <path d="M5 10 16 5l11 5v12l-11 5-11-5Z" fill="currentColor" opacity=".18" />
+                  <path d="M5 10 16 5l11 5v12l-11 5-11-5Z M5 10l11 5 11-5 M16 15v12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" />
+                }
+                @case ('pagos') {
+                  <path d="M8 4h16v24l-4-2-4 2-4-2-4 2Z" fill="currentColor" opacity=".18" />
+                  <path d="M8 4h16v24l-4-2-4 2-4-2-4 2Z M12 11h8 M12 16h8 M12 21h5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" />
+                }
+                @default {
+                  <path d="M16 4c1 6 6 11 12 12-6 1-11 6-12 12-1-6-6-11-12-12 6-1 11-6 12-12Z" fill="currentColor" opacity=".18" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" />
+                }
+              }
+            </svg>
+            <strong>{{ t.titulo }}</strong>
+            <span>{{ t.ayuda }}</span>
+          </label>
+        }
+      </div>
+    </fieldset>
+
+    <label class="campo" [class.con-error]="falta('qué necesitas que hagamos')">
+      <span class="etiqueta">Qué necesitas que hagamos</span>
+      <textarea formControlName="detalle" rows="4" [placeholder]="opcion().ejemplo"></textarea>
+    </label>
+
+    <div class="par">
+      <label class="campo" [class.con-error]="falta('dónde lo recogemos')">
+        <span class="etiqueta">{{ opcion().etiquetaRecoger }}</span>
+        <input formControlName="recoger" type="text" placeholder="Tienda, mercado o dirección" />
+      </label>
+      <label class="campo" [class.con-error]="falta('a dónde lo llevamos')">
+        <span class="etiqueta">Entregar en</span>
+        <input formControlName="entregar" type="text" autocomplete="street-address" placeholder="Calle, número y una referencia" />
+      </label>
+    </div>
+
+    <div class="par">
+      <label class="campo" [class.con-error]="falta('la zona de entrega')">
+        <span class="etiqueta">Zona de entrega</span>
+        <select formControlName="zona">
+          <option value="" disabled>Elige tu zona</option>
+          @for (z of zonas(); track z.id) {
+            <option [value]="'' + z.id">{{ z.nombre }} ({{ precio(z) }})</option>
+          }
+        </select>
+      </label>
+      <fieldset class="campo cuando" [class.con-error]="falta('a qué hora lo necesitas')">
+        <legend class="etiqueta">¿Para cuándo?</legend>
+        <div class="fila">
+          <label class="pastilla"><input type="radio" formControlName="cuando" value="ahora" /> Lo antes posible</label>
+          <label class="pastilla"><input type="radio" formControlName="cuando" value="programado" /> A una hora</label>
+          @if (datos().cuando === 'programado') {
+            <input class="hora" formControlName="hora" type="time" aria-label="Hora" />
+          }
+        </div>
+      </fieldset>
+    </div>
+
+    @if (opcion().manejaDinero) {
+      <fieldset class="campo pago">
+        <legend class="etiqueta">{{ opcion().id === 'pagos' ? '¿Cómo cubrimos el pago?' : '¿Quién paga la compra?' }}</legend>
+        <label class="pastilla larga">
+          <input type="radio" formControlName="pagoCompra" value="repartidor-adelanta" />
+          {{ textoPago('repartidor-adelanta', opcion().id) }}
+        </label>
+        <label class="pastilla larga">
+          <input type="radio" formControlName="pagoCompra" value="cliente-paga-antes" />
+          {{ textoPago('cliente-paga-antes', opcion().id) }}
+        </label>
+      </fieldset>
+    }
+
+    <label class="campo" [class.con-error]="falta('tu nombre')">
+      <span class="etiqueta">Tu nombre</span>
+      <input formControlName="nombre" type="text" autocomplete="name" />
+    </label>
+
+    @if (intentado() && faltan().length) {
+      <p class="faltan" role="alert">Para enviar tu encargo falta: {{ faltan().join(', ') }}.</p>
+    }
+
+    <button type="submit" class="enviar">Enviar encargo por WhatsApp</button>
+    <p class="nota">Se abre WhatsApp con tu lista ya escrita. Antes de salir te confirmamos el total y el tiempo de llegada.</p>
+  </form>
+</section>
+
+@if (tarifas().length) {
+  <section class="tarifas" aria-labelledby="titulo-tarifas">
+    <h2 id="titulo-tarifas">Tarifas por zona</h2>
+    <ul>
+      @for (z of zonas(); track z.id) {
+        <li>
+          <span class="zona"><strong>{{ z.nombre }}</strong>@if (z.descripcion) { <small>{{ z.descripcion }}</small> }</span>
+          <span class="costo">{{ precio(z) }}</span>
+        </li>
+      }
+      @for (x of extras(); track x.id) {
+        <li class="extra">
+          <span class="zona"><strong>{{ x.nombre }}</strong>@if (x.descripcion) { <small>{{ x.descripcion }}</small> }</span>
+          <span class="costo">+{{ precio(x) }}</span>
+        </li>
+      }
+    </ul>
+  </section>
+}
+
+<section class="como" aria-labelledby="titulo-como">
+  <h2 id="titulo-como">Cómo funciona</h2>
+  <ol>
+    <li><strong>Haz tu lista</strong><span>Escribe qué necesitas y a dónde lo llevamos.</span></li>
+    <li><strong>Te confirmamos</strong><span>Por WhatsApp te decimos el total y en cuánto tiempo llegamos.</span></li>
+    <li><strong>Te lo llevamos</strong><span>En moto, con el ticket de lo que compramos.</span></li>
+  </ol>
+  <p class="reglas">
+    En compras y pagos, el repartidor puede adelantar hasta ${{ tope }} y tú pagas productos más envío al recibir.
+    Si es más, pagas antes por transferencia.
+  </p>
+</section>

@@ -5,12 +5,13 @@ import { Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { CatalogoService } from './catalogo.service';
 import { ContactoNegocio } from './contacto-negocio';
+import { EncargoForm } from './encargo-form';
 import { precioConUnidad } from './contacto';
 
 /** Catálogo de un negocio: /turamohoy, /inflables?categoria=brincolines, etc. */
 @Component({
   selector: 'app-catalogo-page',
-  imports: [RouterLink, ContactoNegocio],
+  imports: [RouterLink, ContactoNegocio, EncargoForm],
   templateUrl: './catalogo-page.html',
   styleUrl: './catalogo-page.scss',
   host: {

@@ -27,6 +27,10 @@
     }
   </section>
 
+  @if (n?.tipo === 'SERVICIO') {
+    <!-- Negocios de servicio (Encarguitos): formulario en lugar de catálogo; sus productos son tarifas. -->
+    <app-encargo-form [negocio]="n!" [tarifas]="productos.value() ?? []" />
+  } @else {
   @if (n && n.categorias.length > 1) {
     <nav class="chips" aria-label="Categorías">
       <a class="chip" [routerLink]="['/', n.slug]" [class.active]="!categoria()">Todo</a>
@@ -70,6 +74,8 @@
         }
       </ul>
     }
+  }
+
   }
 
   @if (n) { <app-contacto-negocio [negocio]="n" /> }

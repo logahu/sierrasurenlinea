@@ -2,6 +2,7 @@
 @use './temas/cosmeticos' as cosmeticos;
 @use './temas/inflables' as inflables;
 @use './temas/vinateria' as vinateria;
+@use './temas/encarguitos' as encarguitos;
 
 // Catálogo de un negocio. Todo lo visual sale de tokens --t-*; cada negocio los
 // redefine (y ajusta piezas concretas) en src/temas/. Estos son los valores base,
@@ -204,3 +205,4 @@ h1, h2, h3 { font-family: var(--t-fuente-titulo); font-weight: var(--t-peso-titu
 :host([data-tema='cosmeticos']) { @include cosmeticos.catalogo; }
 :host([data-tema='inflables']) { @include inflables.catalogo; }
 :host([data-tema='vinateria']) { @include vinateria.catalogo; }
+:host([data-tema='encarguitos']) { @include encarguitos.catalogo; }

@@ -1,4 +1,4 @@
-export type TipoNegocio = 'VENTA' | 'RENTA';
+export type TipoNegocio = 'VENTA' | 'RENTA' | 'SERVICIO';
 
 export interface Categoria {
   id: number;

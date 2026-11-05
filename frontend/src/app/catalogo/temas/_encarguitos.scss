@@ -1,0 +1,55 @@
+// Encarguitos · mandados en moto
+// Idea: la bolsa del mandado de plástico tejido (naranja, verde y azul) y la
+// lista escrita en una hoja de libreta. El formulario vive en encargo-form.
+
+$naranja: #d9480f;
+$verde: #2b8a3e;
+$azul: #1864ab;
+
+@mixin tokens {
+  --t-fondo: #eef2f6;
+  --t-superficie: #ffffff;
+  --t-tinta: #1d2433;
+  --t-tinta-suave: #556072;
+  --t-linea: #d5dce4;
+  --t-acento-texto: #{$naranja};
+  --t-sobre-acento: #fff;
+  --t-img-fondo: #e3e9ef;
+  --t-caja: #ffffff;
+  --t-fuente-titulo: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+  --t-fuente-texto: 'Barlow', system-ui, sans-serif;
+  --t-peso-titulo: 700;
+  --t-radio-card: .5rem;
+  --t-radio-chip: .4rem;
+  --t-radio-contacto: .5rem;
+  --t-borde-card: 1px solid var(--t-linea);
+  --t-sombra-card: none;
+}
+
+@mixin catalogo {
+  @include tokens;
+
+  .encabezado {
+    padding: 4.5rem 0 1.75rem;
+    h1 { font-size: clamp(3rem, 10vw, 5.2rem); line-height: .9; letter-spacing: -.01em; color: var(--t-tinta); }
+    .eslogan { font-family: var(--t-fuente-titulo); font-size: 1.6rem; font-weight: 600; color: $naranja; }
+  }
+  // Franja de bolsa del mandado: tejido de plástico a rayas, de orilla a orilla.
+  .adorno {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: calc(50% - 50vw);
+    right: calc(50% - 50vw);
+    height: 2.75rem;
+    background:
+      repeating-linear-gradient(90deg,
+        rgb(217 72 15 / .9) 0 .8rem, transparent .8rem 1.6rem,
+        rgb(43 138 62 / .9) 1.6rem 2.4rem, transparent 2.4rem 3.2rem,
+        rgb(24 100 171 / .9) 3.2rem 4rem, transparent 4rem 4.8rem),
+      repeating-linear-gradient(0deg,
+        rgb(217 72 15 / .55) 0 .8rem, #fff .8rem 1.6rem,
+        rgb(43 138 62 / .55) 1.6rem 2.4rem, #fff 2.4rem 3.2rem);
+    border-bottom: 3px solid var(--t-tinta);
+  }
+}
