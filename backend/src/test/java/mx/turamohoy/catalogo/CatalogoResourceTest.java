@@ -19,7 +19,7 @@ class CatalogoResourceTest {
     void listaNegociosEnOrden() {
         given().when().get("/api/negocios")
                 .then().statusCode(200)
-                .body("slug", contains("turamohoy", "cosmeticos", "inflables", "vinateria"))
+                .body("slug", contains("turamohoy", "cosmeticos", "inflables", "vinateria", "encarguitos"))
                 .body("[0].whatsapp", equalTo("5219510000000"))
                 .body("[0].categorias", empty());
     }
@@ -38,6 +38,18 @@ class CatalogoResourceTest {
         given().when().get("/api/negocios/vinateria")
                 .then().statusCode(200)
                 .body("soloMayoresEdad", equalTo(true));
+    }
+
+    @Test
+    void encarguitosEsUnServicioConTarifasPorZona() {
+        given().when().get("/api/negocios/encarguitos")
+                .then().statusCode(200)
+                .body("tipo", equalTo("SERVICIO"))
+                .body("categorias.slug", contains("zonas"));
+        given().when().get("/api/negocios/encarguitos/productos")
+                .then().statusCode(200)
+                .body("$", hasSize(4))
+                .body("unidadPrecio", hasItem("por mandado"));
     }
 
     @Test
@@ -91,7 +103,7 @@ class CatalogoResourceTest {
                 .body("size()", greaterThan(30));
         given().when().get("/api/categorias")
                 .then().statusCode(200)
-                .body("$", hasSize(16))
+                .body("$", hasSize(17))
                 .body("[0].negocioSlug", equalTo("turamohoy"));
     }
 
