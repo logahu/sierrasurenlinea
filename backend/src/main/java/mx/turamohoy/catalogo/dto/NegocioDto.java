@@ -23,6 +23,7 @@ public record NegocioDto(
         String direccion,
         String horario,
         boolean soloMayoresEdad,
+        Integer topeAdelanto,
         List<CategoriaDto> categorias) {
 
     public static NegocioDto resumen(Negocio n) {
@@ -32,6 +33,6 @@ public record NegocioDto(
     public static NegocioDto de(Negocio n, List<CategoriaDto> categorias) {
         return new NegocioDto(n.id, n.slug, n.nombre, n.eslogan, n.descripcion, n.tipo,
                 n.colorPrimario, n.portadaUrl, n.whatsapp, n.telefono, n.direccion, n.horario,
-                n.soloMayoresEdad, categorias);
+                n.soloMayoresEdad, n.topeAdelanto, categorias);
     }
 }

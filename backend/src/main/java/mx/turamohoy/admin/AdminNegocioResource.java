@@ -5,6 +5,8 @@ import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -19,6 +21,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response.Status;
 import mx.turamohoy.catalogo.model.Negocio;
 import mx.turamohoy.catalogo.model.Producto;
+import mx.turamohoy.catalogo.model.TipoNegocio;
 
 import java.util.List;
 
@@ -48,7 +51,9 @@ public class AdminNegocioResource {
             @Size(max = 200) String direccion,
             @Size(max = 120) String horario,
             @Pattern(regexp = "#[0-9a-fA-F]{6}", message = "El color va en formato #rrggbb.") String colorPrimario,
-            Boolean visible) {
+            Boolean visible,
+            @Min(value = 0, message = "El tope no puede ser negativo.")
+            @Max(value = 100000, message = "El tope es demasiado alto.") Integer topeAdelanto) {
     }
 
     @GET
@@ -77,6 +82,9 @@ public class AdminNegocioResource {
         n.telefono = limpio(e.telefono());
         n.direccion = limpio(e.direccion());
         n.horario = limpio(e.horario());
+        if (n.tipo == TipoNegocio.SERVICIO && e.topeAdelanto() != null) {
+            n.topeAdelanto = e.topeAdelanto();
+        }
         if (sesion.usuario().esDueno()) {
             n.nombre = e.nombre().trim();
             if (e.colorPrimario() != null) {

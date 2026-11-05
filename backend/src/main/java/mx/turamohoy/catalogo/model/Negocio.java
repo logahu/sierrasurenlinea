@@ -70,6 +70,10 @@ public class Negocio extends PanacheEntityBase {
     @Column(nullable = false)
     public boolean visible = true;
 
+    /** Solo en servicios (Encarguitos): cuánto adelanta el repartidor de su bolsa, en MXN. */
+    @Column(name = "tope_adelanto")
+    public Integer topeAdelanto;
+
     public static Optional<Negocio> porSlug(String slug) {
         return find("slug", slug).firstResultOptional();
     }
