@@ -1,7 +1,7 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { NegocioTabs } from './negocio-tabs';
 import { finalize } from 'rxjs';
 import { NegocioAdmin, NegocioEdicion } from './admin.model';
 import { AdminApi } from './admin.api';
@@ -27,19 +27,13 @@ export function whatsappValido(texto: string): boolean {
 
 @Component({
   selector: 'app-editar-negocio',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, NegocioTabs],
   template: `
-    <p class="migas"><a routerLink="/admin">← Negocios</a></p>
+    <app-negocio-tabs [slug]="slug()" [negocio]="negocio.value()" seccion="datos" />
 
     @if (negocio.error(); as e) {
       <p class="error" role="alert">{{ mensaje(e) }}</p>
     } @else if (negocio.value(); as n) {
-      <header class="panel-titulo" [style.--acento]="n.colorPrimario">
-        <h1>{{ n.nombre }}</h1>
-        <p class="ayuda">
-          <a [href]="'/' + n.slug" target="_blank" rel="noopener">Ver la página en el sitio ↗</a>
-        </p>
-      </header>
 
       <form class="ficha" [formGroup]="form" (ngSubmit)="guardar(n)" novalidate>
         <fieldset>
@@ -62,6 +56,17 @@ export function whatsappValido(texto: string): boolean {
             <input formControlName="horario" maxlength="120" placeholder="Lun a sáb, 9:00 a 19:00" />
           </label>
         </fieldset>
+
+        @if (n.tipo === 'SERVICIO') {
+          <fieldset>
+            <legend>Mandados</legend>
+            <label>
+              Tope que adelanta el repartidor (MXN)
+              <input type="number" formControlName="topeAdelanto" min="0" step="50" inputmode="numeric" />
+              <small>En compras y pagos, el repartidor pone hasta esta cantidad de su bolsa. El cliente lo ve en el formulario.</small>
+            </label>
+          </fieldset>
+        }
 
         <fieldset>
           <legend>Presentación</legend>
@@ -138,6 +143,7 @@ export class EditarNegocio {
     horario: [''],
     colorPrimario: ['#000000'],
     visible: [true],
+    topeAdelanto: [null as number | null],
   });
   protected readonly guardando = signal(false);
   protected readonly guardado = signal(false);
@@ -161,6 +167,7 @@ export class EditarNegocio {
       horario: n.horario ?? '',
       colorPrimario: n.colorPrimario,
       visible: n.visible,
+      topeAdelanto: n.topeAdelanto,
     });
     if (this.sesion.esDueno()) this.form.controls.nombre.enable();
     else this.form.controls.nombre.disable();
@@ -171,6 +178,9 @@ export class EditarNegocio {
     const v = this.form.getRawValue();
     if (!v.nombre.trim()) return this.error.set('El nombre es obligatorio.');
     if (!whatsappValido(v.whatsapp)) return this.error.set('El WhatsApp debe tener 10 dígitos.');
+    if (v.topeAdelanto !== null && (!Number.isFinite(Number(v.topeAdelanto)) || Number(v.topeAdelanto) < 0)) {
+      return this.error.set('El tope debe ser 0 o más.');
+    }
     this.error.set(null);
     this.guardando.set(true);
     const datos: NegocioEdicion = { ...v };

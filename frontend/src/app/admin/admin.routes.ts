@@ -23,7 +23,22 @@ export const ADMIN_ROUTES: Routes = [
           },
           {
             path: 'negocios/:slug',
-            title: 'Editar negocio · Panel',
+            title: 'Catálogo · Panel',
+            loadComponent: () => import('./productos-page').then((m) => m.ProductosPage),
+          },
+          {
+            path: 'negocios/:slug/productos/:id',
+            title: 'Producto · Panel',
+            loadComponent: () => import('./producto-form').then((m) => m.ProductoForm),
+          },
+          {
+            path: 'negocios/:slug/categorias',
+            title: 'Categorías · Panel',
+            loadComponent: () => import('./categorias-page').then((m) => m.CategoriasPage),
+          },
+          {
+            path: 'negocios/:slug/datos',
+            title: 'Datos del negocio · Panel',
             loadComponent: () => import('./editar-negocio').then((m) => m.EditarNegocio),
           },
           {

@@ -2,7 +2,9 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { NegocioAdmin, NegocioEdicion, Usuario } from './admin.model';
+import {
+  CategoriaAdmin, CategoriaEdicion, NegocioAdmin, NegocioEdicion, ProductoAdmin, ProductoEdicion, Usuario,
+} from './admin.model';
 
 /** Endpoints del panel (/api/admin/...). El token lo agrega autorizacionInterceptor. */
 @Injectable({ providedIn: 'root' })
@@ -36,5 +38,43 @@ export class AdminApi {
 
   reiniciarContrasena(id: number, nueva: string): Observable<void> {
     return this.http.put<void>(`${this.base}/usuarios/${id}/contrasena`, { nueva });
+  }
+
+  // ---- Catálogo de un negocio
+
+  categorias(slug: string): Observable<CategoriaAdmin[]> {
+    return this.http.get<CategoriaAdmin[]>(`${this.de(slug)}/categorias`);
+  }
+
+  crearCategoria(slug: string, datos: CategoriaEdicion): Observable<CategoriaAdmin> {
+    return this.http.post<CategoriaAdmin>(`${this.de(slug)}/categorias`, datos);
+  }
+
+  editarCategoria(slug: string, id: number, datos: CategoriaEdicion): Observable<CategoriaAdmin> {
+    return this.http.put<CategoriaAdmin>(`${this.de(slug)}/categorias/${id}`, datos);
+  }
+
+  productos(slug: string): Observable<ProductoAdmin[]> {
+    return this.http.get<ProductoAdmin[]>(`${this.de(slug)}/productos`);
+  }
+
+  producto(slug: string, id: number): Observable<ProductoAdmin> {
+    return this.http.get<ProductoAdmin>(`${this.de(slug)}/productos/${id}`);
+  }
+
+  crearProducto(slug: string, datos: ProductoEdicion): Observable<ProductoAdmin> {
+    return this.http.post<ProductoAdmin>(`${this.de(slug)}/productos`, datos);
+  }
+
+  editarProducto(slug: string, id: number, datos: ProductoEdicion): Observable<ProductoAdmin> {
+    return this.http.put<ProductoAdmin>(`${this.de(slug)}/productos/${id}`, datos);
+  }
+
+  cambiarDisponible(slug: string, id: number, disponible: boolean): Observable<ProductoAdmin> {
+    return this.http.put<ProductoAdmin>(`${this.de(slug)}/productos/${id}/disponible`, { disponible });
+  }
+
+  private de(slug: string): string {
+    return `${this.base}/negocios/${encodeURIComponent(slug)}`;
   }
 }

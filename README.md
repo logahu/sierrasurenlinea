@@ -63,6 +63,9 @@ Requieren `Authorization: Bearer <token>` (lo obtiene `/api/auth/entrar`).
 | PUT | `/api/auth/contrasena` | con sesión | Cambiar mi contraseña (`{actual, nueva}`) |
 | GET/PUT | `/api/admin/negocios[/{slug}]` | dueño; encargado solo el suyo | Ver y editar contacto, horario, presentación; el dueño también nombre, color y si se muestra |
 | GET/POST/PUT | `/api/admin/usuarios[/{id}]` | dueño | Encargados: alta, quitar o devolver acceso, contraseña nueva |
+| GET/POST/PUT | `/api/admin/negocios/{slug}/categorias[/{id}]` | dueño; encargado el suyo | Categorías: alta, renombrar, orden |
+| GET/POST/PUT | `/api/admin/negocios/{slug}/productos[/{id}]` | dueño; encargado el suyo | Productos o tarifas: alta y edición (incluye ocultos) |
+| PUT | `/api/admin/negocios/{slug}/productos/{id}/disponible` | dueño; encargado el suyo | Mostrar u ocultar en el sitio |
 
 Roles: **dueño** (todo) y **encargado** (uno por negocio, solo el suyo). En local entras con
 `dueno@sierrasur.local` / `dueno-local-123`. En producción, ver [DEPLOY.md](DEPLOY.md), sección 2.2.
@@ -77,8 +80,8 @@ Para ver todas juntas: `GET /api/visitas` con la sesión del dueño (en la fase 
   configura con variables de entorno en Render; ver [DEPLOY.md](DEPLOY.md).
 - **Esquema y datos:** migraciones de Flyway en `backend/src/main/resources/db/migration`
   (`V1__esquema_inicial.sql`, `V2__datos_iniciales.sql`). Se aplican solas al arrancar.
-- **Datos de contacto** (WhatsApp, horario, dirección): desde el panel, en `/admin`.
-- **Para cambiar otros datos** (precios, productos, hasta la fase 2 del panel): crea una migración nueva
+- **Datos de contacto, productos, precios, categorías y tarifas**: desde el panel, en `/admin`.
+- **Cambios de estructura** (tablas, columnas, datos masivos): crea una migración nueva
   con el siguiente número, p. ej. `V3__whatsapp_reales.sql`. **No edites** migraciones que
   ya se aplicaron: Flyway las detecta y el backend no arranca.
 
@@ -111,8 +114,8 @@ backend con Maven (con H2 y contra un PostgreSQL real) y el frontend con Angular
 ## Próximas fases
 1. ✅ Catálogo con imágenes
 2. ✅ Varios negocios con contacto por WhatsApp
-3. Panel de administración: ✅ fase 1 (acceso, encargados, datos de cada negocio);
-   faltan catálogo y tarifas, fotos (Cloudflare R2), visitas y bitácora
+3. Panel de administración: ✅ fase 1 (acceso, encargados, datos de cada negocio),
+   ✅ fase 2 (catálogo, categorías y tarifas); faltan fotos (Cloudflare R2), visitas y bitácora
 4. Carrito y pedidos (con fecha y dirección de entrega; disponibilidad de inflables)
 5. Pagos (Mercado Pago, transferencia, contra entrega)
 6. Dominio propio: `sierrasurenlinea.com.mx`

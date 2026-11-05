@@ -24,6 +24,7 @@ describe('contacto', () => {
 
   it('muestra solo el precio cuando es venta', () => {
     expect(precioConUnidad({ precio: 1200, unidadPrecio: null })).toBe('$1,200');
+    expect(precioConUnidad({ precio: 520.5, unidadPrecio: null })).toBe('$520.50');
   });
 
   it('arma el enlace de WhatsApp quitando espacios y codificando el mensaje', () => {

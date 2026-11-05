@@ -13,9 +13,9 @@ import { SesionService } from './sesion';
       <h1>Hola, {{ sesion.usuario()?.nombre }}</h1>
       <p class="ayuda">
         @if (sesion.esDueno()) {
-          Elige un negocio para cambiar sus datos de contacto, o da de alta a sus encargados.
+          Elige un negocio para editar su catálogo y sus datos, o da de alta a sus encargados.
         } @else {
-          Aquí cambias los datos de contacto de tu negocio.
+          Aquí editas el catálogo y los datos de tu negocio.
         }
       </p>
     </header>
@@ -30,7 +30,7 @@ import { SesionService } from './sesion';
     <ul class="tarjetas">
       @for (n of negocios.value() ?? []; track n.id) {
         <li class="tarjeta" [style.--acento]="n.colorPrimario">
-          <a [routerLink]="['/admin/negocios', n.slug]">
+          <a [routerLink]="['/admin/negocios', n.slug]" [attr.aria-label]="'Abrir ' + n.nombre">
             <span class="tarjeta-nombre">{{ n.nombre }}</span>
             @if (!n.visible) {
               <span class="etiqueta">Oculto</span>
@@ -43,7 +43,7 @@ import { SesionService } from './sesion';
                 Sin encargado
               }
             </span>
-            <span class="tarjeta-accion">Editar datos →</span>
+            <span class="tarjeta-accion">{{ n.tipo === 'SERVICIO' ? 'Tarifas' : 'Productos' }} y datos →</span>
           </a>
         </li>
       }

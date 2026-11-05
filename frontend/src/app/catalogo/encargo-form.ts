@@ -25,7 +25,8 @@ export class EncargoForm {
   readonly tarifas = input<Producto[]>([]);
 
   protected readonly tipos = TIPOS_ENCARGO;
-  protected readonly tope = TOPE_ADELANTO;
+  /** Cuánto adelanta el repartidor: lo define el negocio desde el panel. */
+  protected readonly tope = computed(() => this.negocio().topeAdelanto ?? TOPE_ADELANTO);
   protected readonly precio = precioConUnidad;
   protected readonly textoPago = textoPagoCompra;
 
@@ -41,7 +42,7 @@ export class EncargoForm {
   protected readonly intentado = signal(false);
 
   protected readonly mensaje = computed(() =>
-    armarMensajeEncargo(this.datos(), this.tarifas().find((t) => String(t.id) === this.datos().zona)),
+    armarMensajeEncargo(this.datos(), this.tarifas().find((t) => String(t.id) === this.datos().zona), this.tope()),
   );
 
   protected enviar(): void {

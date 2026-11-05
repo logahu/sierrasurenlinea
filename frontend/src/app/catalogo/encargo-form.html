@@ -77,7 +77,7 @@
         <legend class="etiqueta">{{ opcion().id === 'pagos' ? '¿Cómo cubrimos el pago?' : '¿Quién paga la compra?' }}</legend>
         <label class="pastilla larga">
           <input type="radio" formControlName="pagoCompra" value="repartidor-adelanta" />
-          {{ textoPago('repartidor-adelanta', opcion().id) }}
+          {{ textoPago('repartidor-adelanta', opcion().id, tope()) }}
         </label>
         <label class="pastilla larga">
           <input type="radio" formControlName="pagoCompra" value="cliente-paga-antes" />
@@ -128,7 +128,7 @@
     <li><strong>Te lo llevamos</strong><span>En moto, con el ticket de lo que compramos.</span></li>
   </ol>
   <p class="reglas">
-    En compras y pagos, el repartidor puede adelantar hasta ${{ tope }} y tú pagas productos más envío al recibir.
+    En compras y pagos, el repartidor puede adelantar hasta ${{ tope() }} y tú pagas productos más envío al recibir.
     Si es más, pagas antes por transferencia.
   </p>
 </section>

@@ -35,6 +35,7 @@ export interface NegocioAdmin {
   horario: string | null;
   soloMayoresEdad: boolean;
   visible: boolean;
+  topeAdelanto: number | null;
   orden: number;
   productosActivos: number;
   /** Nombre del encargado activo, si tiene. */
@@ -44,5 +45,46 @@ export interface NegocioAdmin {
 /** Lo que se manda al guardar un negocio. */
 export type NegocioEdicion = Pick<
   NegocioAdmin,
-  'nombre' | 'eslogan' | 'descripcion' | 'whatsapp' | 'telefono' | 'direccion' | 'horario' | 'colorPrimario' | 'visible'
+  'nombre' | 'eslogan' | 'descripcion' | 'whatsapp' | 'telefono' | 'direccion' | 'horario' | 'colorPrimario' | 'visible' | 'topeAdelanto'
 >;
+
+export interface CategoriaAdmin {
+  id: number;
+  slug: string;
+  nombre: string;
+  descripcion: string | null;
+  orden: number;
+  /** Cuántos productos tiene (visibles y ocultos). */
+  productos: number;
+}
+
+export interface ProductoAdmin {
+  id: number;
+  nombre: string;
+  descripcion: string | null;
+  precio: number;
+  unidadPrecio: string | null;
+  caracteristicas: string[];
+  imagenUrl: string;
+  categoriaId: number;
+  categoriaNombre: string;
+  destacado: boolean;
+  disponible: boolean;
+}
+
+export interface ProductoEdicion {
+  nombre: string;
+  descripcion: string;
+  precio: number;
+  unidadPrecio: string;
+  caracteristicas: string[];
+  categoriaId: number;
+  destacado: boolean;
+  disponible: boolean;
+}
+
+export interface CategoriaEdicion {
+  nombre: string;
+  descripcion: string;
+  orden?: number | null;
+}

@@ -8,6 +8,7 @@ export type PagoCompra = 'repartidor-adelanta' | 'cliente-paga-antes';
 export type Cuando = 'ahora' | 'programado';
 
 /** Hasta cuánto adelanta el repartidor con su dinero (de ejemplo). */
+/** Tope por omisión; el de cada negocio se edita en el panel (negocio.topeAdelanto). */
 export const TOPE_ADELANTO = 500;
 
 export interface OpcionEncargo {
@@ -108,15 +109,15 @@ export function camposFaltantes(d: DatosEncargo): string[] {
   return faltan;
 }
 
-export function textoPagoCompra(pago: PagoCompra, tipo: TipoEncargo): string {
+export function textoPagoCompra(pago: PagoCompra, tipo: TipoEncargo, tope = TOPE_ADELANTO): string {
   const que = tipo === 'pagos' ? 'el monto a pagar' : 'los productos';
   return pago === 'repartidor-adelanta'
-    ? `El repartidor adelanta ${que} (hasta $${TOPE_ADELANTO}) y le pago todo al recibir`
+    ? `El repartidor adelanta ${que} (hasta $${tope}) y le pago todo al recibir`
     : `Pago ${que} antes, por transferencia`;
 }
 
 /** Mensaje de WhatsApp ordenado, con negritas de WhatsApp (*texto*). */
-export function armarMensajeEncargo(d: DatosEncargo, zona: Producto | undefined): string {
+export function armarMensajeEncargo(d: DatosEncargo, zona: Producto | undefined, tope = TOPE_ADELANTO): string {
   const opcion = opcionDe(d.tipo);
   const lineas = [
     'Hola Encarguitos, quiero hacer un encargo:',
@@ -128,7 +129,7 @@ export function armarMensajeEncargo(d: DatosEncargo, zona: Producto | undefined)
   lineas.push(`*Entregar en:* ${d.entregar.trim()}`);
   if (zona) lineas.push(`*Zona:* ${zona.nombre} (${precioConUnidad(zona)})`);
   lineas.push(`*Para:* ${d.cuando === 'ahora' ? 'lo antes posible' : `hoy a las ${d.hora}`}`);
-  if (opcion.manejaDinero) lineas.push(`*Pago:* ${textoPagoCompra(d.pagoCompra, d.tipo)}`);
+  if (opcion.manejaDinero) lineas.push(`*Pago:* ${textoPagoCompra(d.pagoCompra, d.tipo, tope)}`);
   lineas.push(`*Nombre:* ${d.nombre.trim()}`, '', 'Enviado desde Sierra Sur en Línea.');
   return lineas.join('\n');
 }

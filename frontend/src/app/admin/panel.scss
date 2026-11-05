@@ -98,7 +98,8 @@
     color: var(--tinta);
     &:focus { outline: 2px solid var(--follaje); outline-offset: 1px; }
   }
-  input[type='checkbox'] { width: 1.25rem; height: 1.25rem; accent-color: var(--follaje); }
+  input[type='checkbox'] { flex: none; width: 1.25rem; height: 1.25rem; accent-color: var(--follaje); }
+  small a { color: var(--acento-texto); }
   input[type='color'] { width: 2.75rem; height: 2.25rem; padding: 0; border: 1px solid var(--linea); border-radius: .4rem; background: none; }
   input:disabled { opacity: .65; }
   textarea { resize: vertical; }
@@ -172,3 +173,139 @@
   form.en-linea { display: flex; gap: .5rem; }
 }
 .acciones-fila { display: flex; flex-wrap: wrap; gap: .5rem; .btn { font-size: .85rem; padding: .4rem .9rem; } }
+
+// Pestañas de un negocio
+.pestanas {
+  display: flex;
+  gap: .25rem;
+  margin: 0 0 1rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  a {
+    flex: none;
+    padding: .45rem .9rem;
+    border-radius: 999px;
+    border: 1px solid var(--linea);
+    color: var(--tinta-suave);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: .9rem;
+    &.activo { background: var(--tinta); border-color: var(--tinta); color: var(--fondo); }
+  }
+}
+.panel .subtitulo { font-size: 1.15rem; margin: 0 0 .75rem; }
+
+// Lista de productos
+.barra-lista {
+  display: flex;
+  gap: .6rem;
+  align-items: center;
+  margin-bottom: .75rem;
+  input { flex: 1; min-width: 0; }
+  .btn { flex: none; white-space: nowrap; }
+}
+.chips {
+  display: flex;
+  gap: .4rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: .25rem;
+  margin-bottom: .5rem;
+  button {
+    flex: none;
+    font: inherit;
+    font-size: .85rem;
+    padding: .3rem .8rem;
+    border-radius: 999px;
+    border: 1px solid var(--linea);
+    background: var(--superficie);
+    color: var(--tinta);
+    cursor: pointer;
+    &.activo { border-color: var(--follaje); background: color-mix(in srgb, var(--follaje) 14%, var(--superficie)); font-weight: 600; }
+  }
+}
+.fila-producto {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  align-items: center;
+  gap: .75rem;
+  padding: .6rem .75rem;
+  border: 1px solid var(--linea);
+  border-radius: var(--panel-radio);
+  background: var(--superficie);
+  img { width: 56px; height: 56px; object-fit: cover; border-radius: .5rem; background: var(--fondo-alt); }
+  &.inactivo { opacity: .6; }
+}
+.fila-producto-datos {
+  display: grid;
+  gap: .1rem;
+  min-width: 0;
+  color: var(--tinta);
+  text-decoration: none;
+  strong { overflow-wrap: anywhere; }
+  &:hover strong { text-decoration: underline; }
+}
+.estrella { color: var(--cempasuchil); }
+.panel label.interruptor {
+  display: grid;
+  justify-items: center;
+  gap: .15rem;
+  font-size: .7rem;
+  font-weight: 600;
+  color: var(--tinta-suave);
+  cursor: pointer;
+  input {
+    appearance: none;
+    width: 2.6rem;
+    height: 1.5rem;
+    border-radius: 999px;
+    background: var(--linea);
+    position: relative;
+    cursor: pointer;
+    transition: background .15s;
+    &::after {
+      content: '';
+      position: absolute;
+      top: .15rem;
+      left: .15rem;
+      width: 1.2rem;
+      height: 1.2rem;
+      border-radius: 50%;
+      background: #fff;
+      box-shadow: 0 1px 3px rgb(0 0 0 / .25);
+      transition: transform .15s;
+    }
+    &:checked { background: var(--follaje); }
+    &:checked::after { transform: translateX(1.1rem); }
+    &:focus-visible { outline: 2px solid var(--follaje); outline-offset: 2px; }
+  }
+}
+
+// Formulario de producto
+.dos-columnas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .75rem;
+  &.angosta { grid-template-columns: 1fr 6rem; }
+}
+.vista-previa {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .75rem;
+  border: 1px dashed var(--linea);
+  border-radius: var(--panel-radio);
+  img { width: 64px; height: 64px; object-fit: cover; border-radius: .5rem; }
+  div { display: grid; }
+}
+
+// Categorías
+.fila-categoria form {
+  display: grid;
+  gap: .6rem;
+  padding: .85rem 1rem;
+  border: 1px solid var(--linea);
+  border-radius: var(--panel-radio);
+  background: var(--superficie);
+}
+.fila-categoria .acciones { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }

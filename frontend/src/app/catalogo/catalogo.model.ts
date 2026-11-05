@@ -22,6 +22,8 @@ export interface Negocio {
   direccion: string | null;
   horario: string | null;
   soloMayoresEdad: boolean;
+  /** Solo servicios: cuánto adelanta el repartidor, en MXN. */
+  topeAdelanto?: number | null;
   /** Vacío en el listado; con datos en el detalle de un negocio. */
   categorias: Categoria[];
 }

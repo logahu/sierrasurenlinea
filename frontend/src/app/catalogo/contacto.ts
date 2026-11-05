@@ -6,10 +6,12 @@ const formatoPesos = new Intl.NumberFormat('es-MX', {
   maximumFractionDigits: 2,
   minimumFractionDigits: 0,
 });
+const formatoCentavos = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 2 });
 
 /** Precio legible con su unidad: "$650 por día" o "$450". */
 export function precioConUnidad(p: Pick<Producto, 'precio' | 'unidadPrecio'>): string {
-  const precio = formatoPesos.format(p.precio);
+  // Enteros sin decimales ($450); con centavos, siempre dos ($520.50).
+  const precio = Number.isInteger(p.precio) ? formatoPesos.format(p.precio) : formatoCentavos.format(p.precio);
   return p.unidadPrecio ? `${precio} ${p.unidadPrecio}` : precio;
 }
 
