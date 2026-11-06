@@ -25,6 +25,7 @@ import jakarta.ws.rs.core.Response.Status;
 import mx.turamohoy.catalogo.model.Categoria;
 import mx.turamohoy.catalogo.model.Negocio;
 import mx.turamohoy.catalogo.model.Producto;
+import mx.turamohoy.fotos.ImagenesPermitidas;
 
 import java.math.BigDecimal;
 import java.text.Normalizer;
@@ -49,6 +50,9 @@ public class AdminCatalogoResource {
 
     @Inject
     SesionActual sesion;
+
+    @Inject
+    ImagenesPermitidas imagenes;
 
     // ---------------------------------------------------------------- DTOs
 
@@ -89,7 +93,9 @@ public class AdminCatalogoResource {
             List<@Size(max = 120, message = "Cada característica puede tener hasta 120 caracteres.") String> caracteristicas,
             @NotNull(message = "Elige la categoría.") Long categoriaId,
             boolean destacado,
-            Boolean disponible) {
+            Boolean disponible,
+            /** Foto subida con /fotos o una de ejemplo (img/...); vacío = no cambia. */
+            String imagenUrl) {
     }
 
     public record Disponibilidad(boolean disponible) {
@@ -191,7 +197,7 @@ public class AdminCatalogoResource {
 
     // ---------------------------------------------------------------- Apoyo
 
-    private static void aplicar(Negocio n, Producto p, ProductoEdicion e) {
+    private void aplicar(Negocio n, Producto p, ProductoEdicion e) {
         p.nombre = e.nombre().trim();
         p.descripcion = AdminNegocioResource.limpio(e.descripcion());
         p.precio = e.precio();
@@ -201,6 +207,10 @@ public class AdminCatalogoResource {
         p.destacado = e.destacado();
         if (e.disponible() != null) {
             p.disponible = e.disponible();
+        }
+        String imagen = imagenes.validar(n, e.imagenUrl());
+        if (imagen != null) {
+            p.imagenUrl = imagen;
         }
     }
 

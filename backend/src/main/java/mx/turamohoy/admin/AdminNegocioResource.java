@@ -22,6 +22,7 @@ import jakarta.ws.rs.core.Response.Status;
 import mx.turamohoy.catalogo.model.Negocio;
 import mx.turamohoy.catalogo.model.Producto;
 import mx.turamohoy.catalogo.model.TipoNegocio;
+import mx.turamohoy.fotos.ImagenesPermitidas;
 
 import java.util.List;
 
@@ -38,6 +39,9 @@ public class AdminNegocioResource {
     @Inject
     SesionActual sesion;
 
+    @Inject
+    ImagenesPermitidas imagenes;
+
     /**
      * Lo que se puede cambiar. {@code nombre}, {@code colorPrimario} y {@code visible} solo
      * los aplica el dueño; si los manda un encargado se ignoran.
@@ -53,7 +57,9 @@ public class AdminNegocioResource {
             @Pattern(regexp = "#[0-9a-fA-F]{6}", message = "El color va en formato #rrggbb.") String colorPrimario,
             Boolean visible,
             @Min(value = 0, message = "El tope no puede ser negativo.")
-            @Max(value = 100000, message = "El tope es demasiado alto.") Integer topeAdelanto) {
+            @Max(value = 100000, message = "El tope es demasiado alto.") Integer topeAdelanto,
+            /** Foto de portada subida con /fotos o una de ejemplo; vacío = no cambia. */
+            String portadaUrl) {
     }
 
     @GET
@@ -82,6 +88,10 @@ public class AdminNegocioResource {
         n.telefono = limpio(e.telefono());
         n.direccion = limpio(e.direccion());
         n.horario = limpio(e.horario());
+        String portada = imagenes.validar(n, e.portadaUrl());
+        if (portada != null) {
+            n.portadaUrl = portada;
+        }
         if (n.tipo == TipoNegocio.SERVICIO && e.topeAdelanto() != null) {
             n.topeAdelanto = e.topeAdelanto();
         }
