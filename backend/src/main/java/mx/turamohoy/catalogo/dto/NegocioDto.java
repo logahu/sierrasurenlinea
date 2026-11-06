@@ -24,15 +24,17 @@ public record NegocioDto(
         String horario,
         boolean soloMayoresEdad,
         Integer topeAdelanto,
-        List<CategoriaDto> categorias) {
+        List<CategoriaDto> categorias,
+        /** Solo servicios: tarjetas visibles de la lista del mandado. */
+        List<TipoEncargoDto> tiposEncargo) {
 
     public static NegocioDto resumen(Negocio n) {
-        return de(n, List.of());
+        return de(n, List.of(), List.of());
     }
 
-    public static NegocioDto de(Negocio n, List<CategoriaDto> categorias) {
+    public static NegocioDto de(Negocio n, List<CategoriaDto> categorias, List<TipoEncargoDto> tiposEncargo) {
         return new NegocioDto(n.id, n.slug, n.nombre, n.eslogan, n.descripcion, n.tipo,
                 n.colorPrimario, n.portadaUrl, n.whatsapp, n.telefono, n.direccion, n.horario,
-                n.soloMayoresEdad, n.topeAdelanto, categorias);
+                n.soloMayoresEdad, n.topeAdelanto, categorias, tiposEncargo);
     }
 }

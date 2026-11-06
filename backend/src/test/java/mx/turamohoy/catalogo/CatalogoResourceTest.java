@@ -45,8 +45,8 @@ class CatalogoResourceTest {
         given().when().get("/api/negocios/encarguitos")
                 .then().statusCode(200)
                 .body("tipo", equalTo("SERVICIO"))
-                .body("categorias.slug", contains("zonas"));
-        given().when().get("/api/negocios/encarguitos/productos")
+                .body("categorias.slug", contains("zonas", "viajes"));
+        given().when().get("/api/negocios/encarguitos/productos?categoria=zonas")
                 .then().statusCode(200)
                 .body("$", hasSize(4))
                 .body("unidadPrecio", hasItem("por mandado"));
@@ -103,7 +103,7 @@ class CatalogoResourceTest {
                 .body("size()", greaterThan(30));
         given().when().get("/api/categorias")
                 .then().statusCode(200)
-                .body("$", hasSize(17))
+                .body("$", hasSize(18))
                 .body("[0].negocioSlug", equalTo("turamohoy"));
     }
 

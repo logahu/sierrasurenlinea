@@ -11,9 +11,12 @@ import jakarta.ws.rs.core.MediaType;
 import mx.turamohoy.catalogo.dto.CategoriaDto;
 import mx.turamohoy.catalogo.dto.NegocioDto;
 import mx.turamohoy.catalogo.dto.ProductoDto;
+import mx.turamohoy.catalogo.dto.TipoEncargoDto;
 import mx.turamohoy.catalogo.model.Categoria;
 import mx.turamohoy.catalogo.model.Negocio;
 import mx.turamohoy.catalogo.model.Producto;
+import mx.turamohoy.catalogo.model.TipoEncargo;
+import mx.turamohoy.catalogo.model.TipoNegocio;
 
 import java.util.List;
 
@@ -37,7 +40,10 @@ public class NegocioResource {
         List<CategoriaDto> categorias = Categoria.delNegocio(negocio).stream()
                 .map(c -> new CategoriaDto(c.id, negocio.slug, c.slug, c.nombre, c.descripcion))
                 .toList();
-        return NegocioDto.de(negocio, categorias);
+        List<TipoEncargoDto> tipos = negocio.tipo == TipoNegocio.SERVICIO
+                ? TipoEncargo.visiblesDe(negocio).stream().map(TipoEncargoDto::de).toList()
+                : List.of();
+        return NegocioDto.de(negocio, categorias, tipos);
     }
 
     /** Productos disponibles del negocio. Con {@code ?categoria=ramos} filtra por categoría. */
