@@ -1,6 +1,7 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FotoCampo } from './foto-campo';
 import { NegocioTabs } from './negocio-tabs';
 import { finalize } from 'rxjs';
 import { NegocioAdmin, NegocioEdicion } from './admin.model';
@@ -27,7 +28,7 @@ export function whatsappValido(texto: string): boolean {
 
 @Component({
   selector: 'app-editar-negocio',
-  imports: [ReactiveFormsModule, NegocioTabs],
+  imports: [ReactiveFormsModule, NegocioTabs, FotoCampo],
   template: `
     <app-negocio-tabs [slug]="slug()" [negocio]="negocio.value()" seccion="datos" />
 
@@ -70,6 +71,10 @@ export function whatsappValido(texto: string): boolean {
 
         <fieldset>
           <legend>Presentación</legend>
+          <div>
+            <strong class="etiqueta-campo">Foto de portada</strong>
+            <app-foto-campo [slug]="n.slug" [url]="portada() ?? n.portadaUrl" (urlChange)="cambiarPortada($event)" />
+          </div>
           <label>
             Nombre
             <input formControlName="nombre" maxlength="80" />
@@ -156,7 +161,17 @@ export class EditarNegocio {
     });
   }
 
+  /** Portada nueva subida en esta pantalla (todavía sin guardar). */
+  protected readonly portada = signal<string | null>(null);
+
+  protected cambiarPortada(url: string | null): void {
+    this.portada.set(url);
+    this.form.markAsDirty();
+    this.guardado.set(false);
+  }
+
   private cargar(n: NegocioAdmin): void {
+    this.portada.set(null);
     this.form.reset({
       nombre: n.nombre,
       eslogan: n.eslogan ?? '',
@@ -183,7 +198,7 @@ export class EditarNegocio {
     }
     this.error.set(null);
     this.guardando.set(true);
-    const datos: NegocioEdicion = { ...v };
+    const datos: NegocioEdicion = { ...v, portadaUrl: this.portada() ?? n.portadaUrl };
     this.api
       .guardarNegocio(n.slug, datos)
       .pipe(finalize(() => this.guardando.set(false)))

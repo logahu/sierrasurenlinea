@@ -7,13 +7,14 @@ import { precioConUnidad } from '../catalogo/contacto';
 import { ProductoAdmin, ProductoEdicion } from './admin.model';
 import { AdminApi } from './admin.api';
 import { mensajeDeError } from './autorizacion';
+import { FotoCampo } from './foto-campo';
 import { NegocioTabs } from './negocio-tabs';
 import { renglones, textosCatalogo } from './textos';
 
 /** Alta (id = "nuevo") y edición de un producto o tarifa. */
 @Component({
   selector: 'app-producto-form',
-  imports: [ReactiveFormsModule, RouterLink, NegocioTabs],
+  imports: [ReactiveFormsModule, RouterLink, NegocioTabs, FotoCampo],
   template: `
     <app-negocio-tabs [slug]="slug()" [negocio]="negocio.value()" />
 
@@ -24,6 +25,11 @@ import { renglones, textosCatalogo } from './textos';
       <p class="error" role="alert">{{ mensaje(e) }}</p>
     } @else {
       <form class="ficha" [formGroup]="form" (ngSubmit)="guardar()" novalidate>
+        <fieldset>
+          <legend>Foto</legend>
+          <app-foto-campo [slug]="slug()" [respaldo]="imagen()" [url]="foto()" (urlChange)="cambiarFoto($event)" />
+        </fieldset>
+
         <fieldset>
           <legend>Lo que ve el cliente</legend>
           <label>
@@ -83,8 +89,8 @@ import { renglones, textosCatalogo } from './textos';
             <span>{{ precioVista() }}</span>
           </div>
         </div>
-        @if (esNuevo()) {
-          <small>Mientras no haya fotos propias, usa la imagen del negocio. Las fotos llegan en la siguiente fase.</small>
+        @if (esNuevo() && !foto()) {
+          <small>Si no subes foto, usa la imagen del negocio.</small>
         }
 
         @if (error()) {
@@ -136,7 +142,11 @@ export class ProductoForm {
   protected readonly error = signal<string | null>(null);
   private readonly valores = signal(this.form.getRawValue());
 
-  protected readonly imagen = computed(() => this.producto.value()?.imagenUrl ?? this.negocio.value()?.portadaUrl ?? '');
+  /** Foto nueva subida en esta pantalla (todavía sin guardar). */
+  protected readonly foto = signal<string | null>(null);
+  protected readonly imagen = computed(
+    () => this.foto() ?? this.producto.value()?.imagenUrl ?? this.negocio.value()?.portadaUrl ?? '',
+  );
   protected readonly precioVista = computed(() => {
     const v = this.valores();
     return v.precio === null || v.precio === undefined || `${v.precio}` === ''
@@ -159,7 +169,14 @@ export class ProductoForm {
     });
   }
 
+  protected cambiarFoto(url: string | null): void {
+    this.foto.set(url);
+    this.form.markAsDirty();
+    this.guardado.set(false);
+  }
+
   private cargar(p: ProductoAdmin): void {
+    this.foto.set(null);
     this.form.reset({
       nombre: p.nombre,
       categoriaId: p.categoriaId,
@@ -191,6 +208,7 @@ export class ProductoForm {
       caracteristicas: renglones(v.caracteristicas ?? ''),
       disponible: !!v.disponible,
       destacado: !!v.destacado,
+      imagenUrl: this.foto(),
     };
     this.guardando.set(true);
     const op = this.esNuevo()

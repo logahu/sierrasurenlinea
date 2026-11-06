@@ -45,7 +45,7 @@ export interface NegocioAdmin {
 /** Lo que se manda al guardar un negocio. */
 export type NegocioEdicion = Pick<
   NegocioAdmin,
-  'nombre' | 'eslogan' | 'descripcion' | 'whatsapp' | 'telefono' | 'direccion' | 'horario' | 'colorPrimario' | 'visible' | 'topeAdelanto'
+  'nombre' | 'eslogan' | 'descripcion' | 'whatsapp' | 'telefono' | 'direccion' | 'horario' | 'colorPrimario' | 'visible' | 'topeAdelanto' | 'portadaUrl'
 >;
 
 export interface CategoriaAdmin {
@@ -81,6 +81,8 @@ export interface ProductoEdicion {
   categoriaId: number;
   destacado: boolean;
   disponible: boolean;
+  /** Foto nueva; null = no cambia. */
+  imagenUrl: string | null;
 }
 
 export interface CategoriaEdicion {

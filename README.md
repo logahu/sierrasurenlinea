@@ -66,6 +66,7 @@ Requieren `Authorization: Bearer <token>` (lo obtiene `/api/auth/entrar`).
 | GET/POST/PUT | `/api/admin/negocios/{slug}/categorias[/{id}]` | dueño; encargado el suyo | Categorías: alta, renombrar, orden |
 | GET/POST/PUT | `/api/admin/negocios/{slug}/productos[/{id}]` | dueño; encargado el suyo | Productos o tarifas: alta y edición (incluye ocultos) |
 | PUT | `/api/admin/negocios/{slug}/productos/{id}/disponible` | dueño; encargado el suyo | Mostrar u ocultar en el sitio |
+| POST | `/api/admin/negocios/{slug}/fotos` | dueño; encargado el suyo | Permiso (URL firmada) para subir una foto a R2 |
 
 Roles: **dueño** (todo) y **encargado** (uno por negocio, solo el suyo). En local entras con
 `dueno@sierrasur.local` / `dueno-local-123`. En producción, ver [DEPLOY.md](DEPLOY.md), sección 2.2.
@@ -103,9 +104,9 @@ negocio nuevo usa el estilo base hasta que se le cree su archivo de tema y se ag
 en `catalogo-page.scss` y `producto-page.scss`.
 
 ## Cambiar las imágenes
-Las imágenes de ejemplo están en `frontend/public/img/*.svg`. Pon tus fotos
-(idealmente cuadradas, 800×800, en `.jpg` o `.webp`) en esa carpeta y
-actualiza `imagen_url` (productos) o `portada_url` (negocios) con una migración nueva.
+Desde el panel: en cada producto (y en "Datos del negocio" para la portada), **Subir foto**.
+El navegador la recorta cuadrada, la reduce a 800×800 y la comprime (WebP) antes de subirla
+a Cloudflare R2 (ver DEPLOY.md). Las imágenes de ejemplo siguen en `frontend/public/img/`.
 
 ## Calidad
 Cada push corre **GitHub Actions** (`.github/workflows/ci.yml`): compila y prueba el
@@ -115,7 +116,8 @@ backend con Maven (con H2 y contra un PostgreSQL real) y el frontend con Angular
 1. ✅ Catálogo con imágenes
 2. ✅ Varios negocios con contacto por WhatsApp
 3. Panel de administración: ✅ fase 1 (acceso, encargados, datos de cada negocio),
-   ✅ fase 2 (catálogo, categorías y tarifas); faltan fotos (Cloudflare R2), visitas y bitácora
+   ✅ fase 2 (catálogo, categorías y tarifas), ✅ fase 3 (fotos en Cloudflare R2);
+   faltan visitas y bitácora
 4. Carrito y pedidos (con fecha y dirección de entrega; disponibilidad de inflables)
 5. Pagos (Mercado Pago, transferencia, contra entrega)
 6. ✅ Dominio propio: `sierrasurenlinea.com.mx` (ver DEPLOY.md, sección Dominio)

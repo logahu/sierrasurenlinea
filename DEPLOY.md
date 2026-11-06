@@ -172,3 +172,43 @@ Los `.com.mx` no se pueden registrar en Cloudflare, pero sí se pueden **adminis
 La dirección `*.workers.dev` sigue funcionando; se puede desactivar después en
 Domains & Routes.
 
+## Fotos en Cloudflare R2 (panel, fase 3)
+
+Las fotos se suben desde el panel directo a un bucket de R2 (10 GB gratis) y se ven en
+`https://fotos.sierrasurenlinea.com.mx/...`.
+
+1. **Cloudflare → R2 → Crear bucket**: nombre `sierrasurenlinea-fotos`, ubicación automática.
+2. **El bucket → Configuración → Dominio personalizado → Agregar**: `fotos.sierrasurenlinea.com.mx`.
+3. **El bucket → Configuración → Política de CORS → Agregar** y pega:
+   ```json
+   [
+     {
+       "AllowedOrigins": [
+         "https://sierrasurenlinea.com.mx",
+         "https://www.sierrasurenlinea.com.mx",
+         "https://sierrasurenlinea.hugo-logarcia.workers.dev",
+         "http://localhost:4200"
+       ],
+       "AllowedMethods": ["PUT"],
+       "AllowedHeaders": ["content-type"],
+       "MaxAgeSeconds": 3600
+     }
+   ]
+   ```
+4. **R2 → Información general → Administrar tokens de API → Crear token de API de cuenta**:
+   permiso **Lectura y escritura de objetos**, solo para el bucket `sierrasurenlinea-fotos`.
+   Copia el **ID de clave de acceso** y la **clave de acceso secreta** (la secreta se
+   muestra una sola vez).
+5. **Render → turamohoy-api → Environment**, agrega:
+
+| Variable | Valor |
+|---|---|
+| `R2_CUENTA` | El id de tu cuenta de Cloudflare (está en la URL del panel: `dash.cloudflare.com/<id>/...`) |
+| `R2_LLAVE_ACCESO` | ID de clave de acceso del paso 4 |
+| `R2_LLAVE_SECRETA` | Clave de acceso secreta del paso 4 |
+| `R2_BUCKET` | `sierrasurenlinea-fotos` |
+| `R2_URL_PUBLICA` | `https://fotos.sierrasurenlinea.com.mx` |
+
+Sin estas variables el sitio funciona igual, pero el panel avisa que las fotos no están
+configuradas. Las fotos que se reemplazan se quedan en el bucket (no estorban).
+
