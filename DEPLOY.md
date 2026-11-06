@@ -149,3 +149,26 @@ ya permite ese dominio en CORS.
 - **Pages → Custom domains:** agrega `www.tudominio.com.mx`.
 - **Render → Settings → Custom Domains:** agrega `api.tudominio.com.mx` y actualiza
   `environment.ts` y `CORS_ORIGINS` con los nuevos dominios.
+
+## Dominio propio: sierrasurenlinea.com.mx
+
+Los `.com.mx` no se pueden registrar en Cloudflare, pero sí se pueden **administrar** ahí
+(gratis) cambiando los nameservers en el registrador.
+
+1. **Cloudflare → Add a domain** → `sierrasurenlinea.com.mx` → plan **Free**. Cloudflare
+   te da dos nameservers (p. ej. `xxx.ns.cloudflare.com`).
+2. **En tu registrador** (donde compraste el dominio) → DNS / Nameservers → reemplaza
+   los suyos por los dos de Cloudflare. Tarda de minutos a 24 h; Cloudflare te avisa por
+   correo cuando el dominio queda **Active**.
+3. **Workers & Pages → sierrasurenlinea → Settings → Domains & Routes → Add → Custom
+   domain**: agrega `sierrasurenlinea.com.mx` y luego `www.sierrasurenlinea.com.mx`.
+   Cloudflare crea los registros DNS y el certificado HTTPS solo.
+4. **Render → turamohoy-api → Environment → CORS_ORIGINS**: agrega al inicio
+   `https://sierrasurenlinea.com.mx,https://www.sierrasurenlinea.com.mx,` (sin quitar lo
+   que ya tiene) y guarda. Sin esto el sitio carga pero no muestra el catálogo.
+5. (Opcional) **Que www lleve al dominio sin www**: Cloudflare → el dominio → Rules →
+   Redirect Rules → plantilla "Redirect from WWW to root".
+
+La dirección `*.workers.dev` sigue funcionando; se puede desactivar después en
+Domains & Routes.
+

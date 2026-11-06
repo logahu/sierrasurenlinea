@@ -118,7 +118,7 @@ backend con Maven (con H2 y contra un PostgreSQL real) y el frontend con Angular
    ✅ fase 2 (catálogo, categorías y tarifas); faltan fotos (Cloudflare R2), visitas y bitácora
 4. Carrito y pedidos (con fecha y dirección de entrega; disponibilidad de inflables)
 5. Pagos (Mercado Pago, transferencia, contra entrega)
-6. Dominio propio: `sierrasurenlinea.com.mx`
+6. ✅ Dominio propio: `sierrasurenlinea.com.mx` (ver DEPLOY.md, sección Dominio)
 
 ## Publicar en internet
 Ver [DEPLOY.md](DEPLOY.md): frontend en Cloudflare y backend en Render, ambos gratis.
