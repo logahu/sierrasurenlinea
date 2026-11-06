@@ -6,7 +6,7 @@ Cada negocio tiene su página, su color, su catálogo y su WhatsApp:
 | Negocio | Ruta | Tipo |
 |---|---|---|
 | TuRamoHoy (florería) | `/turamohoy` | Venta |
-| Cosméticos | `/cosmeticos` | Venta |
+| Belleza (antes Cosméticos) | `/belleza` (`/cosmeticos` redirige) | Venta |
 | Renta de Inflables | `/inflables` | Renta (precio por día / por evento) |
 | Vinatería | `/vinateria` | Venta, solo mayores de 18 |
 | Encarguitos | `/encarguitos` | Servicio: mandados en moto con formulario ("lista del mandado") y tarifas por zona |
@@ -98,7 +98,7 @@ Lo que define a cada negocio (en las migraciones, ver arriba):
 
 ## Diseño de cada negocio
 La portada tiene su propio estilo ("la calle de los rótulos") y cada negocio tiene un
-tema visual en `frontend/src/app/catalogo/temas/` (`_turamohoy.scss`, `_cosmeticos.scss`,
+tema visual en `frontend/src/app/catalogo/temas/` (`_turamohoy.scss`, `_belleza.scss`,
 `_inflables.scss`, `_vinateria.scss`). El tema se elige por el `slug` del negocio; un
 negocio nuevo usa el estilo base hasta que se le cree su archivo de tema y se agregue
 en `catalogo-page.scss` y `producto-page.scss`.

@@ -134,31 +134,31 @@ class PanelResourceTest {
     @Test
     void elEncargadoSoloTocaSuNegocio() {
         String dueno = Sesiones.dueno();
-        int id = crearEncargado(dueno, "cosmeticos@sierrasur.local", "cosmeticos");
+        int id = crearEncargado(dueno, "belleza@sierrasur.local", "belleza");
         try {
-            String encargado = Sesiones.entrar("cosmeticos@sierrasur.local", "clave-segura-1");
+            String encargado = Sesiones.entrar("belleza@sierrasur.local", "clave-segura-1");
 
             como(encargado).when().get("/api/admin/negocios")
                     .then().statusCode(200)
                     .body("$", hasSize(1))
-                    .body("[0].slug", equalTo("cosmeticos"))
-                    .body("[0].encargado", equalTo("Encargado cosmeticos"));
+                    .body("[0].slug", equalTo("belleza"))
+                    .body("[0].encargado", equalTo("Encargado belleza"));
             como(encargado).when().get("/api/admin/negocios/vinateria").then().statusCode(403);
             como(encargado).body(edicion(dueno, "vinateria", "horario", "nunca"))
                     .when().put("/api/admin/negocios/vinateria").then().statusCode(403);
 
             // Puede cambiar su horario, pero no el nombre ni ocultar el negocio.
-            Map<String, Object> antes = edicion(dueno, "cosmeticos");
+            Map<String, Object> antes = edicion(dueno, "belleza");
             try {
-                como(encargado).body(edicion(dueno, "cosmeticos",
+                como(encargado).body(edicion(dueno, "belleza",
                                 "horario", "9 a 7", "nombre", "Otro nombre", "visible", false))
-                        .when().put("/api/admin/negocios/cosmeticos")
+                        .when().put("/api/admin/negocios/belleza")
                         .then().statusCode(200)
                         .body("horario", equalTo("9 a 7"))
                         .body("nombre", equalTo(antes.get("nombre")))
                         .body("visible", equalTo(true));
             } finally {
-                como(dueno).body(antes).when().put("/api/admin/negocios/cosmeticos").then().statusCode(200);
+                como(dueno).body(antes).when().put("/api/admin/negocios/belleza").then().statusCode(200);
             }
 
             como(encargado).when().get("/api/admin/usuarios").then().statusCode(403);
@@ -166,18 +166,18 @@ class PanelResourceTest {
 
             // Un encargado por negocio.
             como(dueno).body(Map.of("nombre", "Otra", "correo", "otra@sierrasur.local",
-                            "contrasena", "clave-segura-1", "negocioSlug", "cosmeticos"))
+                            "contrasena", "clave-segura-1", "negocioSlug", "belleza"))
                     .when().post("/api/admin/usuarios")
                     .then().statusCode(409)
                     .body("mensaje", containsString("ya tiene encargado"));
 
             // Al desactivarlo, su sesión deja de servir de inmediato.
-            como(dueno).body(Map.of("nombre", "Encargado cosmeticos", "activo", false))
+            como(dueno).body(Map.of("nombre", "Encargado belleza", "activo", false))
                     .when().put("/api/admin/usuarios/" + id)
                     .then().statusCode(200).body("activo", equalTo(false));
             como(encargado).when().get("/api/admin/negocios").then().statusCode(401);
         } finally {
-            como(dueno).body(Map.of("nombre", "Encargado cosmeticos", "activo", false))
+            como(dueno).body(Map.of("nombre", "Encargado belleza", "activo", false))
                     .when().put("/api/admin/usuarios/" + id).then().statusCode(200);
         }
     }

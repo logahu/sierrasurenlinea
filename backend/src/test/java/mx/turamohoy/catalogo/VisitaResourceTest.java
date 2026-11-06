@@ -25,9 +25,9 @@ class VisitaResourceTest {
 
     @Test
     void laPrimeraVisitaCreaElContadorYLasSiguientesSuman() {
-        assertEquals(1, visitar("/cosmeticos/producto/16", null));
-        assertEquals(2, visitar("/cosmeticos/producto/16", true));
-        assertEquals(3, visitar("/cosmeticos/producto/16", null));
+        assertEquals(1, visitar("/belleza/producto/16", null));
+        assertEquals(2, visitar("/belleza/producto/16", true));
+        assertEquals(3, visitar("/belleza/producto/16", null));
     }
 
     @Test

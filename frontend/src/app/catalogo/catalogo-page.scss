@@ -1,5 +1,5 @@
 @use './temas/turamohoy' as turamohoy;
-@use './temas/cosmeticos' as cosmeticos;
+@use './temas/belleza' as belleza;
 @use './temas/inflables' as inflables;
 @use './temas/vinateria' as vinateria;
 @use './temas/encarguitos' as encarguitos;
@@ -202,7 +202,7 @@ h1, h2, h3 { font-family: var(--t-fuente-titulo); font-weight: var(--t-peso-titu
 
 // --- Tema propio de cada negocio (src/app/catalogo/temas/) -------------------
 :host([data-tema='turamohoy']) { @include turamohoy.catalogo; }
-:host([data-tema='cosmeticos']) { @include cosmeticos.catalogo; }
+:host([data-tema='belleza']) { @include belleza.catalogo; }
 :host([data-tema='inflables']) { @include inflables.catalogo; }
 :host([data-tema='vinateria']) { @include vinateria.catalogo; }
 :host([data-tema='encarguitos']) { @include encarguitos.catalogo; }

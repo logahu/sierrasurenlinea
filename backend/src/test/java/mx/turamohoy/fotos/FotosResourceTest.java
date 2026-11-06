@@ -47,26 +47,26 @@ class FotosResourceTest {
     void soloSeAsignanFotosSubidasParaEseNegocio() {
         String dueno = Sesiones.dueno();
         String url = como(dueno).body(Map.of("tipo", "image/jpeg", "bytes", 50_000))
-                .when().post("/api/admin/negocios/cosmeticos/fotos")
+                .when().post("/api/admin/negocios/belleza/fotos")
                 .then().statusCode(200).extract().path("url");
 
         @SuppressWarnings("unchecked")
-        Map<String, Object> negocio = new HashMap<>(como(dueno).when().get("/api/admin/negocios/cosmeticos")
+        Map<String, Object> negocio = new HashMap<>(como(dueno).when().get("/api/admin/negocios/belleza")
                 .then().statusCode(200).extract().as(Map.class));
         Object original = negocio.get("portadaUrl");
         try {
             negocio.put("portadaUrl", url);
-            como(dueno).body(negocio).when().put("/api/admin/negocios/cosmeticos")
+            como(dueno).body(negocio).when().put("/api/admin/negocios/belleza")
                     .then().statusCode(200).body("portadaUrl", equalTo(url));
 
             // Una foto de otro negocio o de otro sitio no se acepta.
-            negocio.put("portadaUrl", url.replace("/cosmeticos/", "/vinateria/"));
-            como(dueno).body(negocio).when().put("/api/admin/negocios/cosmeticos").then().statusCode(400);
+            negocio.put("portadaUrl", url.replace("/belleza/", "/vinateria/"));
+            como(dueno).body(negocio).when().put("/api/admin/negocios/belleza").then().statusCode(400);
             negocio.put("portadaUrl", "https://otro-sitio.com/foto.jpg");
-            como(dueno).body(negocio).when().put("/api/admin/negocios/cosmeticos").then().statusCode(400);
+            como(dueno).body(negocio).when().put("/api/admin/negocios/belleza").then().statusCode(400);
         } finally {
             negocio.put("portadaUrl", original);
-            como(dueno).body(negocio).when().put("/api/admin/negocios/cosmeticos").then().statusCode(200);
+            como(dueno).body(negocio).when().put("/api/admin/negocios/belleza").then().statusCode(200);
         }
     }
 }

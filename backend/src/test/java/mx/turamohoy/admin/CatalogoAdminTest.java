@@ -112,7 +112,7 @@ class CatalogoAdminTest {
     @Test
     void validaPrecioYCategoria() {
         String dueno = Sesiones.dueno();
-        Integer categoriaDeOtro = como(dueno).when().get("/api/admin/negocios/cosmeticos/categorias")
+        Integer categoriaDeOtro = como(dueno).when().get("/api/admin/negocios/belleza/categorias")
                 .then().statusCode(200).extract().path("[0].id");
         Integer categoria = como(dueno).when().get("/api/admin/negocios/turamohoy/categorias")
                 .then().statusCode(200).extract().path("[0].id");
@@ -128,7 +128,7 @@ class CatalogoAdminTest {
                 .then().statusCode(400)
                 .body("mensaje", containsString("no es de"));
         // Un producto de otro negocio no se edita por la ruta de este.
-        Integer productoDeOtro = como(dueno).when().get("/api/admin/negocios/cosmeticos/productos")
+        Integer productoDeOtro = como(dueno).when().get("/api/admin/negocios/belleza/productos")
                 .then().extract().path("[0].id");
         como(dueno).when().get("/api/admin/negocios/turamohoy/productos/" + productoDeOtro)
                 .then().statusCode(404);

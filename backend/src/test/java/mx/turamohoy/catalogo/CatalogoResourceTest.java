@@ -19,7 +19,7 @@ class CatalogoResourceTest {
     void listaNegociosEnOrden() {
         given().when().get("/api/negocios")
                 .then().statusCode(200)
-                .body("slug", contains("turamohoy", "cosmeticos", "inflables", "vinateria", "encarguitos"))
+                .body("slug", contains("turamohoy", "belleza", "inflables", "vinateria", "encarguitos"))
                 .body("[0].whatsapp", equalTo("525540485363"))
                 .body("[0].categorias", empty());
     }
@@ -111,5 +111,13 @@ class CatalogoResourceTest {
     void productoInexistenteDevuelve404() {
         given().when().get("/api/productos/9999")
                 .then().statusCode(404);
+    }
+
+    @Test
+    void cosmeticosAhoraEsBelleza() {
+        given().when().get("/api/negocios/belleza")
+                .then().statusCode(200)
+                .body("nombre", equalTo("Belleza"));
+        given().when().get("/api/negocios/cosmeticos").then().statusCode(404);
     }
 }
