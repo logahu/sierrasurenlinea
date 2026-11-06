@@ -1,5 +1,8 @@
 import { Producto } from './catalogo.model';
-import { ENCARGO_VACIO, armarMensajeEncargo, camposFaltantes, zonasDeEntrega } from './encargo';
+import { TipoEncargo } from './catalogo.model';
+import {
+  ENCARGO_VACIO, armarMensajeEncargo, camposFaltantes, enlaceMapa, opcionDe, textoCuando, zonasDeEntrega, zonasPara,
+} from './encargo';
 
 const tarifa = (id: number, nombre: string, precio: number, unidadPrecio: string): Producto => ({
   id, nombre, precio, unidadPrecio, descripcion: null, caracteristicas: [], imagenUrl: '',
@@ -60,5 +63,56 @@ describe('encargo', () => {
   it('en pagos con transferencia lo dice claro', () => {
     const msg = armarMensajeEncargo({ ...completo, tipo: 'pagos', pagoCompra: 'cliente-paga-antes' }, centro);
     expect(msg).toContain('*Pago:* Pago el monto a pagar antes, por transferencia');
+  });
+
+  describe('viaje en moto', () => {
+    const viaje: TipoEncargo = {
+      id: 5, titulo: 'Viaje en moto', ayuda: null, ejemplo: null, etiquetaRecoger: 'Dónde te recogemos',
+      recogerObligatorio: true, manejaDinero: false, modo: 'VIAJE', icono: 'moto', soloProgramado: false,
+    };
+    const viajeCentro = tarifa(38, 'Viaje en el centro', 30, 'por viaje');
+    const datosViaje = { ...ENCARGO_VACIO, tipo: '5', recoger: 'Parque central', entregar: 'Hospital', zona: '38', nombre: 'Ana' };
+
+    it('usa solo las tarifas por viaje, y los mandados no las incluyen', () => {
+      expect(zonasPara([centro, extra, viajeCentro], viaje).map((z) => z.id)).toEqual([38]);
+      expect(zonasDeEntrega([centro, extra, viajeCentro]).map((z) => z.id)).toEqual([34]);
+    });
+
+    it('no pide detalle pero sí dónde recoger (o la ubicación)', () => {
+      expect(camposFaltantes(datosViaje, viaje)).toEqual([]);
+      expect(camposFaltantes({ ...datosViaje, recoger: '' }, viaje)).toEqual(['dónde te recogemos']);
+      expect(camposFaltantes({ ...datosViaje, recoger: '', ubicacion: enlaceMapa(16.3, -96.6) }, viaje)).toEqual([]);
+    });
+
+    it('arma el mensaje de viaje con ubicación y pide los datos del conductor', () => {
+      const msg = armarMensajeEncargo(
+        { ...datosViaje, ubicacion: enlaceMapa(16.326, -96.5958), equipaje: true }, viajeCentro, 500, viaje,
+      );
+      expect(msg).toContain('quiero un viaje en moto');
+      expect(msg).toContain('*Dónde te recogemos:* Parque central');
+      expect(msg).toContain('*Mi ubicación:* https://maps.google.com/?q=16.326000,-96.595800');
+      expect(msg).toContain('*Voy a:* Hospital');
+      expect(msg).toContain('*Zona:* Viaje en el centro ($30 por viaje)');
+      expect(msg).toContain('*Equipaje:* llevo mochila o bolsa');
+      expect(msg).toContain('*Pasajero:* Ana');
+      expect(msg).toContain('nombre del conductor, la placa');
+      expect(msg).not.toContain('*Pago:*');
+    });
+
+    it('solo con reservación exige hora aunque diga "ahora"', () => {
+      const reserva = { ...viaje, soloProgramado: true };
+      expect(camposFaltantes(datosViaje, reserva)).toEqual(['a qué hora lo necesitas']);
+    });
+
+    it('dice la fecha si no es hoy', () => {
+      const hoy = new Date(2026, 10, 6);
+      const d = { ...datosViaje, cuando: 'programado' as const, hora: '09:00' };
+      expect(textoCuando({ ...d, fecha: '2026-11-06' }, viaje, hoy)).toBe('hoy a las 09:00');
+      expect(textoCuando({ ...d, fecha: '2026-11-08' }, viaje, hoy)).toBe('el domingo, 8 de noviembre a las 09:00');
+    });
+
+    it('si la opción no existe usa la primera', () => {
+      expect(opcionDe([viaje], 'x').id).toBe(5);
+    });
   });
 });

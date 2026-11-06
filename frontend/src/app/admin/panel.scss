@@ -322,3 +322,22 @@
   .error-foto { color: #b02a5b; }
 }
 .panel .etiqueta-campo { display: block; font-size: .92rem; margin-bottom: .4rem; }
+
+// Lista del mandado
+.fila-categoria details {
+  border: 1px solid var(--linea);
+  border-radius: var(--panel-radio);
+  background: var(--superficie);
+  summary {
+    display: grid;
+    gap: .1rem;
+    padding: .85rem 1rem;
+    cursor: pointer;
+    list-style: none;
+    &::-webkit-details-marker { display: none; }
+    &::after { content: 'Editar ▾'; color: var(--acento-texto); font-size: .85rem; font-weight: 600; }
+  }
+  &[open] summary::after { content: 'Cerrar ▴'; }
+  form { border: 0; border-top: 1px solid var(--linea); border-radius: 0; background: none; }
+}
+.fila-categoria.inactivo summary { opacity: .65; }

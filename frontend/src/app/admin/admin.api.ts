@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { TipoEncargo } from '../catalogo/catalogo.model';
 import {
   CategoriaAdmin, CategoriaEdicion, NegocioAdmin, NegocioEdicion, ProductoAdmin, ProductoEdicion, Usuario,
 } from './admin.model';
@@ -72,6 +73,20 @@ export class AdminApi {
 
   cambiarDisponible(slug: string, id: number, disponible: boolean): Observable<ProductoAdmin> {
     return this.http.put<ProductoAdmin>(`${this.de(slug)}/productos/${id}/disponible`, { disponible });
+  }
+
+  // ---- Lista del mandado (Encarguitos)
+
+  tiposEncargo(slug: string): Observable<TipoEncargo[]> {
+    return this.http.get<TipoEncargo[]>(`${this.de(slug)}/tipos-encargo`);
+  }
+
+  crearTipoEncargo(slug: string, datos: Omit<TipoEncargo, 'id'>): Observable<TipoEncargo> {
+    return this.http.post<TipoEncargo>(`${this.de(slug)}/tipos-encargo`, datos);
+  }
+
+  editarTipoEncargo(slug: string, id: number | string, datos: Omit<TipoEncargo, 'id'>): Observable<TipoEncargo> {
+    return this.http.put<TipoEncargo>(`${this.de(slug)}/tipos-encargo/${id}`, datos);
   }
 
   private de(slug: string): string {

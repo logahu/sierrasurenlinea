@@ -15,6 +15,9 @@ import { textosCatalogo } from './textos';
     </header>
     <nav class="pestanas" aria-label="Secciones del negocio">
       <a [routerLink]="base()" [class.activo]="seccion() === 'catalogo'">{{ textos().plural }}</a>
+      @if (negocio()?.tipo === 'SERVICIO') {
+        <a [routerLink]="base() + '/lista-del-mandado'" [class.activo]="seccion() === 'lista'">Lista del mandado</a>
+      }
       <a [routerLink]="base() + '/categorias'" [class.activo]="seccion() === 'categorias'">Categorías</a>
       <a [routerLink]="base() + '/datos'" [class.activo]="seccion() === 'datos'">Datos del negocio</a>
     </nav>
@@ -24,7 +27,7 @@ export class NegocioTabs {
   readonly slug = input.required<string>();
   readonly negocio = input<NegocioAdmin | undefined>();
   /** Pestaña marcada; la de catálogo sigue marcada al editar un producto. */
-  readonly seccion = input<'catalogo' | 'categorias' | 'datos'>('catalogo');
+  readonly seccion = input<'catalogo' | 'lista' | 'categorias' | 'datos'>('catalogo');
   protected readonly base = computed(() => `/admin/negocios/${this.slug()}`);
   protected readonly textos = computed(() => textosCatalogo(this.negocio()?.tipo));
 }

@@ -5,20 +5,35 @@
     <fieldset class="tipos">
       <legend>¿Qué necesitas?</legend>
       <div class="opciones">
-        @for (t of tipos; track t.id) {
+        @for (t of tipos(); track t.id) {
           <label class="tipo" [class.elegido]="opcion().id === t.id">
-            <input type="radio" formControlName="tipo" [value]="t.id" />
+            <input type="radio" formControlName="tipo" [value]="'' + t.id" />
             <svg viewBox="0 0 32 32" width="34" height="34" aria-hidden="true">
-              @switch (t.id) {
-                @case ('super') {
+              @switch (t.icono) {
+                @case ('bolsa') {
                   <path d="M7 11h18l-2 16H9Z" fill="currentColor" opacity=".18" />
                   <path d="M7 11h18l-2 16H9Z M12 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" />
                 }
-                @case ('llevar') {
+                @case ('caja') {
                   <path d="M5 10 16 5l11 5v12l-11 5-11-5Z" fill="currentColor" opacity=".18" />
                   <path d="M5 10 16 5l11 5v12l-11 5-11-5Z M5 10l11 5 11-5 M16 15v12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" />
                 }
-                @case ('pagos') {
+                @case ('moto') {
+                  <circle cx="8" cy="23" r="4.5" fill="none" stroke="currentColor" stroke-width="2.2" />
+                  <circle cx="25" cy="23" r="4.5" fill="none" stroke="currentColor" stroke-width="2.2" />
+                  <path d="M8 23h7l4-8h5l3 8 M19 15l-2-5h-4 M12 17h6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+                  <path d="M12 17h7l-3 6H9Z" fill="currentColor" opacity=".18" />
+                }
+                @case ('pastilla') {
+                  <rect x="5" y="11" width="22" height="10" rx="5" transform="rotate(-35 16 16)" fill="currentColor" opacity=".18" />
+                  <rect x="5" y="11" width="22" height="10" rx="5" transform="rotate(-35 16 16)" fill="none" stroke="currentColor" stroke-width="2.2" />
+                  <path d="M12 9.5l7.5 11" stroke="currentColor" stroke-width="2.2" />
+                }
+                @case ('llave') {
+                  <circle cx="11" cy="16" r="6" fill="currentColor" opacity=".18" stroke="currentColor" stroke-width="2.2" />
+                  <path d="M17 16h11 M24 16v4 M28 16v3" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+                }
+                @case ('recibo') {
                   <path d="M8 4h16v24l-4-2-4 2-4-2-4 2Z" fill="currentColor" opacity=".18" />
                   <path d="M8 4h16v24l-4-2-4 2-4-2-4 2Z M12 11h8 M12 16h8 M12 21h5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" />
                 }
@@ -28,31 +43,48 @@
               }
             </svg>
             <strong>{{ t.titulo }}</strong>
-            <span>{{ t.ayuda }}</span>
+            @if (t.ayuda) { <span>{{ t.ayuda }}</span> }
+            @if (t.soloProgramado) { <span class="reserva">Solo con reservación</span> }
           </label>
         }
       </div>
     </fieldset>
 
-    <label class="campo" [class.con-error]="falta('qué necesitas que hagamos')">
-      <span class="etiqueta">Qué necesitas que hagamos</span>
-      <textarea formControlName="detalle" rows="4" [placeholder]="opcion().ejemplo"></textarea>
-    </label>
+    @if (!viaje()) {
+      <label class="campo" [class.con-error]="falta('qué necesitas que hagamos')">
+        <span class="etiqueta">{{ textos().detalle }}</span>
+        <textarea formControlName="detalle" rows="4" [placeholder]="opcion().ejemplo ?? ''"></textarea>
+      </label>
+    }
 
     <div class="par">
-      <label class="campo" [class.con-error]="falta('dónde lo recogemos')">
-        <span class="etiqueta">{{ opcion().etiquetaRecoger }}</span>
-        <input formControlName="recoger" type="text" placeholder="Tienda, mercado o dirección" />
-      </label>
-      <label class="campo" [class.con-error]="falta('a dónde lo llevamos')">
-        <span class="etiqueta">Entregar en</span>
+      <div class="campo" [class.con-error]="falta('dónde lo recogemos', 'dónde te recogemos')">
+        <label class="etiqueta" for="recoger">{{ opcion().etiquetaRecoger }}</label>
+        <input id="recoger" formControlName="recoger" type="text"
+               [placeholder]="viaje() ? 'Calle y una referencia (ej. frente a la iglesia)' : 'Tienda, mercado o dirección'" />
+        @if (viaje()) {
+          @if (datos().ubicacion) {
+            <p class="ubicacion">
+              📍 Ubicación agregada <a [href]="datos().ubicacion" target="_blank" rel="noopener">ver en el mapa</a>
+              <button type="button" class="enlace" (click)="quitarUbicacion()">quitar</button>
+            </p>
+          } @else {
+            <button type="button" class="ubicar" (click)="usarUbicacion()" [disabled]="ubicando()">
+              {{ ubicando() ? 'Buscando tu ubicación…' : '📍 Usar mi ubicación actual' }}
+            </button>
+          }
+          @if (errorUbicacion()) { <small class="aviso-ubicacion">{{ errorUbicacion() }}</small> }
+        }
+      </div>
+      <label class="campo" [class.con-error]="falta('a dónde lo llevamos', 'a dónde vas')">
+        <span class="etiqueta">{{ textos().entregar }}</span>
         <input formControlName="entregar" type="text" autocomplete="street-address" placeholder="Calle, número y una referencia" />
       </label>
     </div>
 
     <div class="par">
-      <label class="campo" [class.con-error]="falta('la zona de entrega')">
-        <span class="etiqueta">Zona de entrega</span>
+      <label class="campo" [class.con-error]="falta('la zona de entrega', 'la zona de destino')">
+        <span class="etiqueta">{{ textos().zona }}</span>
         <select formControlName="zona">
           <option value="" disabled>Elige tu zona</option>
           @for (z of zonas(); track z.id) {
@@ -63,31 +95,52 @@
       <fieldset class="campo cuando" [class.con-error]="falta('a qué hora lo necesitas')">
         <legend class="etiqueta">¿Para cuándo?</legend>
         <div class="fila">
-          <label class="pastilla"><input type="radio" formControlName="cuando" value="ahora" /> Lo antes posible</label>
-          <label class="pastilla"><input type="radio" formControlName="cuando" value="programado" /> A una hora</label>
-          @if (datos().cuando === 'programado') {
+          @if (!opcion().soloProgramado) {
+            <label class="pastilla"><input type="radio" formControlName="cuando" value="ahora" /> Lo antes posible</label>
+            <label class="pastilla"><input type="radio" formControlName="cuando" value="programado" /> Reservar</label>
+          } @else {
+            <span class="nota-reserva">Por ahora solo con reservación.</span>
+          }
+          @if (datos().cuando === 'programado' || opcion().soloProgramado) {
+            <input class="hora" formControlName="fecha" type="date" [min]="hoy" aria-label="Fecha (vacío = hoy)" />
             <input class="hora" formControlName="hora" type="time" aria-label="Hora" />
           }
         </div>
       </fieldset>
     </div>
 
-    @if (opcion().manejaDinero) {
+    @if (viaje()) {
+      <label class="pastilla larga">
+        <input type="checkbox" formControlName="equipaje" /> Llevo mochila o bolsa
+      </label>
+      <label class="campo">
+        <span class="etiqueta">{{ textos().detalle }}</span>
+        <textarea formControlName="detalle" rows="2" [placeholder]="opcion().ejemplo ?? ''"></textarea>
+      </label>
+      <ul class="seguridad" aria-label="Tu viaje seguro">
+        <li>Casco para ti incluido.</li>
+        <li>Un pasajero por moto.</li>
+        <li>Antes de salir te mandamos el nombre del conductor, la placa y una foto de la moto.</li>
+        <li>Comparte esos datos con alguien de confianza.</li>
+      </ul>
+    }
+
+    @if (opcion().manejaDinero && !viaje()) {
       <fieldset class="campo pago">
-        <legend class="etiqueta">{{ opcion().id === 'pagos' ? '¿Cómo cubrimos el pago?' : '¿Quién paga la compra?' }}</legend>
+        <legend class="etiqueta">{{ opcion().icono === 'recibo' ? '¿Cómo cubrimos el pago?' : '¿Quién paga la compra?' }}</legend>
         <label class="pastilla larga">
           <input type="radio" formControlName="pagoCompra" value="repartidor-adelanta" />
-          {{ textoPago('repartidor-adelanta', opcion().id, tope()) }}
+          {{ textoPago('repartidor-adelanta', opcion(), tope()) }}
         </label>
         <label class="pastilla larga">
           <input type="radio" formControlName="pagoCompra" value="cliente-paga-antes" />
-          {{ textoPago('cliente-paga-antes', opcion().id) }}
+          {{ textoPago('cliente-paga-antes', opcion()) }}
         </label>
       </fieldset>
     }
 
-    <label class="campo" [class.con-error]="falta('tu nombre')">
-      <span class="etiqueta">Tu nombre</span>
+    <label class="campo" [class.con-error]="falta('tu nombre', 'el nombre de quien viaja')">
+      <span class="etiqueta">{{ textos().nombre }}</span>
       <input formControlName="nombre" type="text" autocomplete="name" />
     </label>
 
@@ -95,16 +148,23 @@
       <p class="faltan" role="alert">Para enviar tu encargo falta: {{ faltan().join(', ') }}.</p>
     }
 
-    <button type="submit" class="enviar">Enviar encargo por WhatsApp</button>
-    <p class="nota">Se abre WhatsApp con tu lista ya escrita. Antes de salir te confirmamos el total y el tiempo de llegada.</p>
+    <button type="submit" class="enviar">{{ viaje() ? 'Pedir viaje por WhatsApp' : 'Enviar encargo por WhatsApp' }}</button>
+    <p class="nota">
+      @if (viaje()) {
+        Se abre WhatsApp con tu viaje ya escrito. Te confirmamos el precio y en cuántos minutos llega la moto.
+      } @else {
+        Se abre WhatsApp con tu lista ya escrita. Antes de salir te confirmamos el total y el tiempo de llegada.
+      }
+    </p>
   </form>
 </section>
 
 @if (tarifas().length) {
   <section class="tarifas" aria-labelledby="titulo-tarifas">
     <h2 id="titulo-tarifas">Tarifas por zona</h2>
+    @if (hayViajes()) { <h3>Mandados</h3> }
     <ul>
-      @for (z of zonas(); track z.id) {
+      @for (z of zonasMandado(); track z.id) {
         <li>
           <span class="zona"><strong>{{ z.nombre }}</strong>@if (z.descripcion) { <small>{{ z.descripcion }}</small> }</span>
           <span class="costo">{{ precio(z) }}</span>
@@ -117,6 +177,17 @@
         </li>
       }
     </ul>
+    @if (hayViajes() && zonasViaje().length) {
+      <h3>Viajes en moto</h3>
+      <ul>
+        @for (z of zonasViaje(); track z.id) {
+          <li>
+            <span class="zona"><strong>{{ z.nombre }}</strong>@if (z.descripcion) { <small>{{ z.descripcion }}</small> }</span>
+            <span class="costo">{{ precio(z) }}</span>
+          </li>
+        }
+      </ul>
+    }
   </section>
 }
 
