@@ -35,7 +35,7 @@ import { Component } from '@angular/core';
         <h2 id="titulo-obra">Sitio en construcción</h2>
         <p>
           Estamos estrenando: algunos negocios todavía muestran imágenes de ejemplo y cada semana sumamos más.
-          <strong>Ya puedes pedir por WhatsApp.</strong>
+          <strong>Pronto podrás pedir por WhatsApp.</strong>
         </p>
       </div>
     </aside>
@@ -44,8 +44,8 @@ import { Component } from '@angular/core';
     :host { display: block; }
     .obra {
       display: grid;
-      grid-template-columns: 7.5rem 1fr;
-      gap: 1rem;
+      grid-template-columns: clamp(5.25rem, 14vw, 10rem) 1fr;
+      gap: clamp(.75rem, 2.5vw, 1.75rem);
       align-items: center;
       padding: 1rem 1.25rem 1rem 1rem;
       background: color-mix(in srgb, #fab005 12%, var(--cal, #fbfbf8));
