@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
+import { AvisoObra } from './aviso-obra';
 import { CatalogoService } from './catalogo.service';
 import { precioConUnidad } from './contacto';
 
@@ -10,7 +11,7 @@ import { precioConUnidad } from './contacto';
  */
 @Component({
   selector: 'app-inicio-page',
-  imports: [RouterLink],
+  imports: [RouterLink, AvisoObra],
   templateUrl: './inicio-page.html',
   styleUrl: './inicio-page.scss',
 })

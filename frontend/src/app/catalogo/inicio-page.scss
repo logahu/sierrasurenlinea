@@ -43,9 +43,19 @@ h1, h2 { font-family: var(--rotulo); font-weight: 400; letter-spacing: .005em; m
   padding-top: clamp(2rem, 6vw, 3.5rem);
 }
 
+// Título a la izquierda y el letrero de obra a la derecha (abajo en el celular).
+.cabecera {
+  display: grid;
+  grid-template-columns: minmax(0, 38rem) minmax(0, 24rem);
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem 2rem;
+  margin-bottom: clamp(1.75rem, 5vw, 3rem);
+  @media (max-width: 820px) { grid-template-columns: 1fr; }
+}
+
 .intro {
   max-width: 38rem;
-  margin-bottom: clamp(1.75rem, 5vw, 3rem);
 
   h1 { font-size: clamp(2.1rem, 6.5vw, 3.6rem); line-height: 1.02; }
   p { margin: 1rem 0 0; font-size: 1.125rem; line-height: 1.55; color: var(--anil-suave); max-width: 32rem; }
