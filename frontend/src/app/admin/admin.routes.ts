@@ -47,6 +47,12 @@ export const ADMIN_ROUTES: Routes = [
             loadComponent: () => import('./editar-negocio').then((m) => m.EditarNegocio),
           },
           {
+            path: 'visibilidad',
+            title: 'Negocios en el sitio · Panel',
+            canActivate: [soloDueno],
+            loadComponent: () => import('./visibilidad-page').then((m) => m.VisibilidadPage),
+          },
+          {
             path: 'usuarios',
             title: 'Encargados · Panel',
             canActivate: [soloDueno],

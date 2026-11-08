@@ -25,6 +25,10 @@ export class AdminApi {
     return this.http.put<NegocioAdmin>(`${this.base}/negocios/${encodeURIComponent(slug)}`, datos);
   }
 
+  cambiarVisible(slug: string, visible: boolean): Observable<NegocioAdmin> {
+    return this.http.put<NegocioAdmin>(`${this.base}/negocios/${encodeURIComponent(slug)}/visible`, { visible });
+  }
+
   usuarios(): Observable<Usuario[]> {
     return this.http.get<Usuario[]>(`${this.base}/usuarios`);
   }

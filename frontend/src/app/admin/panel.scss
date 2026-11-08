@@ -360,3 +360,18 @@
   .deshabilitado { opacity: .55; pointer-events: none; }
   .error-foto { color: #b02a5b; }
 }
+
+// Negocios en el sitio
+.fila-visible {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: .85rem;
+  padding: .75rem 1rem;
+  border: 1px solid var(--linea);
+  border-radius: var(--panel-radio);
+  background: var(--superficie);
+  > div { display: grid; gap: .1rem; min-width: 0; }
+  .punto { width: .85rem; height: .85rem; border-radius: 50%; background: var(--acento); }
+  &.inactivo { opacity: .7; .punto { background: var(--linea); } }
+}

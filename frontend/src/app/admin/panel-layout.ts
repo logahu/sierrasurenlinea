@@ -18,6 +18,7 @@ import { SesionService } from './sesion';
         <nav class="panel-nav" aria-label="Panel">
           <a routerLink="/admin" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }">Negocios</a>
           @if (sesion.esDueno()) {
+            <a routerLink="/admin/visibilidad" routerLinkActive="activo">En el sitio</a>
             <a routerLink="/admin/usuarios" routerLinkActive="activo">Encargados</a>
           }
           <a routerLink="/admin/cuenta" routerLinkActive="activo">Mi cuenta</a>

@@ -13,7 +13,8 @@ import { SesionService } from './sesion';
       <h1>Hola, {{ sesion.usuario()?.nombre }}</h1>
       <p class="ayuda">
         @if (sesion.esDueno()) {
-          Elige un negocio para editar su catálogo y sus datos, o da de alta a sus encargados.
+          Elige un negocio para editar su catálogo y sus datos. En <a routerLink="/admin/visibilidad">En el sitio</a>
+          muestras u ocultas negocios.
         } @else {
           Aquí editas el catálogo y los datos de tu negocio.
         }
