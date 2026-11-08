@@ -107,6 +107,20 @@ public class AdminNegocioResource {
         return aDto(n);
     }
 
+    public record Visibilidad(boolean visible) {
+    }
+
+    /** Mostrar u ocultar un negocio en el sitio con un toque. Solo el dueño. */
+    @PUT
+    @Path("/{slug}/visible")
+    @RolesAllowed(Rol.DUENO)
+    @Transactional
+    public NegocioAdminDto cambiarVisible(@PathParam("slug") String slug, @NotNull Visibilidad v) {
+        Negocio n = sesion.negocioEditable(slug);
+        n.visible = v.visible();
+        return aDto(n);
+    }
+
     private static NegocioAdminDto aDto(Negocio n) {
         long activos = Producto.count("disponible = true and categoria.negocio = ?1", n);
         String encargado = Usuario.encargadoDe(n).map(u -> u.nombre).orElse(null);

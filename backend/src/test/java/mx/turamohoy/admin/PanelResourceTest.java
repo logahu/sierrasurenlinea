@@ -251,4 +251,33 @@ class PanelResourceTest {
                     .when().put("/api/admin/usuarios/" + id).then().statusCode(200);
         }
     }
+
+    @Test
+    void elDuenoOcultaYMuestraUnNegocioConUnToque() {
+        String dueno = Sesiones.dueno();
+        try {
+            como(dueno).body(Map.of("visible", false)).when().put("/api/admin/negocios/inflables/visible")
+                    .then().statusCode(200).body("visible", equalTo(false));
+            given().when().get("/api/negocios").then().body("slug", not(hasItem("inflables")));
+        } finally {
+            como(dueno).body(Map.of("visible", true)).when().put("/api/admin/negocios/inflables/visible")
+                    .then().statusCode(200).body("visible", equalTo(true));
+        }
+        given().when().get("/api/negocios").then().body("slug", hasItem("inflables"));
+        given().contentType(ContentType.JSON).body(Map.of("visible", false))
+                .when().put("/api/admin/negocios/inflables/visible").then().statusCode(401);
+    }
+
+    @Test
+    void elEncargadoNoPuedeOcultarSuNegocio() {
+        String dueno = Sesiones.dueno();
+        int id = crearEncargado(dueno, "vinos@sierrasur.local", "vinateria");
+        try {
+            como(Sesiones.entrar("vinos@sierrasur.local", "clave-segura-1")).body(Map.of("visible", false))
+                    .when().put("/api/admin/negocios/vinateria/visible").then().statusCode(403);
+        } finally {
+            como(dueno).body(Map.of("nombre", "Encargado vinateria", "activo", false))
+                    .when().put("/api/admin/usuarios/" + id).then().statusCode(200);
+        }
+    }
 }
