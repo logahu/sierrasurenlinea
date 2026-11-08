@@ -59,6 +59,10 @@ public class Producto extends PanacheEntityBase {
     @Column(name = "imagen_url", nullable = false, length = 500)
     public String imagenUrl;
 
+    /** Fotos adicionales (galería), URLs separadas por "|". */
+    @Column(length = 2000)
+    public String galeria;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "categoria_id", nullable = false)
     public Categoria categoria;

@@ -19,7 +19,7 @@ class CatalogoResourceTest {
     void listaNegociosEnOrden() {
         given().when().get("/api/negocios")
                 .then().statusCode(200)
-                .body("slug", contains("turamohoy", "belleza", "inflables", "vinateria", "encarguitos"))
+                .body("slug", contains("turamohoy", "belleza", "inflables", "vinateria", "encarguitos", "autos"))
                 .body("[0].whatsapp", equalTo("525540485363"))
                 .body("[0].categorias", empty());
     }
@@ -103,7 +103,7 @@ class CatalogoResourceTest {
                 .body("size()", greaterThan(30));
         given().when().get("/api/categorias")
                 .then().statusCode(200)
-                .body("$", hasSize(18))
+                .body("$", hasSize(21))
                 .body("[0].negocioSlug", equalTo("turamohoy"));
     }
 

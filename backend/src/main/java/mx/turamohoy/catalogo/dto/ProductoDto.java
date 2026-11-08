@@ -18,6 +18,8 @@ public record ProductoDto(
         String unidadPrecio,
         List<String> caracteristicas,
         String imagenUrl,
+        /** Fotos adicionales, después de la principal. */
+        List<String> galeria,
         String negocioSlug,
         String negocioNombre,
         String categoriaSlug,
@@ -26,12 +28,12 @@ public record ProductoDto(
 
     public static ProductoDto de(Producto p) {
         return new ProductoDto(p.id, p.nombre, p.descripcion, p.precio, p.unidadPrecio,
-                separar(p.caracteristicas), p.imagenUrl,
+                separar(p.caracteristicas), p.imagenUrl, separar(p.galeria),
                 p.categoria.negocio.slug, p.categoria.negocio.nombre,
                 p.categoria.slug, p.categoria.nombre, p.destacado);
     }
 
-    private static List<String> separar(String texto) {
+    public static List<String> separar(String texto) {
         if (texto == null || texto.isBlank()) {
             return List.of();
         }

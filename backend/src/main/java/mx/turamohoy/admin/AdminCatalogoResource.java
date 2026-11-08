@@ -47,6 +47,7 @@ public class AdminCatalogoResource {
 
     /** Límite de la columna caracteristicas (se guardan unidas con "|"). */
     static final int MAX_CARACTERISTICAS = 500;
+    static final int MAX_GALERIA = 8;
 
     @Inject
     SesionActual sesion;
@@ -72,11 +73,12 @@ public class AdminCatalogoResource {
 
     public record ProductoAdminDto(Long id, String nombre, String descripcion, BigDecimal precio,
                                    String unidadPrecio, List<String> caracteristicas, String imagenUrl,
+                                   List<String> galeria,
                                    Long categoriaId, String categoriaNombre, boolean destacado,
                                    boolean disponible) {
         static ProductoAdminDto de(Producto p) {
             return new ProductoAdminDto(p.id, p.nombre, p.descripcion, p.precio, p.unidadPrecio,
-                    separar(p.caracteristicas), p.imagenUrl, p.categoria.id, p.categoria.nombre,
+                    separar(p.caracteristicas), p.imagenUrl, separar(p.galeria), p.categoria.id, p.categoria.nombre,
                     p.destacado, p.disponible);
         }
     }
@@ -95,7 +97,9 @@ public class AdminCatalogoResource {
             boolean destacado,
             Boolean disponible,
             /** Foto subida con /fotos o una de ejemplo (img/...); vacío = no cambia. */
-            String imagenUrl) {
+            String imagenUrl,
+            /** Fotos adicionales en orden; null = no cambia, lista vacía = sin galería. */
+            @Size(max = MAX_GALERIA, message = "La galería puede tener hasta 8 fotos.") List<String> galeria) {
     }
 
     public record Disponibilidad(boolean disponible) {
@@ -211,6 +215,14 @@ public class AdminCatalogoResource {
         String imagen = imagenes.validar(n, e.imagenUrl());
         if (imagen != null) {
             p.imagenUrl = imagen;
+        }
+        if (e.galeria() != null) {
+            List<String> fotos = e.galeria().stream()
+                    .map(u -> imagenes.validar(n, u))
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .toList();
+            p.galeria = fotos.isEmpty() ? null : String.join("|", fotos);
         }
     }
 

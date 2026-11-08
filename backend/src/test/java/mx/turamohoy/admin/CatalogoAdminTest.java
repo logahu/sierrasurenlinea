@@ -189,4 +189,34 @@ class CatalogoAdminTest {
         assertEquals("nino-feliz", AdminCatalogoResource.slug("Niño feliz"));
         assertEquals("categoria", AdminCatalogoResource.slug("¡¡!!"));
     }
+
+    @Test
+    void autosConGaleriaDeFotos() {
+        given().when().get("/api/negocios/autos")
+                .then().statusCode(200)
+                .body("categorias.slug", org.hamcrest.Matchers.contains("autos", "suv", "pickups"));
+
+        String dueno = Sesiones.dueno();
+        String foto1 = como(dueno).body(Map.of("tipo", "image/webp", "bytes", 90_000))
+                .when().post("/api/admin/negocios/autos/fotos").then().statusCode(200).extract().path("url");
+        String foto2 = como(dueno).body(Map.of("tipo", "image/webp", "bytes", 90_000))
+                .when().post("/api/admin/negocios/autos/fotos").then().statusCode(200).extract().path("url");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> auto = new HashMap<>(como(dueno).when().get("/api/admin/negocios/autos/productos/43")
+                .then().statusCode(200).extract().as(Map.class));
+        try {
+            auto.put("galeria", List.of(foto1, foto2, foto1));
+            como(dueno).body(auto).when().put("/api/admin/negocios/autos/productos/43")
+                    .then().statusCode(200).body("galeria", equalTo(List.of(foto1, foto2)));
+            given().when().get("/api/productos/43").then().statusCode(200).body("galeria", equalTo(List.of(foto1, foto2)));
+
+            // Fotos de otro negocio no entran en la galería.
+            auto.put("galeria", List.of(foto1.replace("/autos/", "/turamohoy/")));
+            como(dueno).body(auto).when().put("/api/admin/negocios/autos/productos/43").then().statusCode(400);
+        } finally {
+            auto.put("galeria", List.of());
+            como(dueno).body(auto).when().put("/api/admin/negocios/autos/productos/43")
+                    .then().statusCode(200).body("galeria", equalTo(List.of()));
+        }
+    }
 }
