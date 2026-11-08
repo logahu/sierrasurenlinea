@@ -8,13 +8,14 @@ import { ProductoAdmin, ProductoEdicion } from './admin.model';
 import { AdminApi } from './admin.api';
 import { mensajeDeError } from './autorizacion';
 import { FotoCampo } from './foto-campo';
+import { GaleriaCampo } from './galeria-campo';
 import { NegocioTabs } from './negocio-tabs';
-import { renglones, textosCatalogo } from './textos';
+import { PLANTILLAS_CARACTERISTICAS, renglones, textosCatalogo } from './textos';
 
 /** Alta (id = "nuevo") y edición de un producto o tarifa. */
 @Component({
   selector: 'app-producto-form',
-  imports: [ReactiveFormsModule, RouterLink, NegocioTabs, FotoCampo],
+  imports: [ReactiveFormsModule, RouterLink, NegocioTabs, FotoCampo, GaleriaCampo],
   template: `
     <app-negocio-tabs [slug]="slug()" [negocio]="negocio.value()" />
 
@@ -28,6 +29,8 @@ import { renglones, textosCatalogo } from './textos';
         <fieldset>
           <legend>Foto</legend>
           <app-foto-campo [slug]="slug()" [respaldo]="imagen()" [url]="foto()" (urlChange)="cambiarFoto($event)" />
+          <strong class="etiqueta-campo">Más fotos</strong>
+          <app-galeria-campo [slug]="slug()" [fotos]="galeria()" (fotosChange)="cambiarGaleria($event)" />
         </fieldset>
 
         <fieldset>
@@ -167,6 +170,22 @@ export class ProductoForm {
         this.form.controls.categoriaId.setValue(cats[0].id);
       }
     });
+    // Producto nuevo: renglones sugeridos (p. ej. año y kilometraje en autos).
+    effect(() => {
+      const plantilla = PLANTILLAS_CARACTERISTICAS[this.slug()];
+      if (this.esNuevo() && plantilla && !this.form.controls.caracteristicas.value) {
+        this.form.controls.caracteristicas.setValue(plantilla.join('\n'));
+      }
+    });
+  }
+
+  /** Fotos adicionales tal como están en pantalla (se guardan con el formulario). */
+  protected readonly galeria = signal<string[]>([]);
+
+  protected cambiarGaleria(fotos: string[]): void {
+    this.galeria.set(fotos);
+    this.form.markAsDirty();
+    this.guardado.set(false);
   }
 
   protected cambiarFoto(url: string | null): void {
@@ -177,6 +196,7 @@ export class ProductoForm {
 
   private cargar(p: ProductoAdmin): void {
     this.foto.set(null);
+    this.galeria.set(p.galeria ?? []);
     this.form.reset({
       nombre: p.nombre,
       categoriaId: p.categoriaId,
@@ -209,6 +229,7 @@ export class ProductoForm {
       disponible: !!v.disponible,
       destacado: !!v.destacado,
       imagenUrl: this.foto(),
+      galeria: this.galeria(),
     };
     this.guardando.set(true);
     const op = this.esNuevo()

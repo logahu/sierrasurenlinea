@@ -8,8 +8,20 @@
   <a class="volver" [routerLink]="['/', p.negocioSlug]">← {{ p.negocioNombre }}</a>
 
   <article class="detalle">
-    <div class="foto">
-      <img [src]="p.imagenUrl" [alt]="p.nombre" width="800" height="800" />
+    <div>
+      <div class="foto">
+        <img [src]="fotos()[foto()] ?? p.imagenUrl" [alt]="p.nombre" width="800" height="800" />
+      </div>
+      @if (fotos().length > 1) {
+        <div class="miniaturas" role="group" aria-label="Más fotos">
+          @for (f of fotos(); track f; let i = $index) {
+            <button type="button" (click)="foto.set(i)" [attr.aria-current]="foto() === i"
+                    [attr.aria-label]="'Foto ' + (i + 1) + ' de ' + fotos().length">
+              <img [src]="f" alt="" width="68" height="68" loading="lazy" />
+            </button>
+          }
+        </div>
+      }
     </div>
     <div class="info">
       <a class="cat" [routerLink]="['/', p.negocioSlug]" [queryParams]="{ categoria: p.categoriaSlug }">
@@ -32,14 +44,20 @@
       <div class="acciones">
         @if (whatsapp(); as wa) {
           <a class="btn whatsapp grande" [href]="wa" target="_blank" rel="noopener">
-            {{ negocio.value()?.tipo === 'RENTA' ? 'Apartar por WhatsApp' : 'Pedir por WhatsApp' }}
+            {{ negocio.value()?.tipo === 'RENTA' ? 'Apartar por WhatsApp' : p.negocioSlug === 'autos' ? 'Preguntar por WhatsApp' : 'Pedir por WhatsApp' }}
           </a>
         }
         @if (telefono(); as tel) {
           <a class="btn secundario grande" [href]="tel">Llamar</a>
         }
       </div>
-      <p class="nota">Te respondemos por WhatsApp para confirmar disponibilidad, entrega y forma de pago.</p>
+      <p class="nota">
+        @if (p.negocioSlug === 'autos') {
+          Te respondemos por WhatsApp para agendar una cita, ver el auto en persona y hacer prueba de manejo.
+        } @else {
+          Te respondemos por WhatsApp para confirmar disponibilidad, entrega y forma de pago.
+        }
+      </p>
     </div>
   </article>
 

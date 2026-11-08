@@ -40,5 +40,11 @@ export function renglones(texto: string): string[] {
   return texto
     .split('\n')
     .map((s) => s.trim())
-    .filter((s) => s.length > 0);
+    // Renglones de la plantilla que se quedaron sin llenar ("Año:", "Kilometraje:  km").
+    .filter((s) => s.length > 0 && !/^[^:]+:\s*(km)?$/i.test(s));
 }
+
+/** Renglones sugeridos al dar de alta un producto, por negocio (slug). */
+export const PLANTILLAS_CARACTERISTICAS: Record<string, string[]> = {
+  autos: ['Año: ', 'Kilometraje:  km', 'Transmisión: ', 'Combustible: ', 'Motor: ', 'Color: ', 'Reparaciones: '],
+};

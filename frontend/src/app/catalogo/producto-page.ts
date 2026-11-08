@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, numberAttribute } from '@angular/core';
+import { Component, computed, effect, inject, input, numberAttribute, linkedSignal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
@@ -48,6 +48,13 @@ export class ProductoPage {
   });
 
   protected readonly precio = precioConUnidad;
+
+  /** Foto principal y galería; la elegida se muestra en grande. */
+  protected readonly fotos = computed(() => {
+    const p = this.producto.value();
+    return p ? [p.imagenUrl, ...(p.galeria ?? [])] : [];
+  });
+  protected readonly foto = linkedSignal({ source: this.fotos, computation: () => 0 });
 
   constructor() {
     effect(() => {

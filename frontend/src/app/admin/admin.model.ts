@@ -66,6 +66,7 @@ export interface ProductoAdmin {
   unidadPrecio: string | null;
   caracteristicas: string[];
   imagenUrl: string;
+  galeria: string[];
   categoriaId: number;
   categoriaNombre: string;
   destacado: boolean;
@@ -83,6 +84,8 @@ export interface ProductoEdicion {
   disponible: boolean;
   /** Foto nueva; null = no cambia. */
   imagenUrl: string | null;
+  /** Fotos adicionales en orden. */
+  galeria: string[];
 }
 
 export interface CategoriaEdicion {

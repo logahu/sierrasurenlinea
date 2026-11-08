@@ -61,12 +61,14 @@
             <a class="card" [routerLink]="['/', p.negocioSlug, 'producto', p.id]">
               <div class="img">
                 <img [src]="p.imagenUrl" [alt]="p.nombre" loading="lazy" width="400" height="400" />
-                @if (p.destacado) { <span class="badge">Favorito</span> }
+                @if (p.destacado) { <span class="badge">{{ p.negocioSlug === 'autos' ? 'Recomendado' : 'Favorito' }}</span> }
               </div>
               <div class="body">
                 <span class="cat">{{ p.categoriaNombre }}</span>
                 <h3>{{ p.nombre }}</h3>
-                @if (p.caracteristicas.length) { <span class="dato">{{ p.caracteristicas[0] }}</span> }
+                @if (p.caracteristicas.length) {
+                  <span class="dato">{{ p.caracteristicas.slice(0, p.negocioSlug === 'autos' ? 2 : 1).join(' · ') }}</span>
+                }
                 <span class="precio">{{ precio(p) }}</span>
               </div>
             </a>

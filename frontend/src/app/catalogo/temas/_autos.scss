@@ -1,0 +1,105 @@
+// Autos (usados y reparados)
+// Idea: un lote de autos. Asfalto oscuro, rayas amarillas de estacionamiento,
+// letra condensada de cartel y el precio escrito a mano como en el parabrisas.
+
+$asfalto: #1f2226;
+$asfalto-claro: #2b2f35;
+$amarillo: #f2c94c;
+$verde-parabrisas: #b6f09c;
+$gis: #eef0f2;
+
+@mixin tokens {
+  --t-fondo: #{$asfalto};
+  --t-superficie: #{$asfalto-claro};
+  --t-tinta: #{$gis};
+  --t-tinta-suave: #aeb4bd;
+  --t-linea: #3d434b;
+  --t-acento-texto: #{$amarillo};
+  --t-sobre-acento: #{$asfalto};
+  --t-img-fondo: #eceae4;
+  --t-caja: #{$asfalto-claro};
+  --t-fuente-titulo: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --t-fuente-texto: 'Barlow', system-ui, sans-serif;
+  --t-peso-titulo: 700;
+  --t-radio-card: .35rem;
+  --t-radio-img: 0;
+  --t-radio-chip: .3rem;
+  --t-radio-contacto: .35rem;
+  --t-borde-card: 1px solid #3d434b;
+  --t-sombra-card: none;
+  color-scheme: dark;
+}
+
+// Precio "pintado" en el parabrisas: verde fosforescente y letra de plumón.
+@mixin precio-parabrisas {
+  font-family: 'Caveat', 'Comic Sans MS', cursive;
+  font-weight: 700;
+  color: $verde-parabrisas;
+  letter-spacing: .01em;
+}
+
+@mixin catalogo {
+  @include tokens;
+
+  .encabezado {
+    position: relative;
+    padding: 2rem 1.25rem 2.5rem;
+    border-bottom: .5rem solid $amarillo;
+    // Rayas de cajón de estacionamiento en el piso del encabezado.
+    background:
+      repeating-linear-gradient(90deg, transparent 0 7rem, rgba($amarillo, .9) 7rem 7.35rem) bottom / 100% 2.2rem no-repeat,
+      $asfalto;
+    h1 {
+      text-transform: uppercase;
+      font-size: clamp(2.8rem, 9vw, 5rem);
+      line-height: .92;
+      color: $gis;
+      letter-spacing: .01em;
+    }
+    .eslogan { color: $amarillo; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; font-size: .95rem; }
+    .lead { color: #c9ced5; padding-bottom: 1.5rem; }
+    .volver { color: #aeb4bd; }
+  }
+
+  .chips { margin-top: 1.25rem; }
+  .chip {
+    background: transparent;
+    border: 2px solid #3d434b;
+    color: $gis;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: .04em;
+    font-size: .85rem;
+    &.active { background: $amarillo; border-color: $amarillo; color: $asfalto; }
+  }
+  .section-title { text-transform: uppercase; letter-spacing: .03em; }
+
+  .card {
+    background: $asfalto-claro;
+    overflow: hidden;
+    .img { aspect-ratio: 4 / 3; img { object-fit: cover; } }
+    .cat { color: $amarillo; text-transform: uppercase; letter-spacing: .06em; font-size: .75rem; font-weight: 700; }
+    h3 { font-family: var(--t-fuente-titulo); font-size: 1.35rem; text-transform: uppercase; line-height: 1.05; color: $gis; }
+    .dato { color: #aeb4bd; font-size: .9rem; }
+    .precio { @include precio-parabrisas; font-size: 1.9rem; line-height: 1; }
+  }
+  .badge { background: $amarillo; color: $asfalto; border-radius: .2rem; text-transform: uppercase; font-weight: 700; letter-spacing: .05em; }
+  .estado a { color: $amarillo; }
+}
+
+@mixin producto {
+  @include tokens;
+  .foto { border-radius: .35rem; overflow: hidden; border: 1px solid #3d434b; }
+  .info {
+    .cat { color: $amarillo; text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
+    h1 { text-transform: uppercase; font-size: clamp(2.2rem, 6vw, 3.4rem); line-height: .95; color: $gis; }
+    .precio { @include precio-parabrisas; font-size: 2.8rem; line-height: 1; }
+  }
+  .caracteristicas {
+    border: 0;
+    border-left: .35rem solid $amarillo;
+    background: $asfalto-claro;
+    li { border-color: #3d434b; }
+  }
+  .miniaturas button[aria-current='true'] { outline-color: $amarillo; }
+}

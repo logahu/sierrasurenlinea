@@ -9,6 +9,7 @@ Cada negocio tiene su página, su color, su catálogo y su WhatsApp:
 | Belleza (antes Cosméticos) | `/belleza` (`/cosmeticos` redirige) | Venta |
 | Renta de Inflables | `/inflables` | Renta (precio por día / por evento) |
 | Vinatería | `/vinateria` | Venta, solo mayores de 18 |
+| Autos de la Sierra (nombre provisional) | `/autos` | Venta de autos usados y reparados, con galería de fotos |
 | Encarguitos | `/encarguitos` | Servicio: mandados y viajes en moto con formulario ("lista del mandado") y tarifas por zona |
 
 ```

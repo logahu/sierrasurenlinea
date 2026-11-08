@@ -60,6 +60,8 @@ export interface Producto {
   /** "por día", "por evento"... o null si es precio de venta. */
   unidadPrecio: string | null;
   caracteristicas: string[];
+  /** Fotos adicionales, después de la principal. */
+  galeria?: string[];
   imagenUrl: string;
   negocioSlug: string;
   negocioNombre: string;
