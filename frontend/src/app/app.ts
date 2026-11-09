@@ -4,6 +4,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { SwUpdate } from '@angular/service-worker';
 import { filter, map, of, switchMap, tap } from 'rxjs';
 import { CatalogoService } from './catalogo/catalogo.service';
+import { InstalarApp } from './instalar';
 import { VisitasService, esRutaDelPanel, folio, rutaDeUrl } from './visitas';
 
 @Component({
@@ -22,6 +23,7 @@ export class App {
   protected readonly folio = signal<string | null>(null);
   /** En /admin se oculta el menú de negocios: el panel tiene su propia barra. */
   protected readonly enPanel = signal(false);
+  protected readonly instalar = inject(InstalarApp);
 
   constructor() {
     const visitas = inject(VisitasService);
