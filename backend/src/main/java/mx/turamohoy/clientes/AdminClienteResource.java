@@ -28,6 +28,9 @@ import java.util.stream.Collectors;
 @RolesAllowed(Rol.DUENO)
 public class AdminClienteResource {
 
+    @jakarta.inject.Inject
+    mx.turamohoy.admin.SesionActual sesion;
+
     public record ClienteAdminDto(Long id, String nombre, String telefono, String correo, String direccion,
                                   boolean activo, Instant creado, Instant ultimoAcceso, long pedidos) {
     }
@@ -60,6 +63,10 @@ public class AdminClienteResource {
         Cliente c = Cliente.findById(id);
         if (c == null) {
             throw Errores.de(Status.NOT_FOUND, "No existe ese cliente.");
+        }
+        if (c.activo != a.activo()) {
+            mx.turamohoy.historial.Bitacora.anotar(sesion.usuario(), null, mx.turamohoy.historial.Bitacora.CLIENTE, c.id,
+                    (a.activo() ? "Devolvió el acceso al cliente " : "Quitó el acceso al cliente ") + c.nombre, c.telefono);
         }
         c.activo = a.activo();
         return new ClienteAdminDto(c.id, c.nombre, c.telefono, c.correo, c.direccion, c.activo, c.creado,

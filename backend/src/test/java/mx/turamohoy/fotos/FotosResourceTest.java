@@ -69,4 +69,38 @@ class FotosResourceTest {
             como(dueno).body(negocio).when().put("/api/admin/negocios/belleza").then().statusCode(200);
         }
     }
+
+    @Test
+    void lasFotosSinUsarSeBorranYLasUsadasNo() {
+        String dueno = Sesiones.dueno();
+        String url = como(dueno).body(Map.of("tipo", "image/webp", "bytes", 64_000))
+                .when().post("/api/admin/negocios/belleza/fotos").then().statusCode(200).extract().path("url");
+        int id = como(dueno).when().get("/api/admin/negocios/belleza/fotos").then().statusCode(200)
+                .extract().path("fotos.find { it.url == '" + url + "' }.id");
+        como(dueno).when().get("/api/admin/negocios/belleza/fotos").then()
+                .body("fotos.find { it.id == " + id + " }.usos.size()", equalTo(0));
+
+        // En uso como portada: no se puede borrar.
+        @SuppressWarnings("unchecked")
+        Map<String, Object> negocio = new HashMap<>(como(dueno).when().get("/api/admin/negocios/belleza")
+                .then().statusCode(200).extract().as(Map.class));
+        Object original = negocio.get("portadaUrl");
+        negocio.put("portadaUrl", url);
+        como(dueno).body(negocio).when().put("/api/admin/negocios/belleza").then().statusCode(200);
+        try {
+            como(dueno).when().delete("/api/admin/negocios/belleza/fotos/" + id).then().statusCode(409)
+                    .body("mensaje", containsString("Portada del negocio"));
+        } finally {
+            negocio.put("portadaUrl", original);
+            como(dueno).body(negocio).when().put("/api/admin/negocios/belleza").then().statusCode(200);
+        }
+
+        // Ya sin usar: se borra, deja de aparecer y queda en el historial.
+        como(dueno).when().delete("/api/admin/negocios/belleza/fotos/" + id).then().statusCode(204);
+        como(dueno).when().get("/api/admin/negocios/belleza/fotos").then()
+                .body("fotos.id", org.hamcrest.Matchers.not(org.hamcrest.Matchers.hasItem(id)));
+        como(dueno).when().delete("/api/admin/negocios/belleza/fotos/" + id).then().statusCode(404);
+        como(dueno).when().get("/api/admin/historial?entidad=FOTO&id=" + id).then()
+                .body("renglones[0].accion", equalTo("Borró una foto sin usar"));
+    }
 }

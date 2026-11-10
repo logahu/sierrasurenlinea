@@ -91,6 +91,7 @@ public class AdminComidaResource {
         r.orden = Restaurante.delNegocio(n).stream().mapToInt(x -> x.orden).max().orElse(0) + 1;
         aplicar(n, r, e);
         r.persist();
+        mx.turamohoy.historial.Bitacora.anotar(sesion.usuario(), n, mx.turamohoy.historial.Bitacora.COMIDA, r.id, "Agregó el lugar de comida " + r.nombre, null);
         return Response.status(Status.CREATED).entity(RestauranteDto.de(r, List.of())).build();
     }
 
@@ -102,6 +103,7 @@ public class AdminComidaResource {
         Negocio n = servicio(slug);
         Restaurante r = restaurante(n, id);
         aplicar(n, r, e);
+        mx.turamohoy.historial.Bitacora.anotar(sesion.usuario(), n, mx.turamohoy.historial.Bitacora.COMIDA, r.id, "Editó el lugar de comida " + r.nombre, null);
         return RestauranteDto.de(r, Platillo.deRestaurantes(List.of(r), false));
     }
 
@@ -117,6 +119,7 @@ public class AdminComidaResource {
         p.orden = Platillo.deRestaurantes(List.of(r), false).stream().mapToInt(x -> x.orden).max().orElse(0) + 1;
         aplicar(n, p, e);
         p.persist();
+        mx.turamohoy.historial.Bitacora.anotar(sesion.usuario(), n, mx.turamohoy.historial.Bitacora.COMIDA, r.id, "Agregó el platillo " + p.nombre + " en " + r.nombre, null);
         return Response.status(Status.CREATED).entity(PlatilloDto.de(p)).build();
     }
 
@@ -132,6 +135,7 @@ public class AdminComidaResource {
             throw Errores.de(Status.NOT_FOUND, "No existe ese platillo en " + r.nombre + ".");
         }
         aplicar(n, p, e);
+        mx.turamohoy.historial.Bitacora.anotar(sesion.usuario(), n, mx.turamohoy.historial.Bitacora.COMIDA, r.id, "Editó el platillo " + p.nombre + " de " + r.nombre, null);
         return PlatilloDto.de(p);
     }
 

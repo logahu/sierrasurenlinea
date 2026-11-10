@@ -1,5 +1,6 @@
 package mx.turamohoy.pedidos;
 
+import mx.turamohoy.historial.Bitacora;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.vertx.core.http.HttpServerRequest;
 import jakarta.inject.Inject;
@@ -141,6 +142,7 @@ public class PedidoResource {
             p.actualizado = p.creado;
             p.persistAndFlush();
             p.folio = Pedido.folioDe(n, p.id);
+            Bitacora.anotar(p.cliente, n, Bitacora.PEDIDO, p.id, "Hizo el pedido " + p.folio + " · " + p.tipo, null);
             return new PedidoRegistrado(p.id, p.folio, p.totalEstimado);
         });
         CompletableFuture.runAsync(() -> notificador.pedidoNuevo(r.id()));
@@ -226,6 +228,8 @@ public class PedidoResource {
                 l.pedido = p;
                 l.persist();
             }
+            Bitacora.anotar(p.cliente, n, Bitacora.PEDIDO, p.id, "Hizo el pedido " + p.folio + " · " + p.tipo,
+                    "Total aprox.: " + mx.turamohoy.historial.Cambios.texto(total));
             return new PedidoRegistrado(p.id, p.folio, total);
         });
         CompletableFuture.runAsync(() -> notificador.pedidoNuevo(r.id()));

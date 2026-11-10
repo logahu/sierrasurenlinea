@@ -66,4 +66,19 @@ class ClienteTest {
         // Un cliente no ve la lista.
         given().auth().oauth2(Clientes.nuevo("Curioso")).when().get("/api/admin/clientes").then().statusCode(403);
     }
+
+    @Test
+    void elClienteActivaYQuitaLosAvisosDeSusPedidos() {
+        String token = Clientes.nuevo("Avisos");
+        given().auth().oauth2(token).when().get("/api/clientes/push/clave").then().statusCode(200)
+                .body("clave", notNullValue());
+        Map<String, Object> s = Map.of("endpoint", "https://push.ejemplo.mx/cliente-" + System.nanoTime(),
+                "p256dh", "BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QTpQtUbVlUls0VJXg7A8u-Ts1XbjhazAkj7I99e8QcYP7DkM",
+                "auth", "tBHItJI5svbpez7KI4CCXg");
+        given().auth().oauth2(token).contentType(ContentType.JSON).body(s).when().post("/api/clientes/push")
+                .then().statusCode(204);
+        given().auth().oauth2(token).contentType(ContentType.JSON).body(s).when().delete("/api/clientes/push")
+                .then().statusCode(204);
+        given().contentType(ContentType.JSON).body(s).when().post("/api/clientes/push").then().statusCode(401);
+    }
 }

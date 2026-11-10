@@ -2,6 +2,8 @@ package mx.turamohoy.pedidos;
 
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.event.TransactionPhase;
 import org.jboss.logging.Logger;
 
 import java.net.URI;
@@ -13,6 +15,7 @@ import java.security.KeyPair;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Notificaciones push a los celulares del panel (Web Push con VAPID). Las llaves VAPID
@@ -69,17 +72,56 @@ public class Notificador {
                         + (p.totalEstimado != null ? " · aprox. $" + p.totalEstimado.stripTrailingZeros().toPlainString() : "");
                 return new Datos(titulo, cuerpo, destinos);
             });
-            enviar(d.titulo(), d.cuerpo(), "pedido-" + pedidoId, d.destinos());
+            enviar(d.titulo(), d.cuerpo(), "pedido-" + pedidoId, "/admin/pedidos", d.destinos());
         } catch (RuntimeException e) {
             LOG.warnf(e, "No se pudo avisar del pedido %d", pedidoId);
         }
     }
 
-    void enviar(String titulo, String cuerpo, String etiqueta, List<Destino> destinos) {
+    /** Cuando el cambio de estado ya se guardó, avisa al cliente sin hacer esperar al panel. */
+    void alCambiarEstado(@Observes(during = TransactionPhase.AFTER_SUCCESS) EstadoCambiado e) {
+        CompletableFuture.runAsync(() -> estadoParaCliente(e.pedidoId()));
+    }
+
+    /** Avisa al cliente en qué va su pedido (si activó los avisos en su celular). */
+    public void estadoParaCliente(Long pedidoId) {
+        try {
+            record Datos(String titulo, String cuerpo, List<Destino> destinos) {
+            }
+            Datos d = QuarkusTransaction.requiringNew().call(() -> {
+                Pedido p = Pedido.findById(pedidoId);
+                if (p == null || p.cliente == null) {
+                    return new Datos("", "", List.of());
+                }
+                List<Destino> destinos = PushCliente.<PushCliente>list("cliente", p.cliente).stream()
+                        .map(s -> new Destino(s.endpoint, s.p256dh, s.auth)).toList();
+                return new Datos("Tu pedido " + p.folio + " · " + p.negocio.nombre, mensajeParaCliente(p), destinos);
+            });
+            enviar(d.titulo(), d.cuerpo(), "mi-pedido-" + pedidoId, "/cuenta", d.destinos());
+        } catch (RuntimeException e) {
+            LOG.warnf(e, "No se pudo avisar al cliente del pedido %d", pedidoId);
+        }
+    }
+
+    static String mensajeParaCliente(Pedido p) {
+        boolean cita = "CITA".equals(p.modo);
+        return switch (p.estado) {
+            case Pedido.ACEPTADO -> cita ? "Tu cita está confirmada. Te esperamos."
+                    : p.negocio.nombre + " aceptó tu pedido y ya lo está preparando.";
+            case Pedido.EN_CAMINO -> cita ? "Ya te están atendiendo."
+                    : Pedido.RECOGER.equals(p.entrega) ? "Tu pedido está listo. Ya puedes pasar a recogerlo."
+                    : "¡Tu pedido va en camino!";
+            case Pedido.ENTREGADO -> cita ? "Gracias por tu visita." : "Tu pedido fue entregado. ¡Gracias por tu compra!";
+            case Pedido.CANCELADO -> "Tu pedido fue cancelado. Si tienes dudas, escríbele al negocio por WhatsApp.";
+            default -> "Recibimos tu pedido.";
+        };
+    }
+
+    void enviar(String titulo, String cuerpo, String etiqueta, String url, List<Destino> destinos) {
         if (destinos.isEmpty()) {
             return;
         }
-        byte[] contenido = carga(titulo, cuerpo, etiqueta).getBytes(StandardCharsets.UTF_8);
+        byte[] contenido = carga(titulo, cuerpo, etiqueta, url).getBytes(StandardCharsets.UTF_8);
         long expira = Instant.now().plus(Duration.ofHours(12)).getEpochSecond();
         for (Destino s : destinos) {
             try {
@@ -95,7 +137,10 @@ public class Notificador {
                 http.sendAsync(req, HttpResponse.BodyHandlers.discarding()).thenAccept(r -> {
                     if (r.statusCode() == 404 || r.statusCode() == 410) {
                         // El celular ya no acepta notificaciones: se borra la suscripción.
-                        QuarkusTransaction.requiringNew().run(() -> PushSuscripcion.delete("endpoint", s.endpoint()));
+                        QuarkusTransaction.requiringNew().run(() -> {
+                            PushSuscripcion.delete("endpoint", s.endpoint());
+                            PushCliente.delete("endpoint", s.endpoint());
+                        });
                     } else if (r.statusCode() >= 300) {
                         LOG.warnf("Push rechazado (%d) por %s", r.statusCode(), URI.create(s.endpoint()).getHost());
                     }
@@ -107,7 +152,7 @@ public class Notificador {
     }
 
     /** Formato que entiende el service worker de Angular (ngsw). */
-    static String carga(String titulo, String cuerpo, String etiqueta) {
+    static String carga(String titulo, String cuerpo, String etiqueta, String url) {
         return "{\"notification\":{"
                 + "\"title\":" + json(titulo) + ","
                 + "\"body\":" + json(cuerpo) + ","
@@ -115,7 +160,7 @@ public class Notificador {
                 + "\"badge\":\"icons/icon-96x96.png\","
                 + "\"tag\":" + json(etiqueta) + ","
                 + "\"renotify\":true,\"requireInteraction\":true,\"vibrate\":[300,100,300,100,300],"
-                + "\"data\":{\"onActionClick\":{\"default\":{\"operation\":\"navigateLastFocusedOrOpen\",\"url\":\"/admin/pedidos\"}}}"
+                + "\"data\":{\"onActionClick\":{\"default\":{\"operation\":\"navigateLastFocusedOrOpen\",\"url\":" + json(url) + "}}}"
                 + "}}";
     }
 

@@ -20,6 +20,8 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response.Status;
 import mx.turamohoy.catalogo.model.Negocio;
+import mx.turamohoy.historial.Bitacora;
+import mx.turamohoy.historial.Cambios;
 import mx.turamohoy.catalogo.model.Producto;
 import mx.turamohoy.catalogo.model.TipoNegocio;
 import mx.turamohoy.fotos.ImagenesPermitidas;
@@ -82,6 +84,12 @@ public class AdminNegocioResource {
     @Transactional
     public NegocioAdminDto guardar(@PathParam("slug") String slug, @Valid @NotNull NegocioEdicion e) {
         Negocio n = sesion.negocioEditable(slug);
+        Cambios c = new Cambios();
+        String nombre = n.nombre, eslogan = n.eslogan, descripcion = n.descripcion, whatsapp = n.whatsapp,
+                telefono = n.telefono, direccion = n.direccion, horario = n.horario, portadaAntes = n.portadaUrl,
+                color = n.colorPrimario;
+        Integer tope = n.topeAdelanto;
+        boolean visible = n.visible;
         n.eslogan = limpio(e.eslogan());
         n.descripcion = limpio(e.descripcion());
         n.whatsapp = Telefonos.whatsapp(e.whatsapp());
@@ -104,6 +112,14 @@ public class AdminNegocioResource {
                 n.visible = e.visible();
             }
         }
+        c.campo("Nombre", nombre, n.nombre).campo("Eslogan", eslogan, n.eslogan).largo("Descripción", descripcion, n.descripcion)
+                .campo("WhatsApp", whatsapp, n.whatsapp).campo("Teléfono", telefono, n.telefono)
+                .campo("Dirección", direccion, n.direccion).campo("Horario", horario, n.horario)
+                .largo("Portada", portadaAntes, n.portadaUrl).campo("Color", color, n.colorPrimario)
+                .campo("Tope de adelanto", tope, n.topeAdelanto).campo("Visible", visible, n.visible);
+        if (c.hay()) {
+            Bitacora.anotar(sesion.usuario(), n, Bitacora.NEGOCIO, n.id, "Editó los datos de " + n.nombre, c.toString());
+        }
         return aDto(n);
     }
 
@@ -117,6 +133,10 @@ public class AdminNegocioResource {
     @Transactional
     public NegocioAdminDto cambiarVisibleApp(@PathParam("slug") String slug, @NotNull Visibilidad v) {
         Negocio n = sesion.negocioEditable(slug);
+        if (n.visibleApp != v.visible()) {
+            Bitacora.anotar(sesion.usuario(), n, Bitacora.NEGOCIO, n.id,
+                    (v.visible() ? "Mostró " : "Ocultó ") + n.nombre + " en la app", null);
+        }
         n.visibleApp = v.visible();
         return aDto(n);
     }
@@ -128,6 +148,10 @@ public class AdminNegocioResource {
     @Transactional
     public NegocioAdminDto cambiarVisible(@PathParam("slug") String slug, @NotNull Visibilidad v) {
         Negocio n = sesion.negocioEditable(slug);
+        if (n.visible != v.visible()) {
+            Bitacora.anotar(sesion.usuario(), n, Bitacora.NEGOCIO, n.id,
+                    (v.visible() ? "Mostró " : "Ocultó ") + n.nombre + " en el sitio", null);
+        }
         n.visible = v.visible();
         return aDto(n);
     }

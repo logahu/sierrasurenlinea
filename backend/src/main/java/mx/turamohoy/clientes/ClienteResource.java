@@ -1,5 +1,10 @@
 package mx.turamohoy.clientes;
 
+import mx.turamohoy.pedidos.PushCliente;
+import mx.turamohoy.pedidos.Notificador;
+import mx.turamohoy.pedidos.AdminPedidoResource;
+import java.util.Map;
+import jakarta.ws.rs.DELETE;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.smallrye.jwt.build.Jwt;
@@ -190,6 +195,44 @@ public class ClienteResource {
                         p.entrega == null ? Pedido.DOMICILIO : p.entrega, p.entregar, p.cuando, p.totalEstimado,
                         p.estado, p.creado))
                 .toList();
+    }
+
+    // ---------------------------------------------------------------- avisos push
+
+    @jakarta.inject.Inject
+    Notificador notificador;
+
+    @GET
+    @Path("/push/clave")
+    @RolesAllowed(SesionCliente.ROL)
+    public Map<String, String> clavePush() {
+        sesion.cliente();
+        return Map.of("clave", notificador.clavePublica());
+    }
+
+    /** Este celular quiere avisos cuando cambie el estado de sus pedidos. */
+    @POST
+    @Path("/push")
+    @RolesAllowed(SesionCliente.ROL)
+    @Transactional
+    public void suscribir(@Valid @NotNull AdminPedidoResource.Suscripcion s) {
+        Cliente c = sesion.cliente();
+        PushCliente pc = PushCliente.<PushCliente>find("endpoint", s.endpoint()).firstResultOptional()
+                .orElseGet(PushCliente::new);
+        pc.cliente = c;
+        pc.endpoint = s.endpoint();
+        pc.p256dh = s.p256dh();
+        pc.auth = s.auth();
+        pc.creado = Instant.now();
+        pc.persist();
+    }
+
+    @DELETE
+    @Path("/push")
+    @RolesAllowed(SesionCliente.ROL)
+    @Transactional
+    public void desuscribir(@Valid @NotNull AdminPedidoResource.Suscripcion s) {
+        PushCliente.delete("endpoint = ?1 and cliente = ?2", s.endpoint(), sesion.cliente());
     }
 
     private static SesionDto sesionDe(Cliente c) {

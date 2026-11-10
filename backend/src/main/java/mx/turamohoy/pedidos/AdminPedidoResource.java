@@ -1,5 +1,6 @@
 package mx.turamohoy.pedidos;
 
+import mx.turamohoy.historial.Bitacora;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -43,6 +44,9 @@ public class AdminPedidoResource {
 
     @Inject
     SesionActual sesion;
+
+    @Inject
+    jakarta.enterprise.event.Event<EstadoCambiado> estadoCambiado;
 
     @Inject
     Notificador notificador;
@@ -133,8 +137,12 @@ public class AdminPedidoResource {
         if (repartidor && p.repartidor == null) {
             p.repartidor = u; // el repartidor que acepta o sale con el pedido se lo queda
         }
+        Bitacora.anotar(u, p.negocio, Bitacora.PEDIDO, p.id,
+                "Pedido " + p.folio + ": " + texto(p.estado) + " → " + texto(nuevo), null);
         p.estado = nuevo;
         p.actualizado = Instant.now();
+        // Avisa al cliente (si activó los avisos) cuando ya se guardó el cambio.
+        estadoCambiado.fire(new EstadoCambiado(p.id));
         return PedidoDto.de(p);
     }
 

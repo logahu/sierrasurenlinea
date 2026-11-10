@@ -1,5 +1,6 @@
 package mx.turamohoy.admin;
 
+import mx.turamohoy.historial.Bitacora;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import io.quarkus.narayana.jta.QuarkusTransaction;
 import io.quarkus.security.Authenticated;
@@ -126,5 +127,6 @@ public class AuthResource {
         }
         Contrasenas.validarNueva(req.nueva());
         u.contrasenaHash = Contrasenas.cifrar(req.nueva());
+        Bitacora.anotar(u, u.negocio, Bitacora.USUARIO, u.id, "Cambió su contraseña", null);
     }
 }

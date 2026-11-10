@@ -20,6 +20,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 import mx.turamohoy.catalogo.model.Negocio;
+import mx.turamohoy.historial.Bitacora;
 
 import java.util.List;
 
@@ -98,6 +99,8 @@ public class AdminUsuarioResource {
         u.negocio = negocio;
         u.contrasenaHash = Contrasenas.cifrar(req.contrasena());
         u.persist();
+        Bitacora.anotar(sesion.usuario(), negocio, Bitacora.USUARIO, u.id,
+                "Dio de alta a " + u.nombre + " como " + nombreRol(u), u.correo);
         return Response.status(Status.CREATED).entity(UsuarioDto.de(u)).build();
     }
 
@@ -118,6 +121,7 @@ public class AdminUsuarioResource {
             } else if (activo && !u.activo) {
                 exigirCupoDeAdministrador();
             }
+            anotarAcceso(u, activo);
             u.activo = activo;
             return UsuarioDto.de(u);
         }
@@ -126,6 +130,11 @@ public class AdminUsuarioResource {
         if (activo && Rol.ENCARGADO.equals(u.rol)) {
             exigirSinEncargado(negocio, u);
         }
+        if (u.negocio != negocio) {
+            Bitacora.anotar(sesion.usuario(), negocio, Bitacora.USUARIO, u.id, "Cambió de negocio a " + u.nombre,
+                    (u.negocio == null ? "todos" : u.negocio.nombre) + " → " + (negocio == null ? "todos" : negocio.nombre));
+        }
+        anotarAcceso(u, activo);
         u.negocio = negocio;
         u.activo = activo;
         return UsuarioDto.de(u);
@@ -141,6 +150,22 @@ public class AdminUsuarioResource {
         u.contrasenaHash = Contrasenas.cifrar(req.nueva());
         u.intentosFallidos = 0;
         u.bloqueadoHasta = null;
+        Bitacora.anotar(sesion.usuario(), u.negocio, Bitacora.USUARIO, u.id, "Puso una contraseña nueva a " + u.nombre, null);
+    }
+
+    private void anotarAcceso(Usuario u, boolean activo) {
+        if (u.activo != activo) {
+            Bitacora.anotar(sesion.usuario(), u.negocio, Bitacora.USUARIO, u.id,
+                    (activo ? "Devolvió el acceso a " : "Quitó el acceso a ") + u.nombre, nombreRol(u));
+        }
+    }
+
+    static String nombreRol(Usuario u) {
+        return switch (u.rol) {
+            case Rol.DUENO -> "administrador";
+            case Rol.REPARTIDOR -> u.negocio == null ? "repartidor de todos los negocios" : "repartidor de " + u.negocio.nombre;
+            default -> "encargado de " + (u.negocio == null ? "?" : u.negocio.nombre);
+        };
     }
 
     private Usuario buscar(Long id) {

@@ -67,6 +67,7 @@ public class AdminTiposEncargoResource {
         t.orden = TipoEncargo.delNegocio(n).stream().mapToInt(x -> x.orden).max().orElse(0) + 1;
         aplicar(t, e);
         t.persist();
+        mx.turamohoy.historial.Bitacora.anotar(sesion.usuario(), n, mx.turamohoy.historial.Bitacora.ENCARGO, t.id, "Agregó la opción " + t.titulo + " a la lista del mandado", null);
         return Response.status(Status.CREATED).entity(TipoEncargoDto.de(t)).build();
     }
 
@@ -81,6 +82,7 @@ public class AdminTiposEncargoResource {
             throw Errores.de(Status.NOT_FOUND, "No existe esa opción en " + n.nombre + ".");
         }
         aplicar(t, e);
+        mx.turamohoy.historial.Bitacora.anotar(sesion.usuario(), n, mx.turamohoy.historial.Bitacora.ENCARGO, t.id, "Editó la opción " + t.titulo + " de la lista del mandado", null);
         return TipoEncargoDto.de(t);
     }
 

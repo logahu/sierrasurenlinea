@@ -160,7 +160,7 @@ class PedidosTest {
 
     @Test
     void cargaJsonDeLaNotificacion() {
-        String c = Notificador.carga("Nuevo \"pedido\"", "Ana\nCentro", "pedido-1");
+        String c = Notificador.carga("Nuevo \"pedido\"", "Ana\nCentro", "pedido-1", "/admin/pedidos");
         assertTrue(c.contains("\"title\":\"Nuevo \\\"pedido\\\"\""));
         assertTrue(c.contains("\"body\":\"Ana\\nCentro\""));
         assertTrue(c.contains("navigateLastFocusedOrOpen"));

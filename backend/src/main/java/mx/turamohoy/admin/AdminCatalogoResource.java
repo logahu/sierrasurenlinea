@@ -24,6 +24,8 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 import mx.turamohoy.catalogo.model.Categoria;
 import mx.turamohoy.catalogo.model.Negocio;
+import mx.turamohoy.historial.Bitacora;
+import mx.turamohoy.historial.Cambios;
 import mx.turamohoy.catalogo.model.Producto;
 import mx.turamohoy.fotos.ImagenesPermitidas;
 
@@ -127,6 +129,7 @@ public class AdminCatalogoResource {
         c.orden = e.orden() != null ? e.orden()
                 : Categoria.<Categoria>list("negocio", n).stream().mapToInt(x -> x.orden).max().orElse(0) + 1;
         c.persist();
+        Bitacora.anotar(sesion.usuario(), n, Bitacora.CATEGORIA, c.id, "Creó la categoría " + c.nombre, null);
         return Response.status(Status.CREATED).entity(CategoriaAdminDto.de(c)).build();
     }
 
@@ -136,11 +139,18 @@ public class AdminCatalogoResource {
     @Transactional
     public CategoriaAdminDto editarCategoria(@PathParam("slug") String slug, @PathParam("id") Long id,
                                              @Valid @NotNull CategoriaEdicion e) {
-        Categoria c = categoriaDe(sesion.negocioEditable(slug), id);
+        Negocio n = sesion.negocioEditable(slug);
+        Categoria c = categoriaDe(n, id);
+        Cambios cambios = new Cambios().campo("Nombre", c.nombre, e.nombre().trim())
+                .largo("Descripción", c.descripcion, e.descripcion())
+                .campo("Orden", c.orden, e.orden() != null ? e.orden() : c.orden);
         c.nombre = e.nombre().trim();
         c.descripcion = AdminNegocioResource.limpio(e.descripcion());
         if (e.orden() != null) {
             c.orden = e.orden();
+        }
+        if (cambios.hay()) {
+            Bitacora.anotar(sesion.usuario(), n, Bitacora.CATEGORIA, c.id, "Editó la categoría " + c.nombre, cambios.toString());
         }
         return CategoriaAdminDto.de(c);
     }
@@ -174,6 +184,8 @@ public class AdminCatalogoResource {
         p.disponible = true;
         aplicar(n, p, e);
         p.persist();
+        Bitacora.anotar(sesion.usuario(), n, Bitacora.PRODUCTO, p.id, "Creó el producto " + p.nombre,
+                "Precio: " + Cambios.texto(p.precio) + "; Categoría: " + p.categoria.nombre);
         return Response.status(Status.CREATED).entity(ProductoAdminDto.de(p)).build();
     }
 
@@ -184,7 +196,26 @@ public class AdminCatalogoResource {
                                            @Valid @NotNull ProductoEdicion e) {
         Negocio n = sesion.negocioEditable(slug);
         Producto p = productoDe(n, id);
+        Cambios cambios = new Cambios();
+        String nombre = p.nombre;
+        java.math.BigDecimal precio = p.precio;
+        String unidad = p.unidadPrecio;
+        String categoria = p.categoria.nombre;
+        boolean destacado = p.destacado;
+        boolean disponible = p.disponible;
+        String descripcion = p.descripcion;
+        String caracteristicas = p.caracteristicas;
+        String imagen = p.imagenUrl;
+        String galeria = p.galeria;
         aplicar(n, p, e);
+        cambios.campo("Nombre", nombre, p.nombre).campo("Precio", precio, p.precio).campo("Unidad", unidad, p.unidadPrecio)
+                .campo("Categoría", categoria, p.categoria.nombre).campo("Destacado", destacado, p.destacado)
+                .campo("Disponible", disponible, p.disponible).largo("Descripción", descripcion, p.descripcion)
+                .largo("Características", caracteristicas, p.caracteristicas).largo("Foto principal", imagen, p.imagenUrl)
+                .largo("Galería", galeria, p.galeria);
+        if (cambios.hay()) {
+            Bitacora.anotar(sesion.usuario(), n, Bitacora.PRODUCTO, p.id, "Editó el producto " + p.nombre, cambios.toString());
+        }
         return ProductoAdminDto.de(p);
     }
 
@@ -194,7 +225,12 @@ public class AdminCatalogoResource {
     @Transactional
     public ProductoAdminDto cambiarDisponible(@PathParam("slug") String slug, @PathParam("id") Long id,
                                               @NotNull Disponibilidad d) {
-        Producto p = productoDe(sesion.negocioEditable(slug), id);
+        Negocio n = sesion.negocioEditable(slug);
+        Producto p = productoDe(n, id);
+        if (p.disponible != d.disponible()) {
+            Bitacora.anotar(sesion.usuario(), n, Bitacora.PRODUCTO, p.id,
+                    (d.disponible() ? "Mostró el producto " : "Ocultó el producto ") + p.nombre, null);
+        }
         p.disponible = d.disponible();
         return ProductoAdminDto.de(p);
     }
