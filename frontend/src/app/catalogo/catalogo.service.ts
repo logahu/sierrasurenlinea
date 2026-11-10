@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, combineLatest, map, shareReplay } from 'rxjs';
 import { visiblesAqui } from '../modo-app';
-import { Negocio, Producto } from './catalogo.model';
+import { Negocio, Producto, Restaurante } from './catalogo.model';
 import { environment } from '../../environments/environment';
 
 /**
@@ -54,5 +54,10 @@ export class CatalogoService {
 
   producto(id: number): Observable<Producto> {
     return this.http.get<Producto>(`${this.base}/productos/${id}`);
+  }
+
+  /** Encarguitos: lugares de comida con sus platillos disponibles. */
+  restaurantes(negocio: string): Observable<Restaurante[]> {
+    return this.http.get<Restaurante[]>(`${this.base}/negocios/${encodeURIComponent(negocio)}/restaurantes`);
   }
 }

@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { TipoEncargo } from '../catalogo/catalogo.model';
+import { Platillo, Restaurante, TipoEncargo } from '../catalogo/catalogo.model';
 import {
   CategoriaAdmin, CategoriaEdicion, NegocioAdmin, NegocioEdicion, ProductoAdmin, ProductoEdicion, Usuario,
 } from './admin.model';
@@ -95,6 +95,25 @@ export class AdminApi {
 
   editarTipoEncargo(slug: string, id: number | string, datos: Omit<TipoEncargo, 'id'>): Observable<TipoEncargo> {
     return this.http.put<TipoEncargo>(`${this.de(slug)}/tipos-encargo/${id}`, datos);
+  }
+
+  // ---- Comida a domicilio (Encarguitos)
+
+  restaurantes(slug: string): Observable<Restaurante[]> {
+    return this.http.get<Restaurante[]>(`${this.de(slug)}/restaurantes`);
+  }
+
+  guardarRestaurante(slug: string, r: Partial<Restaurante>): Observable<Restaurante> {
+    const { id, platillos: _platillos, ...datos } = r;
+    return id
+      ? this.http.put<Restaurante>(`${this.de(slug)}/restaurantes/${id}`, datos)
+      : this.http.post<Restaurante>(`${this.de(slug)}/restaurantes`, datos);
+  }
+
+  guardarPlatillo(slug: string, restauranteId: number, p: Partial<Platillo>): Observable<Platillo> {
+    const { id, ...datos } = p;
+    const base = `${this.de(slug)}/restaurantes/${restauranteId}/platillos`;
+    return id ? this.http.put<Platillo>(`${base}/${id}`, datos) : this.http.post<Platillo>(base, datos);
   }
 
   private de(slug: string): string {

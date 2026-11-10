@@ -69,6 +69,7 @@ Requieren `Authorization: Bearer <token>` (lo obtiene `/api/auth/entrar`).
 | GET/POST/PUT | `/api/admin/negocios/{slug}/categorias[/{id}]` | dueño; encargado el suyo | Categorías: alta, renombrar, orden |
 | GET/POST/PUT | `/api/admin/negocios/{slug}/productos[/{id}]` | dueño; encargado el suyo | Productos o tarifas: alta y edición (incluye ocultos) |
 | PUT | `/api/admin/negocios/{slug}/productos/{id}/disponible` | dueño; encargado el suyo | Mostrar u ocultar en el sitio |
+| GET/POST/PUT | `/api/admin/negocios/{slug}/restaurantes[/{id}[/platillos[/{id}]]]` | dueño; encargado el suyo | Encarguitos: lugares de comida y sus platillos |
 | GET/POST/PUT | `/api/admin/negocios/{slug}/tipos-encargo[/{id}]` | dueño; encargado el suyo | Encarguitos: tarjetas de la lista del mandado (mandado o viaje en moto) |
 | POST | `/api/admin/negocios/{slug}/fotos` | dueño; encargado el suyo | Permiso (URL firmada) para subir una foto a R2 |
 

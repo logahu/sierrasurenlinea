@@ -12,6 +12,7 @@ export const ICONOS: { id: IconoEncargo; nombre: string }[] = [
   { id: 'caja', nombre: 'Caja (paquete)' },
   { id: 'recibo', nombre: 'Recibo (pagos)' },
   { id: 'moto', nombre: 'Moto (viaje)' },
+  { id: 'plato', nombre: 'Plato (comida)' },
   { id: 'pastilla', nombre: 'Pastilla (farmacia)' },
   { id: 'llave', nombre: 'Llave (trámites)' },
   { id: 'estrella', nombre: 'Estrella (otro)' },
@@ -51,7 +52,7 @@ export function opcionNueva(): Omit<TipoEncargo, 'id'> {
             <summary>
               <strong>{{ t.titulo }}</strong>
               <span class="ayuda">
-                {{ t.modo === 'VIAJE' ? 'Viaje en moto' : 'Mandado' }} · orden {{ t.orden }}
+                {{ t.modo === 'VIAJE' ? 'Viaje en moto' : t.modo === 'COMIDA' ? 'Comida a domicilio' : 'Mandado' }} · orden {{ t.orden }}
                 · {{ t.visible ? 'a la vista' : 'oculta' }}
               </span>
             </summary>
@@ -69,6 +70,7 @@ export function opcionNueva(): Omit<TipoEncargo, 'id'> {
                   <select name="modo" [(ngModel)]="t.modo">
                     <option value="MANDADO">Mandado (llevar cosas)</option>
                     <option value="VIAJE">Viaje en moto (llevar personas)</option>
+                    <option value="COMIDA">Comida a domicilio (menú de lugares)</option>
                   </select>
                 </label>
                 <label>Ícono
@@ -81,7 +83,7 @@ export function opcionNueva(): Omit<TipoEncargo, 'id'> {
                 <input name="etiquetaRecoger" [(ngModel)]="t.etiquetaRecoger" maxlength="60" /></label>
               <label class="en-linea"><input type="checkbox" name="recogerObligatorio" [(ngModel)]="t.recogerObligatorio" />
                 Pedir obligatoriamente dónde empezamos</label>
-              @if (t.modo === 'MANDADO') {
+              @if (t.modo !== 'VIAJE') {
                 <label class="en-linea"><input type="checkbox" name="manejaDinero" [(ngModel)]="t.manejaDinero" />
                   Implica comprar o pagar algo (pregunta quién paga)</label>
               }

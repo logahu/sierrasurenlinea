@@ -37,6 +37,11 @@ export const ADMIN_ROUTES: Routes = [
             loadComponent: () => import('./tipos-encargo-page').then((m) => m.TiposEncargoPage),
           },
           {
+            path: 'negocios/:slug/comida',
+            title: 'Comida a domicilio · Panel',
+            loadComponent: () => import('./comida-page').then((m) => m.ComidaPage),
+          },
+          {
             path: 'negocios/:slug/categorias',
             title: 'Categorías · Panel',
             loadComponent: () => import('./categorias-page').then((m) => m.CategoriasPage),

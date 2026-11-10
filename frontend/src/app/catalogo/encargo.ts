@@ -1,4 +1,4 @@
-import { Producto, TipoEncargo } from './catalogo.model';
+import { Platillo, Producto, Restaurante, TipoEncargo } from './catalogo.model';
 import { precioConUnidad } from './contacto';
 
 /**
@@ -82,6 +82,19 @@ export function opcionDe(tipos: readonly TipoEncargo[], id: string): TipoEncargo
 }
 
 export const esViaje = (o: TipoEncargo): boolean => o.modo === 'VIAJE';
+export const esComida = (o: TipoEncargo): boolean => o.modo === 'COMIDA';
+
+/** Pedido de comida: el lugar y cuántos de cada platillo. */
+export interface PedidoComida {
+  restaurante: Restaurante;
+  lineas: { platillo: Platillo; cantidad: number }[];
+}
+
+export function subtotalComida(p: PedidoComida | undefined): number {
+  return (p?.lineas ?? []).reduce((s, l) => s + l.platillo.precio * l.cantidad, 0);
+}
+
+const pesos = (n: number) => precioConUnidad({ precio: n, unidadPrecio: null });
 
 /** Zonas con precio para esa opción (viaje o mandado), de la más barata a la más cara. */
 export function zonasPara(tarifas: readonly Producto[], opcion: TipoEncargo): Producto[] {
@@ -99,14 +112,22 @@ export function zonasDeEntrega(tarifas: readonly Producto[]): Producto[] {
 export function etiquetas(o: TipoEncargo) {
   return esViaje(o)
     ? { detalle: 'Notas para el conductor (opcional)', entregar: '¿A dónde vas?', zona: 'Zona de destino', nombre: 'Nombre de quien viaja' }
-    : { detalle: 'Qué necesitas que hagamos', entregar: 'Entregar en', zona: 'Zona de entrega', nombre: 'Tu nombre' };
+    : esComida(o)
+      ? { detalle: 'Indicaciones (opcional)', entregar: 'Entregar en', zona: 'Zona de entrega', nombre: 'Tu nombre' }
+      : { detalle: 'Qué necesitas que hagamos', entregar: 'Entregar en', zona: 'Zona de entrega', nombre: 'Tu nombre' };
 }
 
 /** Campos que faltan, en lenguaje del cliente. Vacío = se puede enviar. */
-export function camposFaltantes(d: DatosEncargo, opcion: TipoEncargo = opcionDe(TIPOS_ENCARGO, d.tipo)): string[] {
+export function camposFaltantes(
+  d: DatosEncargo,
+  opcion: TipoEncargo = opcionDe(TIPOS_ENCARGO, d.tipo),
+  comida?: PedidoComida,
+): string[] {
   const viaje = esViaje(opcion);
   const faltan: string[] = [];
-  if (!viaje && !d.detalle.trim()) faltan.push('qué necesitas que hagamos');
+  if (esComida(opcion)) {
+    if (!comida?.lineas.length) faltan.push('qué platillos quieres');
+  } else if (!viaje && !d.detalle.trim()) faltan.push('qué necesitas que hagamos');
   if (opcion.recogerObligatorio && !d.recoger.trim() && !d.ubicacion) {
     faltan.push(viaje ? 'dónde te recogemos' : 'dónde lo recogemos');
   }
@@ -118,7 +139,7 @@ export function camposFaltantes(d: DatosEncargo, opcion: TipoEncargo = opcionDe(
 }
 
 export function textoPagoCompra(pago: PagoCompra, opcion: TipoEncargo, tope = TOPE_ADELANTO): string {
-  const que = opcion.icono === 'recibo' ? 'el monto a pagar' : 'los productos';
+  const que = opcion.icono === 'recibo' ? 'el monto a pagar' : esComida(opcion) ? 'la comida' : 'los productos';
   return pago === 'repartidor-adelanta'
     ? `El repartidor adelanta ${que} (hasta $${tope}) y le pago todo al recibir`
     : `Pago ${que} antes, por transferencia`;
@@ -145,16 +166,30 @@ export function armarMensajeEncargo(
   zona: Producto | undefined,
   tope = TOPE_ADELANTO,
   opcion: TipoEncargo = opcionDe(TIPOS_ENCARGO, d.tipo),
+  comida?: PedidoComida,
 ): string {
   const viaje = esViaje(opcion);
-  const lineas = viaje
-    ? ['Hola Encarguitos, quiero un viaje en moto:', '']
-    : ['Hola Encarguitos, quiero hacer un encargo:', '', `*Tipo:* ${opcion.titulo}`, `*Qué necesito:* ${d.detalle.trim()}`];
+  let lineas: string[];
+  if (esComida(opcion) && comida) {
+    lineas = ['Hola Encarguitos, quiero pedir comida:', '', `*Lugar:* ${comida.restaurante.nombre}`, '*Pedido:*'];
+    for (const l of comida.lineas) {
+      lineas.push(`• ${l.cantidad} × ${l.platillo.nombre} — ${pesos(l.platillo.precio * l.cantidad)}`);
+    }
+    lineas.push(`*Subtotal de la comida:* ${pesos(subtotalComida(comida))}`);
+    if (d.detalle.trim()) lineas.push(`*Indicaciones:* ${d.detalle.trim()}`);
+  } else {
+    lineas = viaje
+      ? ['Hola Encarguitos, quiero un viaje en moto:', '']
+      : ['Hola Encarguitos, quiero hacer un encargo:', '', `*Tipo:* ${opcion.titulo}`, `*Qué necesito:* ${d.detalle.trim()}`];
+  }
   const etiquetaRecoger = opcion.etiquetaRecoger.replace(/\s*\(opcional\)\s*$/, '');
   if (d.recoger.trim()) lineas.push(`*${etiquetaRecoger}:* ${d.recoger.trim()}`);
   if (d.ubicacion) lineas.push(`*Mi ubicación:* ${d.ubicacion}`);
   lineas.push(`*${viaje ? 'Voy a' : 'Entregar en'}:* ${d.entregar.trim()}`);
   if (zona) lineas.push(`*Zona:* ${zona.nombre} (${precioConUnidad(zona)})`);
+  if (esComida(opcion) && comida && zona && !zona.unidadPrecio?.startsWith('extra')) {
+    lineas.push(`*Total aproximado:* ${pesos(subtotalComida(comida) + zona.precio)} (comida + envío)`);
+  }
   lineas.push(`*${viaje ? 'Cuándo' : 'Para'}:* ${textoCuando(d, opcion)}`);
   if (viaje) {
     if (d.equipaje) lineas.push('*Equipaje:* llevo mochila o bolsa');

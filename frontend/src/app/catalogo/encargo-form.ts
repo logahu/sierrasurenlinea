@@ -1,11 +1,15 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { rxResource } from '@angular/core/rxjs-interop';
+import { of } from 'rxjs';
+import { CatalogoService } from './catalogo.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { Negocio, Producto } from './catalogo.model';
+import { Negocio, Platillo, Producto, Restaurante } from './catalogo.model';
 import { enlaceWhatsapp, precioConUnidad } from './contacto';
 import {
   DatosEncargo, ENCARGO_VACIO, TIPOS_ENCARGO, TOPE_ADELANTO, UNIDAD_VIAJE, armarMensajeEncargo,
-  camposFaltantes, enlaceMapa, esViaje, etiquetas, opcionDe, textoPagoCompra, zonasPara,
+  PedidoComida, camposFaltantes, enlaceMapa, esComida, esViaje, etiquetas, opcionDe, subtotalComida, textoPagoCompra,
+  zonasPara,
 } from './encargo';
 
 /**
@@ -51,7 +55,41 @@ export class EncargoForm {
     this.tarifas().filter((t) => t.unidadPrecio === UNIDAD_VIAJE).sort((a, b) => a.precio - b.precio),
   );
   protected readonly extras = computed(() => this.tarifas().filter((t) => t.unidadPrecio === 'extra'));
-  protected readonly faltan = computed(() => camposFaltantes(this.datos(), this.opcion()));
+  // --- Comida a domicilio ---------------------------------------------------------
+  private readonly catalogo = inject(CatalogoService);
+  protected readonly comida = computed(() => esComida(this.opcion()));
+  /** Lugares de comida: solo se piden si el negocio ofrece esa opción. */
+  protected readonly lugares = rxResource({
+    params: () => (this.tipos().some(esComida) ? this.negocio().slug : undefined),
+    stream: ({ params }) => (params ? this.catalogo.restaurantes(params) : of([] as Restaurante[])),
+  });
+  protected readonly lugarId = signal<number | null>(null);
+  protected readonly lugar = computed(() => (this.lugares.value() ?? []).find((r) => r.id === this.lugarId()));
+  /** Cantidad por platillo (id → cantidad). */
+  protected readonly cantidades = signal<Record<number, number>>({});
+  protected readonly pedidoComida = computed<PedidoComida | undefined>(() => {
+    const r = this.lugar();
+    if (!r) return undefined;
+    const c = this.cantidades();
+    return { restaurante: r, lineas: r.platillos.filter((p) => (c[p.id] ?? 0) > 0).map((p) => ({ platillo: p, cantidad: c[p.id] })) };
+  });
+  protected readonly subtotal = computed(() => subtotalComida(this.pedidoComida()));
+  protected readonly piezas = computed(() => (this.pedidoComida()?.lineas ?? []).reduce((s, l) => s + l.cantidad, 0));
+
+  protected elegirLugar(r: Restaurante): void {
+    if (this.lugarId() !== r.id) this.cantidades.set({});
+    this.lugarId.set(r.id);
+  }
+
+  protected cantidad(p: Platillo): number {
+    return this.cantidades()[p.id] ?? 0;
+  }
+
+  protected cambiarCantidad(p: Platillo, paso: number): void {
+    this.cantidades.update((c) => ({ ...c, [p.id]: Math.max(0, Math.min(20, (c[p.id] ?? 0) + paso)) }));
+  }
+
+  protected readonly faltan = computed(() => camposFaltantes(this.datos(), this.opcion(), this.pedidoComida()));
   /** Solo se muestran los errores después del primer intento de enviar. */
   protected readonly intentado = signal(false);
   protected readonly ubicando = signal(false);
@@ -64,6 +102,7 @@ export class EncargoForm {
       this.tarifas().find((t) => String(t.id) === this.datos().zona),
       this.tope(),
       this.opcion(),
+      this.pedidoComida(),
     ),
   );
 

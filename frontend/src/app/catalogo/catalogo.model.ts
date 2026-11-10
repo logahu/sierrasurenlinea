@@ -32,8 +32,8 @@ export interface Negocio {
   tiposEncargo?: TipoEncargo[];
 }
 
-export type ModoEncargo = 'MANDADO' | 'VIAJE';
-export type IconoEncargo = 'bolsa' | 'caja' | 'recibo' | 'estrella' | 'moto' | 'pastilla' | 'llave';
+export type ModoEncargo = 'MANDADO' | 'VIAJE' | 'COMIDA';
+export type IconoEncargo = 'bolsa' | 'caja' | 'recibo' | 'estrella' | 'moto' | 'pastilla' | 'llave' | 'plato';
 
 /** Una opción de ¿Qué necesitas? (se edita desde el panel). */
 export interface TipoEncargo {
@@ -70,4 +70,27 @@ export interface Producto {
   categoriaSlug: string;
   categoriaNombre: string;
   destacado: boolean;
+}
+
+/** Encarguitos: lugar de comida con su menú. */
+export interface Restaurante {
+  id: number;
+  nombre: string;
+  descripcion: string | null;
+  horario: string | null;
+  direccion: string | null;
+  imagenUrl: string | null;
+  orden: number;
+  visible: boolean;
+  platillos: Platillo[];
+}
+
+export interface Platillo {
+  id: number;
+  nombre: string;
+  descripcion: string | null;
+  precio: number;
+  imagenUrl: string | null;
+  orden: number;
+  disponible: boolean;
 }

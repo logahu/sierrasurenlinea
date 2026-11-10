@@ -320,6 +320,7 @@
   label.btn { cursor: pointer; font-weight: 600; }
   .deshabilitado { opacity: .55; pointer-events: none; }
   .error-foto { color: #b02a5b; }
+  .sin-foto { width: 120px; height: 120px; flex: none; display: grid; place-items: center; font-size: 2rem; border-radius: .6rem; background: var(--fondo-alt); border: 1px dashed var(--linea); }
 }
 .panel .etiqueta-campo { display: block; font-size: .92rem; margin-bottom: .4rem; }
 
@@ -376,3 +377,19 @@
   &.inactivo { opacity: .7; .punto { background: var(--linea); } }
 }
 .fila-visible .interruptores { display: flex; gap: .75rem; }
+
+// Comida a domicilio: menú de un lugar
+.menu-admin { display: grid; gap: .5rem; padding: .85rem 1rem 1rem; border-top: 1px solid var(--linea); }
+.platillo-admin {
+  display: grid;
+  grid-template-columns: 1fr 6rem;
+  gap: .4rem .5rem;
+  align-items: center;
+  padding: .6rem;
+  border: 1px solid var(--linea);
+  border-radius: .55rem;
+  .ancho { grid-column: 1 / -1; }
+  &.inactivo { opacity: .65; }
+  &.nuevo { border-style: dashed; }
+  .btn { justify-self: end; }
+}

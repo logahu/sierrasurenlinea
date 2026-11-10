@@ -10,7 +10,11 @@ import { FotosService } from './fotos';
   selector: 'app-foto-campo',
   template: `
     <div class="foto-campo">
-      <img [src]="url() || respaldo()" alt="" width="120" height="120" />
+      @if (url() || respaldo()) {
+        <img [src]="url() || respaldo()" alt="" width="120" height="120" />
+      } @else {
+        <span class="sin-foto" aria-hidden="true">📷</span>
+      }
       <div>
         <label class="btn secundario" [class.deshabilitado]="subiendo()">
           {{ subiendo() ? 'Subiendo…' : url() ? 'Cambiar foto' : 'Subir foto' }}

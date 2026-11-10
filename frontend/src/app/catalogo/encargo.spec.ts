@@ -1,7 +1,7 @@
 import { Producto } from './catalogo.model';
 import { TipoEncargo } from './catalogo.model';
 import {
-  ENCARGO_VACIO, armarMensajeEncargo, camposFaltantes, enlaceMapa, opcionDe, textoCuando, zonasDeEntrega, zonasPara,
+  ENCARGO_VACIO, PedidoComida, armarMensajeEncargo, subtotalComida, camposFaltantes, enlaceMapa, opcionDe, textoCuando, zonasDeEntrega, zonasPara,
 } from './encargo';
 
 const tarifa = (id: number, nombre: string, precio: number, unidadPrecio: string): Producto => ({
@@ -113,6 +113,42 @@ describe('encargo', () => {
 
     it('si la opción no existe usa la primera', () => {
       expect(opcionDe([viaje], 'x').id).toBe(5);
+    });
+  });
+
+  describe('comida a domicilio', () => {
+    const comida: TipoEncargo = {
+      id: 6, titulo: 'Comida a domicilio', ayuda: null, ejemplo: null, etiquetaRecoger: 'Lugar de comida',
+      recogerObligatorio: false, manejaDinero: true, modo: 'COMIDA', icono: 'plato', soloProgramado: false,
+    };
+    const platillo = (id: number, nombre: string, precio: number) =>
+      ({ id, nombre, descripcion: null, precio, imagenUrl: null, orden: id, disponible: true });
+    const fonda = {
+      id: 1, nombre: 'Fonda Lupita', descripcion: null, horario: null, direccion: null, imagenUrl: null, orden: 1,
+      visible: true, platillos: [platillo(1, 'Comida corrida', 85), platillo(2, 'Agua fresca', 30)],
+    };
+    const pedido: PedidoComida = {
+      restaurante: fonda,
+      lineas: [{ platillo: fonda.platillos[0], cantidad: 2 }, { platillo: fonda.platillos[1], cantidad: 1 }],
+    };
+    const datos = { ...ENCARGO_VACIO, tipo: '6', entregar: 'Av. Juárez 10', zona: '34', nombre: 'Luis', detalle: 'sin cebolla' };
+
+    it('pide al menos un platillo, no un detalle', () => {
+      expect(camposFaltantes({ ...datos, detalle: '' }, comida, pedido)).toEqual([]);
+      expect(camposFaltantes(datos, comida, { restaurante: fonda, lineas: [] })).toEqual(['qué platillos quieres']);
+    });
+
+    it('arma el pedido con cantidades, subtotal y total aproximado', () => {
+      expect(subtotalComida(pedido)).toBe(200);
+      const msg = armarMensajeEncargo(datos, centro, 500, comida, pedido);
+      expect(msg).toContain('quiero pedir comida');
+      expect(msg).toContain('*Lugar:* Fonda Lupita');
+      expect(msg).toContain('• 2 × Comida corrida — $170');
+      expect(msg).toContain('• 1 × Agua fresca — $30');
+      expect(msg).toContain('*Subtotal de la comida:* $200');
+      expect(msg).toContain('*Indicaciones:* sin cebolla');
+      expect(msg).toContain('*Total aproximado:* $230 (comida + envío)');
+      expect(msg).toContain('El repartidor adelanta la comida');
     });
   });
 });
