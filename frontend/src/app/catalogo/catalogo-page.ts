@@ -4,6 +4,7 @@ import { rxResource } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
 import { RouterLink } from '@angular/router';
 import { CatalogoService } from './catalogo.service';
+import { soloEnWeb } from '../modo-app';
 import { ContactoNegocio } from './contacto-negocio';
 import { EncargoForm } from './encargo-form';
 import { precioConUnidad } from './contacto';
@@ -33,6 +34,9 @@ export class CatalogoPage {
     params: () => this.slug(),
     stream: ({ params }) => this.api.negocio(params),
   });
+
+  /** Dentro de la app, los negocios "solo web" muestran un aviso en lugar del catálogo. */
+  protected readonly soloWeb = computed(() => soloEnWeb(this.negocio.value()));
 
   readonly productos = rxResource({
     params: () => ({ negocio: this.slug(), categoria: this.categoria() ?? null }),

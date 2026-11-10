@@ -64,6 +64,7 @@ Requieren `Authorization: Bearer <token>` (lo obtiene `/api/auth/entrar`).
 | PUT | `/api/auth/contrasena` | con sesión | Cambiar mi contraseña (`{actual, nueva}`) |
 | GET/PUT | `/api/admin/negocios[/{slug}]` | dueño; encargado solo el suyo | Ver y editar contacto, horario, presentación; el dueño también nombre, color y si se muestra |
 | PUT | `/api/admin/negocios/{slug}/visible` | dueño | Mostrar u ocultar un negocio en el sitio |
+| PUT | `/api/admin/negocios/{slug}/visible-app` | dueño | Mostrar u ocultar un negocio solo dentro de la app (Google Play) |
 | GET/POST/PUT | `/api/admin/usuarios[/{id}]` | dueño | Encargados: alta, quitar o devolver acceso, contraseña nueva |
 | GET/POST/PUT | `/api/admin/negocios/{slug}/categorias[/{id}]` | dueño; encargado el suyo | Categorías: alta, renombrar, orden |
 | GET/POST/PUT | `/api/admin/negocios/{slug}/productos[/{id}]` | dueño; encargado el suyo | Productos o tarifas: alta y edición (incluye ocultos) |

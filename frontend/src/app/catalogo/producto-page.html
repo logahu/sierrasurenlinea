@@ -1,4 +1,10 @@
-@if (producto.error()) {
+@if (soloWeb()) {
+  <a class="volver" routerLink="/">← Todos los negocios</a>
+  <div class="estado">
+    <p>Esta sección está disponible en la página web.</p>
+    <a href="https://sierrasurenlinea.com.mx" target="_blank" rel="noopener">Abrir sierrasurenlinea.com.mx</a>
+  </div>
+} @else if (producto.error()) {
   <a class="volver" routerLink="/">← Todos los negocios</a>
   <div class="estado" role="alert">
     <p>No encontramos este producto o el servidor no responde.</p>

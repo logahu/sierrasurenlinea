@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
+import { Observable } from 'rxjs';
 import { NegocioAdmin } from './admin.model';
 import { AdminApi } from './admin.api';
 import { mensajeDeError } from './autorizacion';
@@ -11,8 +12,9 @@ import { mensajeDeError } from './autorizacion';
     <header class="panel-titulo">
       <h1>Negocios en el sitio</h1>
       <p class="ayuda">
-        Un negocio oculto no aparece en la portada ni en el menú, y su página no abre.
-        No se borra nada: al volver a mostrarlo queda igual que antes.
+        <strong>Web:</strong> un negocio oculto no aparece en la portada ni en el menú, y su página no abre.
+        <strong>App:</strong> solo lo quita dentro de la app de Google Play (por ejemplo, la vinatería, para que
+        la app sea para todo público). No se borra nada.
       </p>
     </header>
 
@@ -36,12 +38,21 @@ import { mensajeDeError } from './autorizacion';
               · {{ n.productosActivos }} {{ n.productosActivos === 1 ? 'producto' : 'productos' }} a la vista
             </span>
           </div>
-          <label class="interruptor">
-            <input type="checkbox" role="switch" [checked]="n.visible" [disabled]="cambiando() === n.slug"
-                   (change)="alternar(n, $any($event.target).checked)"
-                   [attr.aria-label]="'Mostrar ' + n.nombre + ' en el sitio'" />
-            <span>{{ cambiando() === n.slug ? 'Guardando…' : n.visible ? 'Visible' : 'Oculto' }}</span>
-          </label>
+          <div class="interruptores">
+            <label class="interruptor">
+              <input type="checkbox" role="switch" [checked]="n.visible" [disabled]="cambiando() === n.slug"
+                     (change)="alternar(n, $any($event.target).checked)"
+                     [attr.aria-label]="'Mostrar ' + n.nombre + ' en la web'" />
+              <span>Web</span>
+            </label>
+            <label class="interruptor">
+              <input type="checkbox" role="switch" [checked]="n.visibleApp && n.visible"
+                     [disabled]="cambiando() === n.slug || !n.visible"
+                     (change)="alternarApp(n, $any($event.target).checked)"
+                     [attr.aria-label]="'Mostrar ' + n.nombre + ' en la app'" />
+              <span>App</span>
+            </label>
+          </div>
         </li>
       }
     </ul>
@@ -56,9 +67,17 @@ export class VisibilidadPage {
   protected readonly error = signal<string | null>(null);
 
   protected alternar(n: NegocioAdmin, visible: boolean): void {
+    this.guardar(n, this.api.cambiarVisible(n.slug, visible));
+  }
+
+  protected alternarApp(n: NegocioAdmin, visible: boolean): void {
+    this.guardar(n, this.api.cambiarVisibleApp(n.slug, visible));
+  }
+
+  private guardar(n: NegocioAdmin, op: Observable<NegocioAdmin>): void {
     this.error.set(null);
     this.cambiando.set(n.slug);
-    this.api.cambiarVisible(n.slug, visible).subscribe({
+    op.subscribe({
       next: (nuevo) => {
         this.negocios.update((lista) => lista?.map((x) => (x.slug === nuevo.slug ? nuevo : x)));
         this.cambiando.set(null);

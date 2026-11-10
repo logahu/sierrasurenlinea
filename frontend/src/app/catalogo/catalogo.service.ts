@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, map, shareReplay } from 'rxjs';
+import { Observable, combineLatest, map, shareReplay } from 'rxjs';
+import { visiblesAqui } from '../modo-app';
 import { Negocio, Producto } from './catalogo.model';
 import { environment } from '../../environments/environment';
 
@@ -17,7 +18,10 @@ export class CatalogoService {
   /** La lista de negocios se usa en el encabezado y la portada: se pide una sola vez. */
   private readonly negocios$ = this.http
     .get<Negocio[]>(`${this.base}/negocios`)
-    .pipe(shareReplay({ bufferSize: 1, refCount: false }));
+    .pipe(
+      map((lista) => visiblesAqui(lista)), // en la app, sin los negocios "solo web"
+      shareReplay({ bufferSize: 1, refCount: false }),
+    );
 
   negocios(): Observable<Negocio[]> {
     return this.negocios$;
@@ -25,9 +29,12 @@ export class CatalogoService {
 
   /** Productos marcados como favoritos en todos los negocios (para la portada). */
   destacados(): Observable<Producto[]> {
-    return this.http
-      .get<Producto[]>(`${this.base}/productos`)
-      .pipe(map((lista) => lista.filter((p) => p.destacado)));
+    return combineLatest([this.http.get<Producto[]>(`${this.base}/productos`), this.negocios$]).pipe(
+      map(([lista, negocios]) => {
+        const aqui = new Set(negocios.map((n) => n.slug));
+        return lista.filter((p) => p.destacado && aqui.has(p.negocioSlug));
+      }),
+    );
   }
 
   negocio(slug: string): Observable<Negocio> {

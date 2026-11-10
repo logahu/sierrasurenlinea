@@ -375,3 +375,4 @@
   .punto { width: .85rem; height: .85rem; border-radius: 50%; background: var(--acento); }
   &.inactivo { opacity: .7; .punto { background: var(--linea); } }
 }
+.fila-visible .interruptores { display: flex; gap: .75rem; }

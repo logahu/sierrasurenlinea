@@ -35,6 +35,8 @@ export interface NegocioAdmin {
   horario: string | null;
   soloMayoresEdad: boolean;
   visible: boolean;
+  /** Si se muestra dentro de la app de Google Play. */
+  visibleApp: boolean;
   topeAdelanto: number | null;
   orden: number;
   productosActivos: number;
