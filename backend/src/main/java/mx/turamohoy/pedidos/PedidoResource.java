@@ -16,7 +16,10 @@ import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
+import jakarta.annotation.security.RolesAllowed;
 import mx.turamohoy.admin.Errores;
+import mx.turamohoy.clientes.Cliente;
+import mx.turamohoy.clientes.SesionCliente;
 import mx.turamohoy.catalogo.model.Negocio;
 import mx.turamohoy.catalogo.model.TipoEncargo;
 import mx.turamohoy.catalogo.model.TipoNegocio;
@@ -26,7 +29,7 @@ import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * El sitio registra aquí cada encargo antes de abrir WhatsApp. Devuelve el folio, que
+ * El sitio registra aquí cada pedido (solo clientes con cuenta) antes de abrir WhatsApp. Devuelve el folio, que
  * va en el mensaje; el pedido aparece al momento en el panel y avisa por push.
  */
 @Path("/api/pedidos")
@@ -40,6 +43,9 @@ public class PedidoResource {
     @Inject
     LimitePedidos limite;
 
+    @Inject
+    SesionCliente sesionCliente;
+
     @Context
     HttpServerRequest peticion;
 
@@ -47,8 +53,9 @@ public class PedidoResource {
             @NotBlank String negocio,
             @NotBlank @Size(max = 60) String tipo,
             @NotBlank String modo,
-            @NotBlank(message = "Falta tu nombre.") @Size(max = 80) String nombre,
-            @NotBlank(message = "Falta tu teléfono.") String telefono,
+            /** Si no se mandan, se usan los de la cuenta del cliente. */
+            @Size(max = 80) String nombre,
+            String telefono,
             @NotBlank(message = "Falta a dónde lo llevamos.") @Size(max = 300) String entregar,
             @Size(max = 80) String zona,
             @DecimalMin("0") BigDecimal total,
@@ -59,17 +66,19 @@ public class PedidoResource {
     }
 
     @POST
+    @RolesAllowed(SesionCliente.ROL)
     public Response registrar(@Valid @NotNull NuevoPedido req) {
         if (!limite.permitir(ip())) {
             throw Errores.de(429, "Hiciste muchos pedidos seguidos. Espera unos minutos o escríbenos por WhatsApp.");
         }
-        String telefono = req.telefono().replaceAll("\\D", "");
-        if (telefono.length() == 12 && telefono.startsWith("52")) {
-            telefono = telefono.substring(2);
-        }
-        if (telefono.length() != 10) {
+        Cliente cliente = sesionCliente.cliente();
+        String telefono = req.telefono() == null || req.telefono().isBlank()
+                ? cliente.telefono : Cliente.normalizarTelefono(req.telefono());
+        if (telefono == null) {
             throw Errores.de(Status.BAD_REQUEST, "El teléfono debe tener 10 dígitos.");
         }
+        String nombre = req.nombre() == null || req.nombre().isBlank() ? cliente.nombre : req.nombre().trim();
+        Long clienteId = cliente.id;
         if (!TipoEncargo.MODOS.contains(req.modo())) {
             throw Errores.de(Status.BAD_REQUEST, "Tipo de encargo no válido.");
         }
@@ -82,7 +91,8 @@ public class PedidoResource {
             p.negocio = n;
             p.tipo = req.tipo().trim();
             p.modo = req.modo();
-            p.clienteNombre = req.nombre().trim();
+            p.clienteNombre = nombre;
+            p.cliente = Cliente.findById(clienteId);
             p.clienteTelefono = tel;
             p.entregar = req.entregar().trim();
             p.zona = req.zona() == null || req.zona().isBlank() ? null : req.zona().trim();

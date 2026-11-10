@@ -23,7 +23,10 @@ import mx.turamohoy.catalogo.model.Negocio;
 
 import java.util.List;
 
-/** Alta y manejo de encargados y repartidores. Solo el dueño. Un encargado activo por negocio. */
+/**
+ * Usuarios del panel: administradores (máximo 2), encargados (uno por negocio) y repartidores.
+ * Solo un administrador. Sin borrados: se quita el acceso (baja lógica) y se puede devolver.
+ */
 @Path("/api/admin/usuarios")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -38,8 +41,9 @@ public class AdminUsuarioResource {
             @NotBlank(message = "El correo es obligatorio.") @Email(message = "El correo no es válido.")
             @Size(max = 120) String correo,
             @NotBlank(message = "La contraseña es obligatoria.") String contrasena,
-            @NotBlank(message = "Elige el negocio.") String negocioSlug,
-            /** ENCARGADO (uno por negocio) o REPARTIDOR (varios); vacío = ENCARGADO. */
+            /** Obligatorio salvo para administradores. */
+            String negocioSlug,
+            /** DUENO (administrador, máximo 2), ENCARGADO (uno por negocio) o REPARTIDOR; vacío = ENCARGADO. */
             String rol) {
     }
 
@@ -68,13 +72,21 @@ public class AdminUsuarioResource {
             throw Errores.de(Status.CONFLICT, "Ya existe un usuario con el correo " + correo + ".");
         }
         Contrasenas.validarNueva(req.contrasena());
-        Negocio negocio = negocio(req.negocioSlug());
         String rol = req.rol() == null || req.rol().isBlank() ? Rol.ENCARGADO : req.rol();
-        if (!Rol.ENCARGADO.equals(rol) && !Rol.REPARTIDOR.equals(rol)) {
-            throw Errores.de(Status.BAD_REQUEST, "El rol debe ser encargado o repartidor.");
+        if (!Rol.DUENO.equals(rol) && !Rol.ENCARGADO.equals(rol) && !Rol.REPARTIDOR.equals(rol)) {
+            throw Errores.de(Status.BAD_REQUEST, "El rol debe ser administrador, encargado o repartidor.");
         }
-        if (Rol.ENCARGADO.equals(rol)) {
-            exigirSinEncargado(negocio, null);
+        Negocio negocio = null;
+        if (Rol.DUENO.equals(rol)) {
+            exigirCupoDeAdministrador();
+        } else {
+            if (req.negocioSlug() == null || req.negocioSlug().isBlank()) {
+                throw Errores.de(Status.BAD_REQUEST, "Elige el negocio.");
+            }
+            negocio = negocio(req.negocioSlug());
+            if (Rol.ENCARGADO.equals(rol)) {
+                exigirSinEncargado(negocio, null);
+            }
         }
 
         Usuario u = new Usuario();
@@ -94,6 +106,17 @@ public class AdminUsuarioResource {
         Usuario u = buscar(id);
         u.nombre = req.nombre().trim();
         if (u.esDueno()) {
+            // Administradores: solo nombre y baja lógica; nadie se da de baja a sí mismo
+            // y siempre queda al menos uno activo.
+            boolean activo = req.activo() == null ? u.activo : req.activo();
+            if (!activo && u.activo) {
+                if (u.id.equals(sesion.usuario().id)) {
+                    throw Errores.de(Status.CONFLICT, "No puedes quitarte el acceso a ti mismo.");
+                }
+            } else if (activo && !u.activo) {
+                exigirCupoDeAdministrador();
+            }
+            u.activo = activo;
             return UsuarioDto.de(u);
         }
         Negocio negocio = req.negocioSlug() == null ? u.negocio : negocio(req.negocioSlug());
@@ -130,6 +153,16 @@ public class AdminUsuarioResource {
     private static Negocio negocio(String slug) {
         return Negocio.porSlug(slug)
                 .orElseThrow(() -> Errores.de(Status.BAD_REQUEST, "No existe el negocio " + slug + "."));
+    }
+
+    /** Máximo dos administradores activos. */
+    static final int MAX_ADMINISTRADORES = 2;
+
+    private static void exigirCupoDeAdministrador() {
+        long activos = Usuario.count("rol = ?1 and activo = true", Rol.DUENO);
+        if (activos >= MAX_ADMINISTRADORES) {
+            throw Errores.de(Status.CONFLICT, "Ya hay " + MAX_ADMINISTRADORES + " administradores activos.");
+        }
     }
 
     private static void exigirSinEncargado(Negocio negocio, Usuario excepto) {

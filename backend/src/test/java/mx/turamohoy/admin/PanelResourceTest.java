@@ -294,4 +294,28 @@ class PanelResourceTest {
                     .then().statusCode(200).body("visibleApp", equalTo(false));
         }
     }
+
+    @Test
+    void hastaDosAdministradores() {
+        String dueno = Sesiones.dueno();
+        int id = como(dueno).body(Map.of("nombre", "Segunda admin", "correo", "admin2@sierrasur.local",
+                        "contrasena", "clave-segura-1", "rol", Rol.DUENO))
+                .when().post("/api/admin/usuarios").then().statusCode(201)
+                .body("rol", equalTo(Rol.DUENO)).extract().path("id");
+        try {
+            // Ya hay dos: no cabe un tercero.
+            como(dueno).body(Map.of("nombre", "Tercero", "correo", "admin3@sierrasur.local",
+                            "contrasena", "clave-segura-1", "rol", Rol.DUENO))
+                    .when().post("/api/admin/usuarios").then().statusCode(409);
+            // La segunda entra al panel y administra usuarios.
+            String admin2 = Sesiones.entrar("admin2@sierrasur.local", "clave-segura-1");
+            como(admin2).when().get("/api/admin/usuarios").then().statusCode(200);
+            // Nadie se quita el acceso a sí mismo.
+            como(admin2).body(Map.of("nombre", "Segunda admin", "activo", false))
+                    .when().put("/api/admin/usuarios/" + id).then().statusCode(409);
+        } finally {
+            como(dueno).body(Map.of("nombre", "Segunda admin", "activo", false))
+                    .when().put("/api/admin/usuarios/" + id).then().statusCode(200).body("activo", equalTo(false));
+        }
+    }
 }

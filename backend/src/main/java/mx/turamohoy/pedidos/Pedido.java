@@ -71,6 +71,11 @@ public class Pedido extends PanacheEntityBase {
     @JoinColumn(name = "repartidor_id")
     public Usuario repartidor;
 
+    /** Cliente con cuenta que hizo el pedido. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cliente_id")
+    public mx.turamohoy.clientes.Cliente cliente;
+
     @Column(nullable = false)
     public Instant creado = Instant.now();
 

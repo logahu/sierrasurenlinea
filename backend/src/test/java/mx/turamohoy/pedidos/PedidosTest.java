@@ -4,6 +4,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 import mx.turamohoy.admin.Sesiones;
+import mx.turamohoy.clientes.Clientes;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -40,7 +41,7 @@ class PedidosTest {
     }
 
     private static int crear(String nombre) {
-        return given().contentType(ContentType.JSON).body(pedido(nombre))
+        return como(Clientes.nuevo(nombre)).body(pedido(nombre))
                 .when().post("/api/pedidos")
                 .then().statusCode(201)
                 .body("folio", matchesPattern("ENC-\\d{5}"))
@@ -56,13 +57,23 @@ class PedidosTest {
 
     @Test
     void elSitioRegistraElPedidoYValida() {
-        crear("Ana");
+        // Sin cuenta no se puede pedir.
+        given().contentType(ContentType.JSON).body(pedido("Ana")).when().post("/api/pedidos").then().statusCode(401);
+        String ana = Clientes.nuevo("Ana");
+        int id = como(ana).body(pedido("Ana")).when().post("/api/pedidos").then().statusCode(201).extract().path("id");
+        // Aparece en "mis pedidos".
+        como(ana).when().get("/api/clientes/pedidos").then().statusCode(200).body("id", hasItem(id));
         Map<String, Object> malo = pedido("Ana");
         malo.put("telefono", "123");
-        given().contentType(ContentType.JSON).body(malo).when().post("/api/pedidos").then().statusCode(400);
+        como(ana).body(malo).when().post("/api/pedidos").then().statusCode(400);
         Map<String, Object> otro = pedido("Ana");
         otro.put("negocio", "turamohoy");
-        given().contentType(ContentType.JSON).body(otro).when().post("/api/pedidos").then().statusCode(400);
+        como(ana).body(otro).when().post("/api/pedidos").then().statusCode(400);
+        // Sin nombre ni teléfono se usan los de la cuenta.
+        Map<String, Object> corto = pedido("x");
+        corto.remove("nombre");
+        corto.remove("telefono");
+        como(ana).body(corto).when().post("/api/pedidos").then().statusCode(201);
     }
 
     @Test
