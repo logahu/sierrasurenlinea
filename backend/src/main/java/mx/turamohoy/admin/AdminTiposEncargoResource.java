@@ -94,7 +94,7 @@ public class AdminTiposEncargoResource {
 
     private static void aplicar(TipoEncargo t, TipoEncargoEdicion e) {
         if (!TipoEncargo.MODOS.contains(e.modo())) {
-            throw Errores.de(Status.BAD_REQUEST, "El modo debe ser MANDADO o VIAJE.");
+            throw Errores.de(Status.BAD_REQUEST, "El modo debe ser MANDADO, VIAJE o COMIDA.");
         }
         if (!TipoEncargo.ICONOS.contains(e.icono())) {
             throw Errores.de(Status.BAD_REQUEST, "Ese ícono no existe.");
@@ -106,7 +106,7 @@ public class AdminTiposEncargoResource {
         t.recogerObligatorio = e.recogerObligatorio();
         t.modo = e.modo();
         // En un viaje no se compra nada: no aplica quién paga la compra.
-        t.manejaDinero = TipoEncargo.MANDADO.equals(e.modo()) && e.manejaDinero();
+        t.manejaDinero = !TipoEncargo.VIAJE.equals(e.modo()) && e.manejaDinero();
         t.icono = e.icono();
         t.soloProgramado = e.soloProgramado();
         if (e.orden() != null) {

@@ -11,14 +11,19 @@ import jakarta.ws.rs.core.MediaType;
 import mx.turamohoy.catalogo.dto.CategoriaDto;
 import mx.turamohoy.catalogo.dto.NegocioDto;
 import mx.turamohoy.catalogo.dto.ProductoDto;
+import mx.turamohoy.catalogo.dto.RestauranteDto;
 import mx.turamohoy.catalogo.dto.TipoEncargoDto;
 import mx.turamohoy.catalogo.model.Categoria;
 import mx.turamohoy.catalogo.model.Negocio;
+import mx.turamohoy.catalogo.model.Platillo;
 import mx.turamohoy.catalogo.model.Producto;
+import mx.turamohoy.catalogo.model.Restaurante;
 import mx.turamohoy.catalogo.model.TipoEncargo;
 import mx.turamohoy.catalogo.model.TipoNegocio;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.Map;
 
 @Path("/api/negocios")
 @Produces(MediaType.APPLICATION_JSON)
@@ -61,5 +66,20 @@ public class NegocioResource {
     private static Negocio buscar(String slug) {
         return Negocio.visiblePorSlug(slug)
                 .orElseThrow(() -> new NotFoundException("Negocio no encontrado: " + slug));
+    }
+
+    /** Encarguitos: lugares de comida visibles con sus platillos disponibles. */
+    @GET
+    @Path("/{slug}/restaurantes")
+    public List<RestauranteDto> restaurantes(@PathParam("slug") String slug) {
+        Negocio negocio = Negocio.visiblePorSlug(slug)
+                .orElseThrow(() -> new NotFoundException("No existe el negocio " + slug));
+        List<Restaurante> lugares = Restaurante.visiblesDe(negocio);
+        Map<Long, List<Platillo>> menu = Platillo.deRestaurantes(lugares, true).stream()
+                .collect(Collectors.groupingBy(p -> p.restaurante.id));
+        return lugares.stream()
+                .filter(r -> menu.containsKey(r.id))
+                .map(r -> RestauranteDto.de(r, menu.get(r.id)))
+                .toList();
     }
 }

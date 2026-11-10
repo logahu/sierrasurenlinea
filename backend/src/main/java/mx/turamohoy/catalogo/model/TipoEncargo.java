@@ -21,9 +21,10 @@ public class TipoEncargo extends PanacheEntityBase {
 
     public static final String MANDADO = "MANDADO";
     public static final String VIAJE = "VIAJE";
-    public static final Set<String> MODOS = Set.of(MANDADO, VIAJE);
+    public static final String COMIDA = "COMIDA";
+    public static final Set<String> MODOS = Set.of(MANDADO, VIAJE, COMIDA);
     /** Íconos que sabe dibujar el sitio. */
-    public static final Set<String> ICONOS = Set.of("bolsa", "caja", "recibo", "estrella", "moto", "pastilla", "llave");
+    public static final Set<String> ICONOS = Set.of("bolsa", "caja", "recibo", "estrella", "moto", "pastilla", "llave", "plato");
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

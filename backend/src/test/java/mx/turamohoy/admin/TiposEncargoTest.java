@@ -42,7 +42,7 @@ class TiposEncargoTest {
         String dueno = Sesiones.dueno();
         @SuppressWarnings("unchecked")
         Map<String, Object> viaje = new HashMap<>(como(dueno).when().get("/api/admin/negocios/encarguitos/tipos-encargo")
-                .then().statusCode(200).body("$", hasSize(5))
+                .then().statusCode(200).body("$", hasSize(6))
                 .extract().jsonPath().getMap("find { it.modo == 'VIAJE' }"));
         Object id = viaje.get("id");
         try {
