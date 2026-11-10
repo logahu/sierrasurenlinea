@@ -1,0 +1,66 @@
+<header class="cabeza">
+  <h1>Ayuda</h1>
+  <p class="intro">
+    Encuentra respuestas a las dudas más comunes y aprende a hacer tu pedido en cada negocio. Si no encuentras lo que
+    buscas, escríbenos por WhatsApp desde la página de cualquier negocio.
+  </p>
+  <nav class="indice" aria-label="En esta página">
+    <a href="/ayuda#como-pedir" (click)="$event.preventDefault(); ir('como-pedir')">Cómo pedir en cada negocio</a>
+    <a href="/ayuda#preguntas" (click)="$event.preventDefault(); ir('preguntas')">Preguntas frecuentes</a>
+  </nav>
+</header>
+
+<section id="como-pedir" aria-labelledby="titulo-guias">
+  <h2 id="titulo-guias">Cómo pedir en cada negocio</h2>
+  @if (negocios.isLoading() && !negocios.hasValue()) {
+    <p class="nota">Cargando los negocios…</p>
+  } @else if (negocios.error()) {
+    <p class="nota">No pudimos cargar los negocios. <button type="button" class="enlace" (click)="negocios.reload()">Reintentar</button></p>
+  }
+  <div class="guias">
+    @for (g of guias(); track g.slug) {
+      <details class="guia" [id]="'guia-' + g.slug" [open]="negocio() === g.slug" [style.--acento]="g.color">
+        <summary>
+          <span class="punto" aria-hidden="true"></span>
+          <span class="titulo-guia">
+            <strong>{{ g.nombre }}</strong>
+            <small>{{ g.resumen }}</small>
+          </span>
+        </summary>
+        <ol class="pasos">
+          @for (p of g.pasos; track p.titulo) {
+            <li><strong>{{ p.titulo }}.</strong> {{ p.detalle }}</li>
+          }
+        </ol>
+        @if (g.consejos.length) {
+          <div class="consejos">
+            <strong>Consejos</strong>
+            <ul>
+              @for (c of g.consejos; track c) { <li>{{ c }}</li> }
+            </ul>
+          </div>
+        }
+        <a class="ir" [routerLink]="['/', g.slug]">Ir a {{ g.nombre }} →</a>
+      </details>
+    }
+  </div>
+</section>
+
+<section id="preguntas" aria-labelledby="titulo-preguntas">
+  <h2 id="titulo-preguntas">Preguntas frecuentes</h2>
+  @for (t of temas; track t.tema) {
+    <h3>{{ t.tema }}</h3>
+    <div class="preguntas">
+      @for (q of t.preguntas; track q.pregunta) {
+        <details class="pregunta">
+          <summary>{{ q.pregunta }}</summary>
+          <p>
+            @for (parte of partes(q.respuesta); track $index) {
+              @if (parte.ruta) { <a [routerLink]="parte.ruta">{{ parte.texto }}</a> } @else { {{ parte.texto }} }
+            }
+          </p>
+        </details>
+      }
+    </div>
+  }
+</section>

@@ -169,7 +169,7 @@
             @else if (!cliente.cliente()) { Iniciar sesión para enviar }
             @else { {{ textos().enviar }} }
           </button>
-          <p class="nota">{{ textos().nota }}</p>
+          <p class="nota">{{ textos().nota }} ¿Dudas? <a routerLink="/ayuda" [queryParams]="{ negocio: n.slug }">Consulta la ayuda</a>.</p>
         </form>
       </section>
     </div>

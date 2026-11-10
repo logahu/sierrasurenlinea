@@ -233,3 +233,13 @@ h1, h2, h3 { font-family: var(--t-fuente-titulo); font-weight: var(--t-peso-titu
 :host([data-tema='vinateria']) { @include vinateria.catalogo; }
 :host([data-tema='encarguitos']) { @include encarguitos.catalogo; }
 :host([data-tema='autos']) { @include autos.catalogo; }
+
+.como-pedir {
+  position: relative;
+  display: inline-block;
+  margin-top: .6rem;
+  color: var(--t-acento-texto);
+  font-weight: 600;
+  font-size: .92rem;
+  text-underline-offset: .2em;
+}

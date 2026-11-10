@@ -11,6 +11,11 @@ export const routes: Routes = [
   // Cuenta del cliente: iniciar sesión, crear cuenta y mis pedidos.
   { path: 'cuenta', loadChildren: () => import('./cuenta/cuenta.routes').then((m) => m.CUENTA_ROUTES) },
   {
+    path: 'ayuda',
+    title: 'Ayuda y preguntas frecuentes · Sierra Sur en Línea',
+    loadComponent: () => import('./ayuda/ayuda-page').then((m) => m.AyudaPage),
+  },
+  {
     path: 'privacidad',
     title: 'Aviso de privacidad · Sierra Sur en Línea',
     loadComponent: () => import('./cuenta/privacidad-page').then((m) => m.PrivacidadPage),

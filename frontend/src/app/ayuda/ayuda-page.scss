@@ -1,0 +1,70 @@
+:host { display: block; max-width: 48rem; margin: 0 auto; padding-top: 1.5rem; line-height: 1.55; }
+
+h1, h2, h3 { font-family: var(--font-display); font-weight: 600; }
+h1 { font-size: clamp(1.9rem, 5vw, 2.5rem); margin: 0 0 .5rem; }
+h2 { font-size: 1.45rem; margin: 2.25rem 0 1rem; scroll-margin-top: 6rem; }
+h3 { font-size: 1.05rem; margin: 1.5rem 0 .6rem; color: var(--tinta-suave); font-family: var(--font-body); text-transform: uppercase; letter-spacing: .05em; font-size: .8rem; }
+section { scroll-margin-top: 6rem; }
+
+.intro { color: var(--tinta-suave); margin: 0 0 1rem; }
+.nota { color: var(--tinta-suave); }
+
+.indice { display: flex; flex-wrap: wrap; gap: .5rem; }
+.indice a {
+  padding: .45rem .9rem;
+  border: 1px solid var(--linea);
+  border-radius: 999px;
+  color: var(--tinta);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: .9rem;
+  &:hover { border-color: var(--follaje); }
+}
+
+.guias, .preguntas { display: grid; gap: .6rem; }
+
+details {
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: .9rem;
+  scroll-margin-top: 6rem;
+  summary {
+    cursor: pointer;
+    list-style: none;
+    &::-webkit-details-marker { display: none; }
+    &::after { content: '+'; margin-left: auto; font-size: 1.3rem; line-height: 1; color: var(--tinta-suave); }
+  }
+  &[open] summary::after { content: '−'; }
+}
+
+.guia {
+  border-left: 4px solid var(--acento, var(--follaje));
+  summary { display: flex; align-items: center; gap: .8rem; padding: 1rem 1.1rem; }
+  .punto { display: none; }
+  .titulo-guia { display: grid; gap: .1rem; strong { font-size: 1.08rem; } small { color: var(--tinta-suave); font-size: .88rem; } }
+  .pasos { margin: 0; padding: 0 1.1rem 0 2.6rem; li { margin: 0 0 .55rem; } li::marker { font-weight: 700; color: var(--acento, var(--follaje)); } }
+  .consejos {
+    margin: .75rem 1.1rem 0;
+    padding: .75rem 1rem;
+    border-radius: .65rem;
+    background: var(--fondo-alt);
+    font-size: .93rem;
+    ul { margin: .35rem 0 0; padding-left: 1.2rem; }
+    li { margin: .2rem 0; }
+  }
+  .ir {
+    display: inline-block;
+    margin: .9rem 1.1rem 1.1rem;
+    color: var(--acento-texto);
+    font-weight: 700;
+    text-decoration: none;
+  }
+}
+
+.pregunta {
+  summary { display: flex; gap: 1rem; padding: .85rem 1.1rem; font-weight: 600; }
+  p { margin: 0; padding: 0 1.1rem 1rem; color: var(--tinta); }
+  a { color: var(--follaje); font-weight: 600; }
+}
+
+.enlace { font: inherit; background: none; border: 0; color: var(--follaje); font-weight: 600; cursor: pointer; padding: 0; }

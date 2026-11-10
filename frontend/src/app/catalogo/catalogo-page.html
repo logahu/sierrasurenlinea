@@ -25,6 +25,7 @@
       <h1>{{ n.nombre }}</h1>
       @if (n.eslogan) { <p class="eslogan">{{ n.eslogan }}</p> }
       @if (n.descripcion) { <p class="lead">{{ n.descripcion }}</p> }
+      <a class="como-pedir" routerLink="/ayuda" [queryParams]="{ negocio: n.slug }">¿Cómo hago mi pedido?</a>
       @if (n.soloMayoresEdad) {
         <p class="aviso-edad" role="note">Venta exclusiva para mayores de 18 años. Se solicitará identificación al entregar.</p>
       }
