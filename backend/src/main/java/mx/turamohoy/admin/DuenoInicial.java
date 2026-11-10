@@ -26,7 +26,7 @@ public class DuenoInicial {
     @ConfigProperty(name = "sierrasur.admin.contrasena")
     Optional<String> contrasena;
 
-    @ConfigProperty(name = "sierrasur.admin.nombre", defaultValue = "Dueño")
+    @ConfigProperty(name = "sierrasur.admin.nombre", defaultValue = "Administrador")
     String nombre;
 
     /** ADMIN_REINICIAR=true: recuperar el acceso si se olvidó la contraseña. */

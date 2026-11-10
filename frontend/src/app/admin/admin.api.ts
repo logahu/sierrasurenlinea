@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Platillo, Restaurante, TipoEncargo } from '../catalogo/catalogo.model';
 import {
-  CategoriaAdmin, CategoriaEdicion, ClienteAdmin, NegocioAdmin, NegocioEdicion, ProductoAdmin, ProductoEdicion, Usuario,
+  CategoriaAdmin, CategoriaEdicion, ClienteAdmin, FotosNegocio, PaginaHistorial, NegocioAdmin, NegocioEdicion, ProductoAdmin, ProductoEdicion, Usuario,
 } from './admin.model';
 
 /** Endpoints del panel (/api/admin/...). El token lo agrega autorizacionInterceptor. */
@@ -31,6 +31,20 @@ export class AdminApi {
 
   cambiarVisibleApp(slug: string, visible: boolean): Observable<NegocioAdmin> {
     return this.http.put<NegocioAdmin>(`${this.base}/negocios/${encodeURIComponent(slug)}/visible-app`, { visible });
+  }
+
+  historial(filtro: { entidad?: string; negocio?: string; q?: string; pagina?: number }): Observable<PaginaHistorial> {
+    const params: Record<string, string> = {};
+    for (const [k, v] of Object.entries(filtro)) if (v !== undefined && v !== '') params[k] = String(v);
+    return this.http.get<PaginaHistorial>(`${this.base}/historial`, { params });
+  }
+
+  fotos(slug: string): Observable<FotosNegocio> {
+    return this.http.get<FotosNegocio>(`${this.base}/negocios/${encodeURIComponent(slug)}/fotos`);
+  }
+
+  borrarFoto(slug: string, id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/negocios/${encodeURIComponent(slug)}/fotos/${id}`);
   }
 
   clientes(q = ''): Observable<ClienteAdmin[]> {

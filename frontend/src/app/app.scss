@@ -135,3 +135,39 @@ main { flex: 1; width: 100%; padding-bottom: 6rem; }
   .sesion { padding: .35rem .7rem; font-size: .82rem; }
   .ayuda { font-size: .82rem; }
 }
+
+// Aviso después de hacer un pedido: lleva a Mi cuenta para darle seguimiento.
+.aviso-pedido {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .65rem max(1rem, calc(50vw - 36rem));
+  background: #e9f7ee;
+  border-bottom: 1px solid #bfe3cb;
+  color: #17432a;
+  font-size: .9rem;
+  line-height: 1.4;
+  p { margin: 0; flex: 1; }
+  .palomita {
+    flex: none;
+    display: inline-grid;
+    place-items: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 50%;
+    background: #1fa855;
+    color: #fff;
+    font-weight: 700;
+  }
+  a {
+    flex: none;
+    padding: .4rem .85rem;
+    border-radius: 999px;
+    background: #157a3d;
+    color: #fff;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  .cerrar { flex: none; border: 0; background: none; color: inherit; font-size: 1rem; cursor: pointer; padding: .25rem; }
+}

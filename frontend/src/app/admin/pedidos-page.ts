@@ -26,7 +26,17 @@ const CADA_MS = 15000;
     @if (avisoPush(); as a) {
       <div class="aviso-push" role="note">
         <span>{{ a }}</span>
-        @if (puedeActivar()) {
+        @if (bloqueadas()) {
+          <ol class="pasos-permiso">
+            <li>Toca el ícono a la izquierda de la dirección (candado o ajustes) y entra a <strong>Permisos</strong>.
+              Si usas la app instalada: Ajustes del teléfono → Apps → <strong>Sierra Sur Pedidos</strong>.</li>
+            <li>En <strong>Notificaciones</strong>, elige <strong>Permitir</strong>.</li>
+            <li>Regresa aquí y toca el botón de abajo.</li>
+          </ol>
+          <button type="button" class="btn primario" (click)="reintentar()" [disabled]="activando()">
+            Ya las permití, activar
+          </button>
+        } @else if (puedeActivar()) {
           <button type="button" class="btn primario" (click)="activar()" [disabled]="activando()">
             {{ activando() ? 'Activando…' : '🔔 Activar notificaciones' }}
           </button>
@@ -108,14 +118,17 @@ export class PedidosPage {
   private conocidos: Set<number> | null = null;
 
   private readonly suscripcion = toSignal(this.servicio.suscrito(), { initialValue: null });
-  protected readonly puedeActivar = computed(() => this.servicio.pushDisponible && this.servicio.permiso !== 'denied');
+  /** Permiso del navegador; se vuelve a leer al regresar de los ajustes. */
+  protected readonly permiso = signal(this.servicio.permiso);
+  protected readonly bloqueadas = computed(() => this.permiso() === 'denied');
+  protected readonly puedeActivar = computed(() => this.servicio.pushDisponible && !this.bloqueadas());
   protected readonly avisoPush = computed(() => {
     if (this.suscripcion()) return null;
     if (!this.servicio.pushDisponible) {
       return 'Para recibir avisos con el celular bloqueado, instala la app del panel (menú del navegador → "Instalar app" o "Agregar a pantalla de inicio").';
     }
-    if (this.servicio.permiso === 'denied') {
-      return 'Las notificaciones están bloqueadas para este sitio. Actívalas en los ajustes del navegador.';
+    if (this.bloqueadas()) {
+      return 'Las notificaciones están bloqueadas para este sitio. Sigue estos pasos para permitirlas:';
     }
     return 'Activa las notificaciones para enterarte de cada pedido aunque tengas el celular bloqueado.';
   });
@@ -123,7 +136,11 @@ export class PedidosPage {
   constructor() {
     this.cargar();
     const intervalo = setInterval(() => document.visibilityState === 'visible' && this.cargar(), CADA_MS);
-    const alVolver = () => document.visibilityState === 'visible' && this.cargar();
+    // Al volver (p. ej. de los ajustes del navegador) se recargan los pedidos y se revisa el permiso.
+    const alVolver = () => {
+      this.permiso.set(this.servicio.permiso);
+      if (document.visibilityState === 'visible') this.cargar();
+    };
     document.addEventListener('visibilitychange', alVolver);
     inject(DestroyRef).onDestroy(() => {
       clearInterval(intervalo);
@@ -186,10 +203,29 @@ export class PedidosPage {
     try {
       await this.servicio.activarNotificaciones();
     } catch (e) {
-      this.error.set(e instanceof Error ? `No se pudieron activar: ${e.message}` : mensajeDeError(e));
+      this.permiso.set(this.servicio.permiso);
+      // Si las bloqueó, se muestran los pasos en lugar del error del navegador (en inglés).
+      if (!this.bloqueadas()) {
+        this.error.set(
+          e instanceof Error
+            ? 'No se pudieron activar las notificaciones. Revisa tu conexión e inténtalo de nuevo.'
+            : mensajeDeError(e),
+        );
+      }
     } finally {
+      this.permiso.set(this.servicio.permiso);
       this.activando.set(false);
     }
+  }
+
+  /** Después de cambiar el permiso en los ajustes. */
+  protected reintentar(): void {
+    this.permiso.set(this.servicio.permiso);
+    if (this.bloqueadas()) {
+      this.error.set('Todavía aparecen bloqueadas. Revisa el paso 2 y recarga la página.');
+      return;
+    }
+    void this.activar();
   }
 
   protected whatsapp(p: Pedido): string {

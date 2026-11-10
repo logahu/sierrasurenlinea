@@ -25,8 +25,12 @@
       {{ textos().nota }}
     </p>
     <p class="nota">Si WhatsApp no se abrió, revisa que tu navegador permita ventanas emergentes.</p>
+    <p class="seguimiento">
+      Puedes ver en qué va tu pedido en cualquier momento en <a routerLink="/cuenta">Mi cuenta → Mis pedidos</a>.
+    </p>
+    <app-boton-avisos />
     <div class="botones">
-      <a class="btn-principal" routerLink="/cuenta">Ver mis pedidos</a>
+      <a class="btn-principal" routerLink="/cuenta">Ver mi pedido</a>
       <a class="btn-claro" [routerLink]="['/', n.slug]">Seguir viendo {{ n.nombre }}</a>
     </div>
   </section>

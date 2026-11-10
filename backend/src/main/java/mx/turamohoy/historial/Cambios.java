@@ -39,7 +39,7 @@ public final class Cambios {
         return String.join("; ", lista);
     }
 
-    static String texto(Object v) {
+    public static String texto(Object v) {
         if (v == null || (v instanceof String s && s.isBlank())) {
             return "(vacío)";
         }

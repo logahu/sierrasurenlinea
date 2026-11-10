@@ -31,6 +31,20 @@
   }
 </header>
 
+@if (ultimoPedido.actual(); as p) {
+  @if (!enPanel() && !enCuenta()) {
+    <div class="aviso-pedido" role="status">
+      <span class="palomita" aria-hidden="true">✓</span>
+      <p>
+        <strong>Tu pedido{{ p.folio ? ' ' + p.folio : '' }} se registró</strong> en {{ p.negocio }}.
+        Dale seguimiento en tu cuenta.
+      </p>
+      <a routerLink="/cuenta">Ver mi pedido</a>
+      <button type="button" class="cerrar" (click)="ultimoPedido.cerrar()" aria-label="Cerrar aviso">✕</button>
+    </div>
+  }
+}
+
 <main class="contenedor">
   <router-outlet />
 </main>

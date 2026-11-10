@@ -67,6 +67,16 @@ export const ADMIN_ROUTES: Routes = [
                 loadComponent: () => import('./editar-negocio').then((m) => m.EditarNegocio),
               },
               {
+                path: 'negocios/:slug/fotos',
+                title: 'Fotos · Panel',
+                loadComponent: () => import('./fotos-page').then((m) => m.FotosPage),
+              },
+              {
+                path: 'historial',
+                title: 'Historial · Panel',
+                loadComponent: () => import('./historial-page').then((m) => m.HistorialPage),
+              },
+              {
                 path: 'visibilidad',
                 title: 'Negocios en el sitio · Panel',
                 canActivate: [soloDueno],

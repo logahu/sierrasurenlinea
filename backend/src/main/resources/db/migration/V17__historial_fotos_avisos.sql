@@ -45,3 +45,6 @@ CREATE TABLE push_cliente (
     CONSTRAINT uq_push_cliente_endpoint UNIQUE (endpoint)
 );
 CREATE INDEX ix_push_cliente ON push_cliente (cliente_id);
+
+-- El rol se llama "Administrador" en todo el panel.
+UPDATE usuario SET nombre = 'Administrador' WHERE rol = 'DUENO' AND nombre = 'Dueño';

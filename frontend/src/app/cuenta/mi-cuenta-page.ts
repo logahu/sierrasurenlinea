@@ -1,19 +1,22 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import { Component, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { mensajeDeError } from '../admin/autorizacion';
 import { ClienteSesionService } from './cliente-sesion';
+import { AvisosCliente } from './avisos-cliente';
+import { BotonAvisos } from './boton-avisos';
 import { MINIMO_CONTRASENA, estadoParaCliente } from './cuenta.model';
 
 @Component({
   selector: 'app-mi-cuenta-page',
-  imports: [ReactiveFormsModule, RouterLink, DatePipe, CurrencyPipe],
+  imports: [ReactiveFormsModule, RouterLink, DatePipe, CurrencyPipe, BotonAvisos],
   styleUrl: './cuenta.scss',
   styles: `
     .encabezado { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
+    app-boton-avisos { display: block; margin-bottom: .9rem; }
     .pedidos { list-style: none; margin: 0; padding: 0; display: grid; gap: .6rem; }
     .pedido {
       display: grid; grid-template-columns: 1fr auto; gap: .15rem 1rem;
@@ -37,12 +40,13 @@ import { MINIMO_CONTRASENA, estadoParaCliente } from './cuenta.model';
         <p class="intro">Desde aquí consultas tus pedidos y mantienes tus datos al día.</p>
 
         <h2>Mis pedidos</h2>
-        @if (pedidos.isLoading()) {
+        <app-boton-avisos titulo="Recibe avisos de tus pedidos." />
+        @if (pedidos.isLoading() && !pedidos.hasValue()) {
           <p class="nota">Cargando tus pedidos…</p>
-        } @else if (pedidos.error()) {
+        } @else if (pedidos.error() && !pedidos.hasValue()) {
           <p class="error">No pudimos cargar tus pedidos. Intenta de nuevo en un momento.</p>
         } @else {
-          <ul class="pedidos">
+          <ul class="pedidos" aria-live="polite">
             @for (p of pedidos.value() ?? []; track p.id) {
               <li class="pedido">
                 <strong>{{ p.negocioNombre }} · {{ p.tipo }}</strong>
@@ -113,6 +117,7 @@ import { MINIMO_CONTRASENA, estadoParaCliente } from './cuenta.model';
 export class MiCuentaPage {
   protected readonly sesion = inject(ClienteSesionService);
   private readonly router = inject(Router);
+  private readonly avisos = inject(AvisosCliente);
   protected readonly estado = estadoParaCliente;
   protected readonly minimo = MINIMO_CONTRASENA;
 
@@ -133,6 +138,12 @@ export class MiCuentaPage {
   protected readonly errorClave = signal<string | null>(null);
 
   constructor() {
+    // Mientras haya pedidos en curso, el estado se actualiza solo cada 30 segundos.
+    const reloj = setInterval(() => {
+      const enCurso = (this.pedidos.value() ?? []).some((p) => ['NUEVO', 'ACEPTADO', 'EN_CAMINO'].includes(p.estado));
+      if (enCurso && document.visibilityState === 'visible') this.pedidos.reload();
+    }, 30_000);
+    inject(DestroyRef).onDestroy(() => clearInterval(reloj));
     // Trae los datos al día (y detecta si la sesión ya no es válida).
     this.sesion.refrescar().subscribe({
       next: (c) => this.datos.patchValue({ nombre: c.nombre, correo: c.correo ?? '', direccion: c.direccion ?? '' }),
@@ -179,7 +190,8 @@ export class MiCuentaPage {
       });
   }
 
-  protected salir(): void {
+  protected async salir(): Promise<void> {
+    await this.avisos.apagar().catch(() => undefined);
     this.sesion.salir();
     void this.router.navigateByUrl('/');
   }

@@ -1,6 +1,7 @@
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { ClienteSesionService } from '../cuenta/cliente-sesion';
+import { UltimoPedido } from '../cuenta/ultimo-pedido';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
@@ -111,6 +112,7 @@ export class EncargoForm {
   );
 
   protected readonly cliente = inject(ClienteSesionService);
+  private readonly ultimoPedido = inject(UltimoPedido);
   private readonly router = inject(Router);
   /** Ruta de esta página, para volver aquí después de iniciar sesión. */
   protected readonly aqui = computed(() => '/' + this.negocio().slug);
@@ -203,6 +205,7 @@ export class EncargoForm {
       registro.then((r) => r.folio).catch(() => undefined),
       new Promise<undefined>((ok) => setTimeout(() => ok(undefined), 6000)),
     ]);
+    this.ultimoPedido.registrar(folio, this.negocio().nombre);
     const mensaje = armarMensajeEncargo(this.datos(), zona, this.tope(), this.opcion(), this.pedidoComida(), folio);
     const url = enlaceWhatsapp(this.negocio().whatsapp, mensaje);
     this.enviando.set(false);

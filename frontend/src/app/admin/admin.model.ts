@@ -13,6 +13,44 @@ export interface Usuario {
   bloqueado: boolean;
 }
 
+/** Un renglón del historial de cambios. */
+export interface RenglonHistorial {
+  id: number;
+  cuando: string;
+  actorTipo: 'USUARIO' | 'CLIENTE' | 'SISTEMA';
+  actorNombre: string;
+  negocioSlug: string | null;
+  negocioNombre: string | null;
+  entidad: string;
+  entidadId: number | null;
+  accion: string;
+  detalle: string | null;
+}
+
+export interface PaginaHistorial {
+  renglones: RenglonHistorial[];
+  hayMas: boolean;
+}
+
+/** Una foto subida a R2 y dónde se usa. */
+export interface FotoAdmin {
+  id: number;
+  url: string;
+  tipo: string;
+  bytes: number;
+  subida: string;
+  subidaPor: string | null;
+  usos: string[];
+}
+
+export interface FotosNegocio {
+  fotos: FotoAdmin[];
+  bytesEnUso: number;
+  bytesSinUsar: number;
+  borradas: number;
+  bytesLiberados: number;
+}
+
 /** Cliente registrado en el sitio, visto desde el panel. */
 export interface ClienteAdmin {
   id: number;

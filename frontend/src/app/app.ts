@@ -6,6 +6,7 @@ import { filter, map, of, switchMap, tap } from 'rxjs';
 import { CatalogoService } from './catalogo/catalogo.service';
 import { ClienteSesionService } from './cuenta/cliente-sesion';
 import { InstalarApp } from './instalar';
+import { UltimoPedido } from './cuenta/ultimo-pedido';
 import { VisitasService, esRutaDelPanel, folio, rutaDeUrl } from './visitas';
 
 @Component({
@@ -26,6 +27,9 @@ export class App {
   protected readonly enPanel = signal(false);
   protected readonly instalar = inject(InstalarApp);
   protected readonly cliente = inject(ClienteSesionService);
+  protected readonly ultimoPedido = inject(UltimoPedido);
+  /** En Mi cuenta ya se ven los pedidos: ahí no hace falta el aviso. */
+  protected readonly enCuenta = signal(false);
 
   constructor() {
     const visitas = inject(VisitasService);
@@ -36,6 +40,7 @@ export class App {
         tap((ruta) => {
           this.folio.set(null);
           this.enPanel.set(esRutaDelPanel(ruta));
+          this.enCuenta.set(ruta === '/cuenta');
         }),
         // El panel no cuenta como visita.
         switchMap((ruta) => (esRutaDelPanel(ruta) ? of(null) : visitas.registrar(ruta))),

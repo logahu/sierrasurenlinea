@@ -7,6 +7,8 @@ import { firstValueFrom } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { mensajeDeError } from '../admin/autorizacion';
 import { ClienteSesionService } from '../cuenta/cliente-sesion';
+import { BotonAvisos } from '../cuenta/boton-avisos';
+import { UltimoPedido } from '../cuenta/ultimo-pedido';
 import { soloEnWeb } from '../modo-app';
 import { CatalogoService } from './catalogo.service';
 import { ModoPedido } from './catalogo.model';
@@ -28,7 +30,7 @@ interface Enviado {
  */
 @Component({
   selector: 'app-pedido-page',
-  imports: [RouterLink],
+  imports: [RouterLink, BotonAvisos],
   templateUrl: './pedido-page.html',
   styleUrl: './pedido-page.scss',
   host: {
@@ -44,6 +46,7 @@ export class PedidoPage {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   protected readonly cliente = inject(ClienteSesionService);
+  private readonly ultimoPedido = inject(UltimoPedido);
 
   protected readonly negocio = rxResource({ params: () => this.slug(), stream: ({ params }) => this.api.negocio(params) });
   protected readonly soloWeb = computed(() => soloEnWeb(this.negocio.value()));
@@ -171,6 +174,7 @@ export class PedidoPage {
     const url = enlaceWhatsapp(n.whatsapp, armarMensajeCarrito(n, modo, lineas, datos, quien, folio));
     this.carrito.vaciar(n.slug);
     this.enviado.set({ folio: folio ?? null, modo });
+    this.ultimoPedido.registrar(folio, n.nombre);
     if (ventana) {
       ventana.location.href = url;
     } else {
