@@ -110,6 +110,17 @@ public class AdminNegocioResource {
     public record Visibilidad(boolean visible) {
     }
 
+    /** Mostrar u ocultar un negocio solo dentro de la app de Google Play. Solo el dueño. */
+    @PUT
+    @Path("/{slug}/visible-app")
+    @RolesAllowed(Rol.DUENO)
+    @Transactional
+    public NegocioAdminDto cambiarVisibleApp(@PathParam("slug") String slug, @NotNull Visibilidad v) {
+        Negocio n = sesion.negocioEditable(slug);
+        n.visibleApp = v.visible();
+        return aDto(n);
+    }
+
     /** Mostrar u ocultar un negocio en el sitio con un toque. Solo el dueño. */
     @PUT
     @Path("/{slug}/visible")

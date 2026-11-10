@@ -70,6 +70,10 @@ public class Negocio extends PanacheEntityBase {
     @Column(nullable = false)
     public boolean visible = true;
 
+    /** Si es false, no aparece dentro de la app de Google Play (en la web sí). */
+    @Column(name = "visible_app", nullable = false)
+    public boolean visibleApp = true;
+
     /** Solo en servicios (Encarguitos): cuánto adelanta el repartidor de su bolsa, en MXN. */
     @Column(name = "tope_adelanto")
     public Integer topeAdelanto;

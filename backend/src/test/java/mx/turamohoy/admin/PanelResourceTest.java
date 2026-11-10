@@ -280,4 +280,18 @@ class PanelResourceTest {
                     .when().put("/api/admin/usuarios/" + id).then().statusCode(200);
         }
     }
+
+    @Test
+    void laVinateriaNoSeMuestraEnLaAppPeroSiEnLaWeb() {
+        given().when().get("/api/negocios/vinateria").then().statusCode(200).body("visibleApp", equalTo(false));
+        given().when().get("/api/negocios/turamohoy").then().body("visibleApp", equalTo(true));
+        String dueno = Sesiones.dueno();
+        try {
+            como(dueno).body(Map.of("visible", true)).when().put("/api/admin/negocios/vinateria/visible-app")
+                    .then().statusCode(200).body("visibleApp", equalTo(true)).body("visible", equalTo(true));
+        } finally {
+            como(dueno).body(Map.of("visible", false)).when().put("/api/admin/negocios/vinateria/visible-app")
+                    .then().statusCode(200).body("visibleApp", equalTo(false));
+        }
+    }
 }

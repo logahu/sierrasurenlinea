@@ -19,6 +19,7 @@ public record NegocioAdminDto(
         String horario,
         boolean soloMayoresEdad,
         boolean visible,
+        boolean visibleApp,
         Integer topeAdelanto,
         int orden,
         long productosActivos,
@@ -27,6 +28,6 @@ public record NegocioAdminDto(
     public static NegocioAdminDto de(Negocio n, long productosActivos, String encargado) {
         return new NegocioAdminDto(n.id, n.slug, n.nombre, n.eslogan, n.descripcion, n.tipo,
                 n.colorPrimario, n.portadaUrl, n.whatsapp, n.telefono, n.direccion, n.horario,
-                n.soloMayoresEdad, n.visible, n.topeAdelanto, n.orden, productosActivos, encargado);
+                n.soloMayoresEdad, n.visible, n.visibleApp, n.topeAdelanto, n.orden, productosActivos, encargado);
     }
 }
