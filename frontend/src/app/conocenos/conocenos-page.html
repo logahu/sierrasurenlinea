@@ -1,0 +1,78 @@
+<section class="portada">
+  <p class="antetitulo">Conócenos</p>
+  <h1>Los negocios de la Sierra Sur, más cerca de ti</h1>
+  <p class="lead">
+    Sierra Sur en Línea reúne en un solo lugar a los negocios de Miahuatlán de Porfirio Díaz para que encontrar y pedir lo
+    que necesitas sea tan fácil como mandar un mensaje.
+  </p>
+</section>
+
+<section class="bloque historia" aria-labelledby="titulo-historia">
+  <h2 id="titulo-historia">Quiénes somos</h2>
+  <p>
+    Nacimos en Miahuatlán con una idea sencilla: que los negocios de nuestra región tengan la misma presencia en internet
+    que cualquier tienda de la ciudad, sin perder el trato cercano que los distingue.
+  </p>
+  <p>
+    Somos una plataforma local hecha por y para la Sierra Sur. Aquí puedes conocer los productos de cada negocio, ver sus
+    precios y hacer tu pedido en minutos; el negocio te atiende directamente, como siempre, pero con más orden y rapidez.
+  </p>
+  <blockquote>
+    Nuestra misión es impulsar el comercio local de la Sierra Sur de Oaxaca, acercando a sus negocios con las personas a
+    través de una herramienta sencilla, confiable y hecha aquí.
+  </blockquote>
+</section>
+
+<section class="bloque" aria-labelledby="titulo-hacemos">
+  <h2 id="titulo-hacemos">Qué hacemos</h2>
+  <ul class="tarjetas">
+    @for (t of queHacemos; track t.titulo) {
+      <li>
+        <span class="icono" aria-hidden="true">{{ t.icono }}</span>
+        <h3>{{ t.titulo }}</h3>
+        <p>{{ t.texto }}</p>
+      </li>
+    }
+  </ul>
+</section>
+
+<section class="bloque" aria-labelledby="titulo-valores">
+  <h2 id="titulo-valores">Lo que nos mueve</h2>
+  <dl class="valores">
+    @for (v of valores; track v.titulo) {
+      <div>
+        <dt>{{ v.titulo }}</dt>
+        <dd>{{ v.texto }}</dd>
+      </div>
+    }
+  </dl>
+</section>
+
+@if (visibles().length) {
+  <section class="bloque" aria-labelledby="titulo-negocios">
+    <h2 id="titulo-negocios">Negocios en Sierra Sur en Línea</h2>
+    <ul class="negocios">
+      @for (n of visibles(); track n.slug) {
+        <li><a [routerLink]="['/', n.slug]" [style.--acento]="n.colorPrimario">{{ n.nombre }}</a></li>
+      }
+    </ul>
+  </section>
+}
+
+<section class="bloque sumate" aria-labelledby="titulo-sumate">
+  <h2 id="titulo-sumate">¿Tienes un negocio en la región?</h2>
+  <p>
+    Súmate a Sierra Sur en Línea. Te ayudamos a crear tu catálogo con fotos y precios, a recibir pedidos ordenados con
+    folio y a llegar a más clientes de Miahuatlán y sus alrededores.
+  </p>
+  <a class="boton" [href]="sumarNegocio" target="_blank" rel="noopener">Quiero sumar mi negocio</a>
+</section>
+
+<section class="bloque contacto" aria-labelledby="titulo-contacto">
+  <h2 id="titulo-contacto">Contacto</h2>
+  <p>
+    ¿Tienes dudas, sugerencias o algún comentario? Escríbenos por
+    <a [href]="contacto" target="_blank" rel="noopener">WhatsApp</a> o consulta la <a routerLink="/ayuda">Ayuda</a>.
+  </p>
+  <p class="nota">Miahuatlán de Porfirio Díaz, Oaxaca.</p>
+</section>
