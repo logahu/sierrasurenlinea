@@ -6,6 +6,8 @@ public final class Rol {
     public static final String DUENO = "DUENO";
     /** Solo ve y edita su negocio. Hay uno por negocio. */
     public static final String ENCARGADO = "ENCARGADO";
+    /** Atiende los pedidos de su negocio desde el celular (no edita el catálogo). */
+    public static final String REPARTIDOR = "REPARTIDOR";
 
     private Rol() {
     }

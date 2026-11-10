@@ -23,7 +23,7 @@ import mx.turamohoy.catalogo.model.Negocio;
 
 import java.util.List;
 
-/** Alta y manejo de encargados. Solo el dueño. Hay un encargado activo por negocio. */
+/** Alta y manejo de encargados y repartidores. Solo el dueño. Un encargado activo por negocio. */
 @Path("/api/admin/usuarios")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -38,7 +38,9 @@ public class AdminUsuarioResource {
             @NotBlank(message = "El correo es obligatorio.") @Email(message = "El correo no es válido.")
             @Size(max = 120) String correo,
             @NotBlank(message = "La contraseña es obligatoria.") String contrasena,
-            @NotBlank(message = "Elige el negocio.") String negocioSlug) {
+            @NotBlank(message = "Elige el negocio.") String negocioSlug,
+            /** ENCARGADO (uno por negocio) o REPARTIDOR (varios); vacío = ENCARGADO. */
+            String rol) {
     }
 
     /** Para el dueño solo se toma en cuenta el nombre. */
@@ -67,12 +69,18 @@ public class AdminUsuarioResource {
         }
         Contrasenas.validarNueva(req.contrasena());
         Negocio negocio = negocio(req.negocioSlug());
-        exigirSinEncargado(negocio, null);
+        String rol = req.rol() == null || req.rol().isBlank() ? Rol.ENCARGADO : req.rol();
+        if (!Rol.ENCARGADO.equals(rol) && !Rol.REPARTIDOR.equals(rol)) {
+            throw Errores.de(Status.BAD_REQUEST, "El rol debe ser encargado o repartidor.");
+        }
+        if (Rol.ENCARGADO.equals(rol)) {
+            exigirSinEncargado(negocio, null);
+        }
 
         Usuario u = new Usuario();
         u.correo = correo;
         u.nombre = req.nombre().trim();
-        u.rol = Rol.ENCARGADO;
+        u.rol = rol;
         u.negocio = negocio;
         u.contrasenaHash = Contrasenas.cifrar(req.contrasena());
         u.persist();
@@ -90,7 +98,7 @@ public class AdminUsuarioResource {
         }
         Negocio negocio = req.negocioSlug() == null ? u.negocio : negocio(req.negocioSlug());
         boolean activo = req.activo() == null ? u.activo : req.activo();
-        if (activo) {
+        if (activo && Rol.ENCARGADO.equals(u.rol)) {
             exigirSinEncargado(negocio, u);
         }
         u.negocio = negocio;

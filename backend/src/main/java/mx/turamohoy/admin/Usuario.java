@@ -65,7 +65,7 @@ public class Usuario extends PanacheEntityBase {
 
     /** El dueño puede con todos los negocios; el encargado, solo con el suyo. */
     public boolean puedeEditar(Negocio n) {
-        return esDueno() || (negocio != null && negocio.id.equals(n.id));
+        return esDueno() || (Rol.ENCARGADO.equals(rol) && negocio != null && negocio.id.equals(n.id));
     }
 
     public static String normalizarCorreo(String correo) {
