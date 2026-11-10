@@ -14,8 +14,11 @@ const MINIMO = 10;
   imports: [ReactiveFormsModule],
   template: `
     <header class="panel-titulo">
-      <h1>Encargados</h1>
-      <p class="ayuda">Cada negocio puede tener un encargado: entra con su correo y solo ve su negocio.</p>
+      <h1>Encargados y repartidores</h1>
+      <p class="ayuda">
+        Un <strong>encargado</strong> por negocio: edita su negocio y ve sus pedidos. Los <strong>repartidores</strong>
+        (los que quieras) solo reciben y atienden pedidos desde el celular.
+      </p>
     </header>
 
     @if (aviso(); as a) {
@@ -32,12 +35,12 @@ const MINIMO = 10;
             <strong>{{ u.nombre }}</strong>
             <span class="ayuda">{{ u.correo }}</span>
             <span class="ayuda">
-              {{ u.rol === 'DUENO' ? 'Dueño · todos los negocios' : u.negocioNombre }}
+              {{ u.rol === 'DUENO' ? 'Dueño · todos los negocios' : (u.rol === 'REPARTIDOR' ? 'Repartidor · ' : 'Encargado · ') + u.negocioNombre }}
               @if (!u.activo) { · sin acceso }
               @if (u.bloqueado) { · bloqueado por intentos }
             </span>
           </div>
-          @if (u.rol === 'ENCARGADO') {
+          @if (u.rol !== 'DUENO') {
             <div class="acciones-fila">
               <button type="button" class="btn secundario" (click)="alternarAcceso(u)" [disabled]="ocupado()">
                 {{ u.activo ? 'Quitar acceso' : 'Devolver acceso' }}
@@ -63,15 +66,22 @@ const MINIMO = 10;
 
     <form class="ficha" [formGroup]="form" (ngSubmit)="crear()" novalidate>
       <fieldset>
-        <legend>Agregar encargado</legend>
-        @if (libres().length === 0 && negocios.hasValue()) {
+        <legend>Agregar persona</legend>
+        <label>
+          Rol
+          <select formControlName="rol">
+            <option value="ENCARGADO">Encargado (edita su negocio y ve sus pedidos)</option>
+            <option value="REPARTIDOR">Repartidor (solo recibe y atiende pedidos)</option>
+          </select>
+        </label>
+        @if (form.controls.rol.value === 'ENCARGADO' && libres().length === 0 && negocios.hasValue()) {
           <p class="ayuda">Todos los negocios ya tienen encargado. Para cambiarlo, primero quítale el acceso al actual.</p>
         } @else {
           <label>
             Negocio
             <select formControlName="negocioSlug">
               <option value="" disabled>Elige…</option>
-              @for (n of libres(); track n.slug) {
+              @for (n of (form.controls.rol.value === 'ENCARGADO' ? libres() : negocios.value() ?? []); track n.slug) {
                 <option [value]="n.slug">{{ n.nombre }}</option>
               }
             </select>
@@ -89,7 +99,9 @@ const MINIMO = 10;
             <input type="text" formControlName="contrasena" autocomplete="off" />
             <small>Mínimo {{ minimo }} caracteres. Compártela en persona; después la puede cambiar en "Mi cuenta".</small>
           </label>
-          <button class="btn primario grande" type="submit" [disabled]="ocupado()">Agregar encargado</button>
+          <button class="btn primario grande" type="submit" [disabled]="ocupado()">
+            {{ form.controls.rol.value === 'REPARTIDOR' ? 'Agregar repartidor' : 'Agregar encargado' }}
+          </button>
         }
       </fieldset>
     </form>
@@ -110,6 +122,7 @@ export class UsuariosPage {
   });
 
   protected readonly form = inject(FormBuilder).nonNullable.group({
+    rol: ['ENCARGADO'],
     negocioSlug: ['', Validators.required],
     nombre: ['', Validators.required],
     correo: ['', [Validators.required, Validators.email]],

@@ -49,6 +49,10 @@ export const conSesion: CanActivateFn = (_route, state) => {
   return inject(Router).createUrlTree(['/admin/entrar'], { queryParams: { volver: state.url } });
 };
 
+/** El repartidor solo usa Pedidos y Mi cuenta: el resto lo manda a Pedidos. */
+export const sinRepartidor: CanActivateFn = () =>
+  inject(SesionService).esRepartidor() ? inject(Router).createUrlTree(['/admin/pedidos']) : true;
+
 /** Pantallas solo del dueño. */
 export const soloDueno: CanActivateFn = () =>
   inject(SesionService).esDueno() ? true : inject(Router).createUrlTree(['/admin']);

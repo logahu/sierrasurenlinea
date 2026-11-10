@@ -1,6 +1,8 @@
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
-import { of } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../environments/environment';
+import { firstValueFrom, of } from 'rxjs';
 import { CatalogoService } from './catalogo.service';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -8,7 +10,7 @@ import { Negocio, Platillo, Producto, Restaurante } from './catalogo.model';
 import { enlaceWhatsapp, precioConUnidad } from './contacto';
 import {
   DatosEncargo, ENCARGO_VACIO, TIPOS_ENCARGO, TOPE_ADELANTO, UNIDAD_VIAJE, armarMensajeEncargo,
-  PedidoComida, camposFaltantes, enlaceMapa, esComida, esViaje, etiquetas, opcionDe, subtotalComida, textoPagoCompra,
+  PedidoComida, camposFaltantes, datosDelPedido, enlaceMapa, esComida, esViaje, etiquetas, opcionDe, subtotalComida, textoPagoCompra,
   zonasPara,
 } from './encargo';
 
@@ -150,11 +152,35 @@ export class EncargoForm {
     this.form.controls.ubicacion.setValue('');
   }
 
-  protected enviar(): void {
+  protected readonly enviando = signal(false);
+  private readonly http = inject(HttpClient);
+
+  /**
+   * Registra el pedido (para el panel y los repartidores) y abre WhatsApp con el folio.
+   * Si el servidor tarda (Render dormido) no se hace esperar al cliente: WhatsApp se abre
+   * sin folio y el registro se completa en segundo plano.
+   */
+  protected async enviar(): Promise<void> {
     this.intentado.set(true);
-    if (this.faltan().length) return;
-    const url = enlaceWhatsapp(this.negocio().whatsapp, this.mensaje());
-    window.open(url, '_blank', 'noopener');
+    if (this.faltan().length || this.enviando()) return;
+    // La ventana se abre ya (con el clic) para que el navegador no la bloquee.
+    const ventana = window.open('', '_blank');
+    this.enviando.set(true);
+    const zona = this.tarifas().find((t) => String(t.id) === this.datos().zona);
+    const datos = datosDelPedido(this.datos(), this.opcion(), this.negocio().slug, this.mensaje(), zona, this.pedidoComida());
+    const registro = firstValueFrom(this.http.post<{ folio: string }>(`${environment.apiUrl}/pedidos`, datos));
+    const folio = await Promise.race([
+      registro.then((r) => r.folio).catch(() => undefined),
+      new Promise<undefined>((ok) => setTimeout(() => ok(undefined), 6000)),
+    ]);
+    const mensaje = armarMensajeEncargo(this.datos(), zona, this.tope(), this.opcion(), this.pedidoComida(), folio);
+    const url = enlaceWhatsapp(this.negocio().whatsapp, mensaje);
+    this.enviando.set(false);
+    if (ventana) {
+      ventana.location.href = url;
+    } else {
+      window.location.href = url;
+    }
   }
 
   protected falta(...campos: string[]): boolean {

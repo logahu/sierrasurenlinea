@@ -1,7 +1,7 @@
 import { Producto } from './catalogo.model';
 import { TipoEncargo } from './catalogo.model';
 import {
-  ENCARGO_VACIO, PedidoComida, armarMensajeEncargo, subtotalComida, camposFaltantes, enlaceMapa, opcionDe, textoCuando, zonasDeEntrega, zonasPara,
+  ENCARGO_VACIO, PedidoComida, TIPOS_ENCARGO, armarMensajeEncargo, datosDelPedido, subtotalComida, telefonoValido, camposFaltantes, enlaceMapa, opcionDe, textoCuando, zonasDeEntrega, zonasPara,
 } from './encargo';
 
 const tarifa = (id: number, nombre: string, precio: number, unidadPrecio: string): Producto => ({
@@ -18,12 +18,13 @@ const completo = {
   entregar: 'Calle Juárez 10, casa azul',
   zona: '34',
   nombre: 'Hugo',
+  telefono: '951 123 4567',
 };
 
 describe('encargo', () => {
   it('pide los campos mínimos', () => {
     expect(camposFaltantes(ENCARGO_VACIO)).toEqual([
-      'qué necesitas que hagamos', 'a dónde lo llevamos', 'la zona de entrega', 'tu nombre',
+      'qué necesitas que hagamos', 'a dónde lo llevamos', 'la zona de entrega', 'tu nombre', 'tu teléfono (10 dígitos)',
     ]);
     expect(camposFaltantes(completo)).toEqual([]);
   });
@@ -71,7 +72,7 @@ describe('encargo', () => {
       recogerObligatorio: true, manejaDinero: false, modo: 'VIAJE', icono: 'moto', soloProgramado: false,
     };
     const viajeCentro = tarifa(38, 'Viaje en el centro', 30, 'por viaje');
-    const datosViaje = { ...ENCARGO_VACIO, tipo: '5', recoger: 'Parque central', entregar: 'Hospital', zona: '38', nombre: 'Ana' };
+    const datosViaje = { ...ENCARGO_VACIO, tipo: '5', recoger: 'Parque central', entregar: 'Hospital', zona: '38', nombre: 'Ana', telefono: '9511234567' };
 
     it('usa solo las tarifas por viaje, y los mandados no las incluyen', () => {
       expect(zonasPara([centro, extra, viajeCentro], viaje).map((z) => z.id)).toEqual([38]);
@@ -131,7 +132,7 @@ describe('encargo', () => {
       restaurante: fonda,
       lineas: [{ platillo: fonda.platillos[0], cantidad: 2 }, { platillo: fonda.platillos[1], cantidad: 1 }],
     };
-    const datos = { ...ENCARGO_VACIO, tipo: '6', entregar: 'Av. Juárez 10', zona: '34', nombre: 'Luis', detalle: 'sin cebolla' };
+    const datos = { ...ENCARGO_VACIO, tipo: '6', entregar: 'Av. Juárez 10', zona: '34', nombre: 'Luis', telefono: '9511234567', detalle: 'sin cebolla' };
 
     it('pide al menos un platillo, no un detalle', () => {
       expect(camposFaltantes({ ...datos, detalle: '' }, comida, pedido)).toEqual([]);
@@ -150,5 +151,15 @@ describe('encargo', () => {
       expect(msg).toContain('*Total aproximado:* $230 (comida + envío)');
       expect(msg).toContain('El repartidor adelanta la comida');
     });
+  });
+
+  it('incluye folio y teléfono, y prepara los datos del pedido', () => {
+    const msg = armarMensajeEncargo(completo, centro, 500, undefined, undefined, 'ENC-00012');
+    expect(msg.split('\n')[2]).toBe('*Folio:* ENC-00012');
+    expect(msg).toContain('*Teléfono:* 951 123 4567');
+    expect(telefonoValido('+52 951 123 4567')).toBe(true);
+    expect(telefonoValido('123')).toBe(false);
+    const datos = datosDelPedido(completo, opcionDe(TIPOS_ENCARGO, completo.tipo), 'encarguitos', msg, centro);
+    expect(datos).toMatchObject({ negocio: 'encarguitos', modo: 'MANDADO', zona: 'Centro', total: null });
   });
 });

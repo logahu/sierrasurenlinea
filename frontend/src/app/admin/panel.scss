@@ -393,3 +393,70 @@
   &.nuevo { border-style: dashed; }
   .btn { justify-self: end; }
 }
+
+// Pedidos
+.aviso-push {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .6rem 1rem;
+  padding: .75rem 1rem;
+  margin-bottom: .75rem;
+  border-radius: var(--panel-radio);
+  background: color-mix(in srgb, var(--cempasuchil) 16%, var(--superficie));
+  border-left: 4px solid var(--cempasuchil);
+  font-size: .92rem;
+}
+.pedidos .vacio { padding: 1.5rem 0; text-align: center; }
+.pedido {
+  display: grid;
+  gap: .45rem;
+  padding: .9rem 1rem;
+  border: 1px solid var(--linea);
+  border-left: 6px solid var(--linea);
+  border-radius: var(--panel-radio);
+  background: var(--superficie);
+  p { margin: 0; }
+  &[data-estado='NUEVO'] { border-left-color: #e8590c; animation: latido 1.6s ease-in-out 3; }
+  &[data-estado='ACEPTADO'] { border-left-color: #1971c2; }
+  &[data-estado='EN_CAMINO'] { border-left-color: var(--follaje); }
+  &[data-estado='CANCELADO'] { opacity: .65; }
+  details summary { cursor: pointer; font-size: .88rem; color: var(--acento-texto); }
+  .btn.peligro { color: #b02a37; border-color: #e6a6ad; }
+  .acciones-fila .btn { text-decoration: none; }
+}
+.pedido-cabeza { display: grid; gap: .1rem; }
+.estado-pedido {
+  justify-self: start;
+  font-size: .72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  padding: .1rem .5rem;
+  border-radius: 999px;
+  background: var(--fondo-alt);
+  [data-estado='NUEVO'] & { background: #e8590c; color: #fff; }
+}
+.mensaje-pedido {
+  white-space: pre-wrap;
+  font: inherit;
+  font-size: .9rem;
+  margin: .4rem 0 0;
+  padding: .6rem .75rem;
+  background: var(--fondo-alt);
+  border-radius: .5rem;
+}
+.marca-nuevos {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.2rem;
+  height: 1.2rem;
+  padding: 0 .3rem;
+  margin-left: .3rem;
+  border-radius: 999px;
+  background: #e8590c;
+  color: #fff;
+  font-size: .72rem;
+  font-weight: 800;
+}
+@keyframes latido { 50% { box-shadow: 0 0 0 4px rgb(232 89 12 / .25); } }

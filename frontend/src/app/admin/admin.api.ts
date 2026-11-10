@@ -37,7 +37,7 @@ export class AdminApi {
     return this.http.get<Usuario[]>(`${this.base}/usuarios`);
   }
 
-  crearEncargado(datos: { nombre: string; correo: string; contrasena: string; negocioSlug: string }): Observable<Usuario> {
+  crearEncargado(datos: { nombre: string; correo: string; contrasena: string; negocioSlug: string; rol?: string }): Observable<Usuario> {
     return this.http.post<Usuario>(`${this.base}/usuarios`, datos);
   }
 

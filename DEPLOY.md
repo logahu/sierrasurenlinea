@@ -212,3 +212,15 @@ Las fotos se suben desde el panel directo a un bucket de R2 (10 GB gratis) y se 
 Sin estas variables el sitio funciona igual, pero el panel avisa que las fotos no están
 configuradas. Las fotos que se reemplazan se quedan en el bucket (no estorban).
 
+## Pedidos en tiempo real
+
+- Los encargos de Encarguitos se registran en la base y aparecen en `/admin/pedidos`
+  (encargados y repartidores). El panel se actualiza cada 15 s y suena con cada pedido nuevo.
+- **Notificaciones push:** cada persona entra al panel desde su celular, lo instala
+  ("Sierra Sur Pedidos": menú del navegador → Instalar app) y toca **Activar notificaciones**.
+  Las llaves VAPID se generan solas y se guardan en la base (tabla `ajuste`); no hay que configurar nada.
+- **Repartidores:** Panel → Equipo → Agregar persona → rol *Repartidor*.
+- **Recomendado:** subir el backend al plan **Starter** de Render. En el plan gratis el servidor
+  se duerme a los 15 min; el primer pedido después de eso tarda hasta un minuto en registrarse
+  (el cliente no espera: WhatsApp se abre igual y el pedido llega cuando el servidor despierta).
+

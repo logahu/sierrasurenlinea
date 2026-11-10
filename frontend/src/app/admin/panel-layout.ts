@@ -1,6 +1,7 @@
 import { Component, DestroyRef, ViewEncapsulation, inject } from '@angular/core';
 import { Meta } from '@angular/platform-browser';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { PedidosService } from './pedidos';
 import { SesionService } from './sesion';
 
 /**
@@ -16,10 +17,15 @@ import { SesionService } from './sesion';
     <div class="panel">
       @if (sesion.usuario(); as u) {
         <nav class="panel-nav" aria-label="Panel">
-          <a routerLink="/admin" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }">Negocios</a>
+          <a routerLink="/admin/pedidos" routerLinkActive="activo">
+            Pedidos @if (pedidos.nuevos()) { <span class="marca-nuevos">{{ pedidos.nuevos() }}</span> }
+          </a>
+          @if (!sesion.esRepartidor()) {
+            <a routerLink="/admin" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }">Negocios</a>
+          }
           @if (sesion.esDueno()) {
             <a routerLink="/admin/visibilidad" routerLinkActive="activo">En el sitio</a>
-            <a routerLink="/admin/usuarios" routerLinkActive="activo">Encargados</a>
+            <a routerLink="/admin/usuarios" routerLinkActive="activo">Equipo</a>
           }
           <a routerLink="/admin/cuenta" routerLinkActive="activo">Mi cuenta</a>
           <span class="panel-quien">{{ u.nombre }}</span>
@@ -32,13 +38,20 @@ import { SesionService } from './sesion';
 })
 export class PanelLayout {
   protected readonly sesion = inject(SesionService);
+  protected readonly pedidos = inject(PedidosService);
   private readonly router = inject(Router);
 
   constructor() {
     // Que los buscadores no indexen el panel (y quitarlo al volver al sitio).
     const meta = inject(Meta);
     meta.updateTag({ name: 'robots', content: 'noindex, nofollow' });
-    inject(DestroyRef).onDestroy(() => meta.removeTag("name='robots'"));
+    // El panel se instala como su propia app ("Sierra Sur Pedidos"), separada de la de clientes.
+    const manifiesto = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
+    manifiesto?.setAttribute('href', 'manifest-panel.webmanifest');
+    inject(DestroyRef).onDestroy(() => {
+      meta.removeTag("name='robots'");
+      manifiesto?.setAttribute('href', 'manifest.webmanifest');
+    });
   }
 
   protected salir(): void {

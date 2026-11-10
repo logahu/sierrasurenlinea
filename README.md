@@ -53,6 +53,7 @@ Abre http://localhost:4200
 | GET | `/api/productos` · `/api/categorias` | Todo, de todos los negocios |
 | POST | `/api/visitas` | Registra una visita a una página (`{ruta, contar}`) y devuelve su total |
 | GET | `/api/visitas` | Visitas de todas las páginas (solo el dueño, con sesión) |
+| POST | `/api/pedidos` | El sitio registra un encargo (Encarguitos) y recibe su folio; límite de 6 por IP cada 10 min |
 
 ### Panel de administración (`/admin`)
 Requieren `Authorization: Bearer <token>` (lo obtiene `/api/auth/entrar`).
@@ -71,6 +72,9 @@ Requieren `Authorization: Bearer <token>` (lo obtiene `/api/auth/entrar`).
 | PUT | `/api/admin/negocios/{slug}/productos/{id}/disponible` | dueño; encargado el suyo | Mostrar u ocultar en el sitio |
 | GET/POST/PUT | `/api/admin/negocios/{slug}/restaurantes[/{id}[/platillos[/{id}]]]` | dueño; encargado el suyo | Encarguitos: lugares de comida y sus platillos |
 | GET/POST/PUT | `/api/admin/negocios/{slug}/tipos-encargo[/{id}]` | dueño; encargado el suyo | Encarguitos: tarjetas de la lista del mandado (mandado o viaje en moto) |
+| GET | `/api/admin/pedidos?activos=true` | dueño, encargado, repartidor | Pedidos en curso (o terminados) según el rol |
+| PUT | `/api/admin/pedidos/{id}/estado` | dueño, encargado, repartidor | Aceptar → en camino → entregado; cancelar (no repartidor) |
+| GET/POST/DELETE | `/api/admin/push[/clave]` | con sesión | Notificaciones push del celular (Web Push, VAPID) |
 | POST | `/api/admin/negocios/{slug}/fotos` | dueño; encargado el suyo | Permiso (URL firmada) para subir una foto a R2 |
 
 Roles: **dueño** (todo) y **encargado** (uno por negocio, solo el suyo). En local entras con

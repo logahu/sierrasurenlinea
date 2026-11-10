@@ -202,16 +202,24 @@
       </fieldset>
     }
 
-    <label class="campo" [class.con-error]="falta('tu nombre', 'el nombre de quien viaja')">
-      <span class="etiqueta">{{ textos().nombre }}</span>
-      <input formControlName="nombre" type="text" autocomplete="name" />
-    </label>
+    <div class="par">
+      <label class="campo" [class.con-error]="falta('tu nombre', 'el nombre de quien viaja')">
+        <span class="etiqueta">{{ textos().nombre }}</span>
+        <input formControlName="nombre" type="text" autocomplete="name" />
+      </label>
+      <label class="campo" [class.con-error]="falta('tu teléfono (10 dígitos)')">
+        <span class="etiqueta">Tu teléfono</span>
+        <input formControlName="telefono" type="tel" inputmode="tel" autocomplete="tel" placeholder="951 123 4567" />
+      </label>
+    </div>
 
     @if (intentado() && faltan().length) {
       <p class="faltan" role="alert">Para enviar tu encargo falta: {{ faltan().join(', ') }}.</p>
     }
 
-    <button type="submit" class="enviar">{{ viaje() ? 'Pedir viaje por WhatsApp' : comida() ? 'Pedir comida por WhatsApp' : 'Enviar encargo por WhatsApp' }}</button>
+    <button type="submit" class="enviar" [disabled]="enviando()">@if (enviando()) { Registrando tu pedido… } @else {
+        {{ viaje() ? 'Pedir viaje por WhatsApp' : comida() ? 'Pedir comida por WhatsApp' : 'Enviar encargo por WhatsApp' }}
+      }</button>
     <p class="nota">
       @if (viaje()) {
         Se abre WhatsApp con tu viaje ya escrito. Te confirmamos el precio y en cuántos minutos llega la moto.

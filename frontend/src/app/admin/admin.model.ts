@@ -1,6 +1,6 @@
 import { TipoNegocio } from '../catalogo/catalogo.model';
 
-export type Rol = 'DUENO' | 'ENCARGADO';
+export type Rol = 'DUENO' | 'ENCARGADO' | 'REPARTIDOR';
 
 export interface Usuario {
   id: number;
@@ -94,4 +94,26 @@ export interface CategoriaEdicion {
   nombre: string;
   descripcion: string;
   orden?: number | null;
+}
+
+export type EstadoPedido = 'NUEVO' | 'ACEPTADO' | 'EN_CAMINO' | 'ENTREGADO' | 'CANCELADO';
+
+export interface Pedido {
+  id: number;
+  folio: string;
+  negocioSlug: string;
+  negocioNombre: string;
+  tipo: string;
+  modo: 'MANDADO' | 'VIAJE' | 'COMIDA';
+  clienteNombre: string;
+  clienteTelefono: string;
+  entregar: string;
+  zona: string | null;
+  totalEstimado: number | null;
+  mensaje: string;
+  estado: EstadoPedido;
+  repartidorId: number | null;
+  repartidorNombre: string | null;
+  creado: string;
+  actualizado: string;
 }

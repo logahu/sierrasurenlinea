@@ -57,6 +57,8 @@ export interface DatosEncargo {
   fecha: string;
   hora: string;
   nombre: string;
+  /** Teléfono del cliente (10 dígitos) para que el repartidor lo contacte. */
+  telefono: string;
   pagoCompra: PagoCompra;
   /** Solo viajes: lleva mochila o bolsa. */
   equipaje: boolean;
@@ -73,6 +75,7 @@ export const ENCARGO_VACIO: DatosEncargo = {
   fecha: '',
   hora: '',
   nombre: '',
+  telefono: '',
   pagoCompra: 'repartidor-adelanta',
   equipaje: false,
 };
@@ -135,7 +138,14 @@ export function camposFaltantes(
   if (!d.zona) faltan.push(viaje ? 'la zona de destino' : 'la zona de entrega');
   if ((d.cuando === 'programado' || opcion.soloProgramado) && !d.hora) faltan.push('a qué hora lo necesitas');
   if (!d.nombre.trim()) faltan.push(viaje ? 'el nombre de quien viaja' : 'tu nombre');
+  if (!telefonoValido(d.telefono)) faltan.push('tu teléfono (10 dígitos)');
   return faltan;
+}
+
+/** 10 dígitos (acepta espacios, guiones y +52). */
+export function telefonoValido(t: string): boolean {
+  const d = t.replace(/\D/g, '');
+  return d.length === 10 || (d.length === 12 && d.startsWith('52'));
 }
 
 export function textoPagoCompra(pago: PagoCompra, opcion: TipoEncargo, tope = TOPE_ADELANTO): string {
@@ -167,6 +177,7 @@ export function armarMensajeEncargo(
   tope = TOPE_ADELANTO,
   opcion: TipoEncargo = opcionDe(TIPOS_ENCARGO, d.tipo),
   comida?: PedidoComida,
+  folio?: string,
 ): string {
   const viaje = esViaje(opcion);
   let lineas: string[];
@@ -197,7 +208,32 @@ export function armarMensajeEncargo(
   }
   if (opcion.manejaDinero && !viaje) lineas.push(`*Pago:* ${textoPagoCompra(d.pagoCompra, opcion, tope)}`);
   lineas.push(`*${viaje ? 'Pasajero' : 'Nombre'}:* ${d.nombre.trim()}`);
+  if (d.telefono.trim()) lineas.push(`*Teléfono:* ${d.telefono.trim()}`);
+  if (folio) lineas.splice(2, 0, `*Folio:* ${folio}`);
   if (viaje) lineas.push('', 'Por favor confírmenme el nombre del conductor, la placa y una foto de la moto.');
   lineas.push('', 'Enviado desde Sierra Sur en Línea.');
   return lineas.join('\n');
+}
+
+/** Datos que se registran en el sistema para el panel de pedidos. */
+export function datosDelPedido(
+  d: DatosEncargo,
+  opcion: TipoEncargo,
+  negocio: string,
+  mensaje: string,
+  zona: Producto | undefined,
+  comida?: PedidoComida,
+) {
+  const total = esComida(opcion) && comida ? subtotalComida(comida) + (zona?.precio ?? 0) : null;
+  return {
+    negocio,
+    tipo: esComida(opcion) && comida ? `${opcion.titulo} · ${comida.restaurante.nombre}` : opcion.titulo,
+    modo: opcion.modo,
+    nombre: d.nombre.trim(),
+    telefono: d.telefono.trim(),
+    entregar: d.entregar.trim(),
+    zona: zona?.nombre ?? null,
+    total,
+    mensaje,
+  };
 }

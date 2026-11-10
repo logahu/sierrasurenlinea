@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { conSesion, soloDueno } from './autorizacion';
+import { conSesion, sinRepartidor, soloDueno } from './autorizacion';
 
 /** Panel de administración: /admin. Se carga aparte, solo cuando alguien entra. */
 export const ADMIN_ROUTES: Routes = [
@@ -17,58 +17,70 @@ export const ADMIN_ROUTES: Routes = [
         canActivate: [conSesion],
         children: [
           {
-            path: '',
-            title: 'Panel · Sierra Sur en Línea',
-            loadComponent: () => import('./inicio-panel').then((m) => m.InicioPanel),
-          },
-          {
-            path: 'negocios/:slug',
-            title: 'Catálogo · Panel',
-            loadComponent: () => import('./productos-page').then((m) => m.ProductosPage),
-          },
-          {
-            path: 'negocios/:slug/productos/:id',
-            title: 'Producto · Panel',
-            loadComponent: () => import('./producto-form').then((m) => m.ProductoForm),
-          },
-          {
-            path: 'negocios/:slug/lista-del-mandado',
-            title: 'Lista del mandado · Panel',
-            loadComponent: () => import('./tipos-encargo-page').then((m) => m.TiposEncargoPage),
-          },
-          {
-            path: 'negocios/:slug/comida',
-            title: 'Comida a domicilio · Panel',
-            loadComponent: () => import('./comida-page').then((m) => m.ComidaPage),
-          },
-          {
-            path: 'negocios/:slug/categorias',
-            title: 'Categorías · Panel',
-            loadComponent: () => import('./categorias-page').then((m) => m.CategoriasPage),
-          },
-          {
-            path: 'negocios/:slug/datos',
-            title: 'Datos del negocio · Panel',
-            loadComponent: () => import('./editar-negocio').then((m) => m.EditarNegocio),
-          },
-          {
-            path: 'visibilidad',
-            title: 'Negocios en el sitio · Panel',
-            canActivate: [soloDueno],
-            loadComponent: () => import('./visibilidad-page').then((m) => m.VisibilidadPage),
-          },
-          {
-            path: 'usuarios',
-            title: 'Encargados · Panel',
-            canActivate: [soloDueno],
-            loadComponent: () => import('./usuarios-page').then((m) => m.UsuariosPage),
+            path: 'pedidos',
+            title: 'Pedidos · Panel',
+            loadComponent: () => import('./pedidos-page').then((m) => m.PedidosPage),
           },
           {
             path: 'cuenta',
             title: 'Mi cuenta · Panel',
             loadComponent: () => import('./cuenta-page').then((m) => m.CuentaPage),
           },
-          { path: '**', redirectTo: '' },
+          {
+            path: '',
+            canActivateChild: [sinRepartidor],
+            canActivate: [sinRepartidor],
+            children: [
+              {
+                path: '',
+                title: 'Panel · Sierra Sur en Línea',
+                loadComponent: () => import('./inicio-panel').then((m) => m.InicioPanel),
+              },
+              {
+                path: 'negocios/:slug',
+                title: 'Catálogo · Panel',
+                loadComponent: () => import('./productos-page').then((m) => m.ProductosPage),
+              },
+              {
+                path: 'negocios/:slug/productos/:id',
+                title: 'Producto · Panel',
+                loadComponent: () => import('./producto-form').then((m) => m.ProductoForm),
+              },
+              {
+                path: 'negocios/:slug/lista-del-mandado',
+                title: 'Lista del mandado · Panel',
+                loadComponent: () => import('./tipos-encargo-page').then((m) => m.TiposEncargoPage),
+              },
+              {
+                path: 'negocios/:slug/comida',
+                title: 'Comida a domicilio · Panel',
+                loadComponent: () => import('./comida-page').then((m) => m.ComidaPage),
+              },
+              {
+                path: 'negocios/:slug/categorias',
+                title: 'Categorías · Panel',
+                loadComponent: () => import('./categorias-page').then((m) => m.CategoriasPage),
+              },
+              {
+                path: 'negocios/:slug/datos',
+                title: 'Datos del negocio · Panel',
+                loadComponent: () => import('./editar-negocio').then((m) => m.EditarNegocio),
+              },
+              {
+                path: 'visibilidad',
+                title: 'Negocios en el sitio · Panel',
+                canActivate: [soloDueno],
+                loadComponent: () => import('./visibilidad-page').then((m) => m.VisibilidadPage),
+              },
+              {
+                path: 'usuarios',
+                title: 'Encargados · Panel',
+                canActivate: [soloDueno],
+                loadComponent: () => import('./usuarios-page').then((m) => m.UsuariosPage),
+              },
+              { path: '**', redirectTo: '' },
+            ],
+          },
         ],
       },
     ],

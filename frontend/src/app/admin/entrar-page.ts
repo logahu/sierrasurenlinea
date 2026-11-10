@@ -82,7 +82,8 @@ export class EntrarPage {
       .subscribe({
         next: () => {
           const destino = this.volver();
-          void this.router.navigateByUrl(destino?.startsWith('/admin') ? destino : '/admin');
+          const inicio = this.sesion.esRepartidor() ? '/admin/pedidos' : '/admin';
+          void this.router.navigateByUrl(destino?.startsWith('/admin') ? destino : inicio);
         },
         error: (e) => {
           this.error.set(mensajeDeError(e));
