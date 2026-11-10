@@ -41,7 +41,7 @@ public class AdminUsuarioResource {
             @NotBlank(message = "El correo es obligatorio.") @Email(message = "El correo no es válido.")
             @Size(max = 120) String correo,
             @NotBlank(message = "La contraseña es obligatoria.") String contrasena,
-            /** Obligatorio salvo para administradores. */
+            /** Obligatorio para encargados; vacío en administradores y en repartidores generales. */
             String negocioSlug,
             /** DUENO (administrador, máximo 2), ENCARGADO (uno por negocio) o REPARTIDOR; vacío = ENCARGADO. */
             String rol) {
@@ -79,6 +79,8 @@ public class AdminUsuarioResource {
         Negocio negocio = null;
         if (Rol.DUENO.equals(rol)) {
             exigirCupoDeAdministrador();
+        } else if (Rol.REPARTIDOR.equals(rol) && (req.negocioSlug() == null || req.negocioSlug().isBlank())) {
+            negocio = null; // repartidor general: entrega pedidos de todos los negocios
         } else {
             if (req.negocioSlug() == null || req.negocioSlug().isBlank()) {
                 throw Errores.de(Status.BAD_REQUEST, "Elige el negocio.");

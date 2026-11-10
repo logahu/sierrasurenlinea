@@ -26,10 +26,13 @@ import mx.turamohoy.admin.Usuario;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
- * Pedidos en el panel. Dueño: todos. Encargado: los de su negocio. Repartidor: los
- * nuevos de su negocio y los que él tomó. El panel los consulta cada pocos segundos y
+ * Pedidos en el panel. Administrador: todos. Encargado: los de su negocio. Repartidor: los
+ * nuevos de su negocio (o, si es general, los de todos los negocios que van a domicilio)
+ * y los que él tomó. El panel los consulta cada pocos segundos y
  * las notificaciones push avisan aunque la app esté cerrada.
  */
 @Path("/api/admin")
@@ -44,15 +47,28 @@ public class AdminPedidoResource {
     @Inject
     Notificador notificador;
 
+    public record LineaDto(String nombre, int cantidad, BigDecimal precioUnitario, String unidad, BigDecimal subtotal) {
+        static LineaDto de(PedidoLinea l) {
+            return new LineaDto(l.nombre, l.cantidad, l.precioUnitario, l.unidad, l.subtotal());
+        }
+    }
+
     public record PedidoDto(Long id, String folio, String negocioSlug, String negocioNombre, String tipo, String modo,
                             String clienteNombre, String clienteTelefono, String entregar, String zona,
                             BigDecimal totalEstimado, String mensaje, String estado, Long repartidorId,
-                            String repartidorNombre, Instant creado, Instant actualizado) {
-        static PedidoDto de(Pedido p) {
+                            String repartidorNombre, Instant creado, Instant actualizado,
+                            String entrega, String cuando, String notas, List<LineaDto> lineas) {
+        static PedidoDto de(Pedido p, List<PedidoLinea> lineas) {
             return new PedidoDto(p.id, p.folio, p.negocio.slug, p.negocio.nombre, p.tipo, p.modo, p.clienteNombre,
                     p.clienteTelefono, p.entregar, p.zona, p.totalEstimado, p.mensaje, p.estado,
                     p.repartidor == null ? null : p.repartidor.id,
-                    p.repartidor == null ? null : p.repartidor.nombre, p.creado, p.actualizado);
+                    p.repartidor == null ? null : p.repartidor.nombre, p.creado, p.actualizado,
+                    p.entrega == null ? Pedido.DOMICILIO : p.entrega, p.cuando, p.notas,
+                    lineas.stream().map(LineaDto::de).toList());
+        }
+
+        static PedidoDto de(Pedido p) {
+            return de(p, PedidoLinea.list("pedido = ?1 order by orden", p));
         }
     }
 
@@ -71,13 +87,21 @@ public class AdminPedidoResource {
         List<Pedido> lista;
         if (u.esDueno()) {
             lista = Pedido.find(q + " order by p.creado desc").page(0, 100).list();
+        } else if (Rol.REPARTIDOR.equals(u.rol) && u.negocio == null) {
+            // Repartidor general: los pedidos a domicilio de todos los negocios.
+            lista = Pedido.find(q + " and (p.entrega is null or p.entrega <> 'RECOGER')"
+                    + " and (p.repartidor is null or p.repartidor = ?1) order by p.creado desc", u).page(0, 100).list();
         } else if (Rol.REPARTIDOR.equals(u.rol)) {
             lista = Pedido.find(q + " and p.negocio = ?1 and (p.repartidor is null or p.repartidor = ?2) order by p.creado desc",
                     u.negocio, u).page(0, 100).list();
         } else {
             lista = Pedido.find(q + " and p.negocio = ?1 order by p.creado desc", u.negocio).page(0, 100).list();
         }
-        return lista.stream().map(PedidoDto::de).toList();
+        // Los renglones de todos en una sola consulta.
+        Map<Long, List<PedidoLinea>> lineas = lista.isEmpty() ? Map.of()
+                : PedidoLinea.<PedidoLinea>list("pedido in ?1 order by orden", lista).stream()
+                        .collect(Collectors.groupingBy(l -> l.pedido.id));
+        return lista.stream().map(p -> PedidoDto.de(p, lineas.getOrDefault(p.id, List.of()))).toList();
     }
 
     @PUT
@@ -86,7 +110,8 @@ public class AdminPedidoResource {
     public PedidoDto cambiarEstado(@PathParam("id") Long id, @Valid @NotNull CambioEstado c) {
         Usuario u = sesion.usuario();
         Pedido p = Pedido.findById(id);
-        if (p == null || !(u.esDueno() || (u.negocio != null && u.negocio.id.equals(p.negocio.id)))) {
+        boolean general = Rol.REPARTIDOR.equals(u.rol) && u.negocio == null && p != null && p.aDomicilio();
+        if (p == null || !(u.esDueno() || general || (u.negocio != null && u.negocio.id.equals(p.negocio.id)))) {
             throw Errores.de(Status.NOT_FOUND, "No existe ese pedido.");
         }
         boolean repartidor = Rol.REPARTIDOR.equals(u.rol);

@@ -58,10 +58,13 @@ public class Notificador {
             }
             Datos d = QuarkusTransaction.requiringNew().call(() -> {
                 Pedido p = Pedido.findById(pedidoId);
-                List<Destino> destinos = PushSuscripcion.<PushSuscripcion>list(
-                                "usuario.activo = true and (usuario.rol = 'DUENO' or usuario.negocio = ?1)", p.negocio)
+                // Administradores, el encargado y los repartidores del negocio; si hay que
+                // llevarlo, también los repartidores generales (sin negocio).
+                String quienes = "usuario.activo = true and (usuario.rol = 'DUENO' or usuario.negocio = ?1"
+                        + (p.aDomicilio() ? " or (usuario.rol = 'REPARTIDOR' and usuario.negocio is null)" : "") + ")";
+                List<Destino> destinos = PushSuscripcion.<PushSuscripcion>list(quienes, p.negocio)
                         .stream().map(s -> new Destino(s.endpoint, s.p256dh, s.auth)).toList();
-                String titulo = "Nuevo: " + p.tipo + " · " + p.folio;
+                String titulo = p.negocio.nombre + ": " + p.tipo + " · " + p.folio;
                 String cuerpo = p.clienteNombre + " · " + p.entregar
                         + (p.totalEstimado != null ? " · aprox. $" + p.totalEstimado.stripTrailingZeros().toPlainString() : "");
                 return new Datos(titulo, cuerpo, destinos);

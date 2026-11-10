@@ -26,6 +26,8 @@ public record NegocioDto(
         /** Si se muestra dentro de la app de Google Play. */
         boolean visibleApp,
         Integer topeAdelanto,
+        /** COMPRA, RENTA o CITA; null en servicios. */
+        String modoPedido,
         List<CategoriaDto> categorias,
         /** Solo servicios: tarjetas visibles de la lista del mandado. */
         List<TipoEncargoDto> tiposEncargo) {
@@ -37,6 +39,6 @@ public record NegocioDto(
     public static NegocioDto de(Negocio n, List<CategoriaDto> categorias, List<TipoEncargoDto> tiposEncargo) {
         return new NegocioDto(n.id, n.slug, n.nombre, n.eslogan, n.descripcion, n.tipo,
                 n.colorPrimario, n.portadaUrl, n.whatsapp, n.telefono, n.direccion, n.horario,
-                n.soloMayoresEdad, n.visibleApp, n.topeAdelanto, categorias, tiposEncargo);
+                n.soloMayoresEdad, n.visibleApp, n.topeAdelanto, n.modoPedido(), categorias, tiposEncargo);
     }
 }

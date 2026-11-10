@@ -74,8 +74,8 @@ public class ClienteResource {
     public record SesionDto(String token, Instant expira, ClienteDto cliente) {
     }
 
-    public record MiPedido(Long id, String folio, String negocioNombre, String tipo, String entregar,
-                           BigDecimal totalEstimado, String estado, Instant creado) {
+    public record MiPedido(Long id, String folio, String negocioNombre, String tipo, String modo, String entrega,
+                           String entregar, String cuando, BigDecimal totalEstimado, String estado, Instant creado) {
     }
 
     @POST
@@ -186,7 +186,8 @@ public class ClienteResource {
         Cliente c = sesion.cliente();
         return Pedido.<Pedido>find("select p from Pedido p join fetch p.negocio where p.cliente = ?1 order by p.creado desc", c)
                 .page(0, 50).list().stream()
-                .map(p -> new MiPedido(p.id, p.folio, p.negocio.nombre, p.tipo, p.entregar, p.totalEstimado,
+                .map(p -> new MiPedido(p.id, p.folio, p.negocio.nombre, p.tipo, p.modo,
+                        p.entrega == null ? Pedido.DOMICILIO : p.entrega, p.entregar, p.cuando, p.totalEstimado,
                         p.estado, p.creado))
                 .toList();
     }

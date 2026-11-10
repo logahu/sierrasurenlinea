@@ -78,6 +78,25 @@ public class Negocio extends PanacheEntityBase {
     @Column(name = "tope_adelanto")
     public Integer topeAdelanto;
 
+    /**
+     * Cómo se piden sus productos en línea: COMPRA, RENTA o CITA (ver {@link ModoPedido}).
+     * Vacío en servicios (Encarguitos usa su propio formulario).
+     */
+    @Column(name = "modo_pedido", length = 10)
+    public String modoPedido;
+
+    /** El modo de pedido, o el que le toca por su tipo si no se definió. */
+    public String modoPedido() {
+        if (modoPedido != null) {
+            return modoPedido;
+        }
+        return switch (tipo) {
+            case VENTA -> ModoPedido.COMPRA;
+            case RENTA -> ModoPedido.RENTA;
+            case SERVICIO -> null;
+        };
+    }
+
     public static Optional<Negocio> porSlug(String slug) {
         return find("slug", slug).firstResultOptional();
     }

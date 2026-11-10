@@ -24,13 +24,24 @@ import mx.turamohoy.catalogo.model.Negocio;
 import mx.turamohoy.catalogo.model.TipoEncargo;
 import mx.turamohoy.catalogo.model.TipoNegocio;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotEmpty;
+import mx.turamohoy.catalogo.model.ModoPedido;
+import mx.turamohoy.catalogo.model.Producto;
+
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.time.Instant;
 import java.util.concurrent.CompletableFuture;
 
 /**
  * El sitio registra aquí cada pedido (solo clientes con cuenta) antes de abrir WhatsApp. Devuelve el folio, que
- * va en el mensaje; el pedido aparece al momento en el panel y avisa por push.
+ * va en el mensaje; el pedido aparece al momento en el panel y avisa por push al administrador, al encargado
+ * del negocio y a sus repartidores (y a los repartidores generales si es a domicilio).
  */
 @Path("/api/pedidos")
 @Produces(MediaType.APPLICATION_JSON)
@@ -62,27 +73,55 @@ public class PedidoResource {
             @NotBlank @Size(max = 4000) String mensaje) {
     }
 
-    public record PedidoRegistrado(Long id, String folio) {
+    public record PedidoRegistrado(Long id, String folio, BigDecimal total) {
     }
 
-    @POST
-    @RolesAllowed(SesionCliente.ROL)
-    public Response registrar(@Valid @NotNull NuevoPedido req) {
+    public record LineaPedida(@NotNull Long productoId, @Min(1) @Max(99) int cantidad) {
+    }
+
+    /** Pedido con carrito, igual para todos los negocios que venden o rentan. */
+    public record PedidoCarrito(
+            @NotBlank String negocio,
+            @NotEmpty(message = "Tu pedido está vacío.") @Size(max = 30, message = "Máximo 30 productos por pedido.")
+            List<@Valid @NotNull LineaPedida> lineas,
+            /** DOMICILIO o RECOGER (solo cuenta en compras). */
+            String entrega,
+            @Size(max = 300) String entregar,
+            @Size(max = 120) String cuando,
+            @Size(max = 500) String notas,
+            boolean mayorDeEdad,
+            @Size(max = 80) String nombre,
+            String telefono,
+            @NotBlank @Size(max = 4000) String mensaje) {
+    }
+
+    /** Quién pide: los datos de la cuenta, salvo que mande otro nombre o teléfono. */
+    private record Solicitante(Long clienteId, String nombre, String telefono) {
+    }
+
+    private Solicitante solicitante(String nombre, String telefono) {
         if (!limite.permitir(ip())) {
             throw Errores.de(429, "Hiciste muchos pedidos seguidos. Espera unos minutos o escríbenos por WhatsApp.");
         }
         Cliente cliente = sesionCliente.cliente();
-        String telefono = req.telefono() == null || req.telefono().isBlank()
-                ? cliente.telefono : Cliente.normalizarTelefono(req.telefono());
-        if (telefono == null) {
+        String tel = telefono == null || telefono.isBlank() ? cliente.telefono : Cliente.normalizarTelefono(telefono);
+        if (tel == null) {
             throw Errores.de(Status.BAD_REQUEST, "El teléfono debe tener 10 dígitos.");
         }
-        String nombre = req.nombre() == null || req.nombre().isBlank() ? cliente.nombre : req.nombre().trim();
-        Long clienteId = cliente.id;
+        return new Solicitante(cliente.id, nombre == null || nombre.isBlank() ? cliente.nombre : nombre.trim(), tel);
+    }
+
+    /** Encargos de Encarguitos (mandados, viajes y comida). */
+    @POST
+    @RolesAllowed(SesionCliente.ROL)
+    public Response registrar(@Valid @NotNull NuevoPedido req) {
+        Solicitante s = solicitante(req.nombre(), req.telefono());
         if (!TipoEncargo.MODOS.contains(req.modo())) {
             throw Errores.de(Status.BAD_REQUEST, "Tipo de encargo no válido.");
         }
-        String tel = telefono;
+        String nombre = s.nombre();
+        String tel = s.telefono();
+        Long clienteId = s.clienteId();
         PedidoRegistrado r = QuarkusTransaction.requiringNew().call(() -> {
             Negocio n = Negocio.visiblePorSlug(req.negocio())
                     .filter(x -> x.tipo == TipoNegocio.SERVICIO)
@@ -102,10 +141,112 @@ public class PedidoResource {
             p.actualizado = p.creado;
             p.persistAndFlush();
             p.folio = Pedido.folioDe(n, p.id);
-            return new PedidoRegistrado(p.id, p.folio);
+            return new PedidoRegistrado(p.id, p.folio, p.totalEstimado);
         });
         CompletableFuture.runAsync(() -> notificador.pedidoNuevo(r.id()));
         return Response.status(Status.CREATED).entity(r).build();
+    }
+
+    /**
+     * Pedido con carrito de cualquier negocio que vende o renta. Los precios y nombres se
+     * toman del catálogo (no del navegador) y el total se calcula aquí.
+     */
+    @POST
+    @Path("/carrito")
+    @RolesAllowed(SesionCliente.ROL)
+    public Response registrarCarrito(@Valid @NotNull PedidoCarrito req) {
+        Solicitante s = solicitante(req.nombre(), req.telefono());
+        PedidoRegistrado r = QuarkusTransaction.requiringNew().call(() -> {
+            Negocio n = Negocio.visiblePorSlug(req.negocio())
+                    .filter(x -> x.modoPedido() != null)
+                    .orElseThrow(() -> Errores.de(Status.BAD_REQUEST, "Ese negocio no recibe pedidos con carrito."));
+            String modo = n.modoPedido();
+            if (n.soloMayoresEdad && !req.mayorDeEdad()) {
+                throw Errores.de(Status.BAD_REQUEST, "Confirma que eres mayor de 18 años.");
+            }
+
+            // Renglones: mismos productos se suman; todos deben ser de este negocio y estar disponibles.
+            Map<Long, Integer> cantidades = new LinkedHashMap<>();
+            for (LineaPedida l : req.lineas()) {
+                cantidades.merge(l.productoId(), l.cantidad(), Integer::sum);
+            }
+            List<PedidoLinea> lineas = new ArrayList<>();
+            BigDecimal total = BigDecimal.ZERO;
+            for (Map.Entry<Long, Integer> e : cantidades.entrySet()) {
+                Producto prod = Producto.buscarCompleto(e.getKey());
+                if (prod == null || !prod.disponible || !prod.categoria.negocio.id.equals(n.id)) {
+                    throw Errores.de(Status.CONFLICT, "Uno de los productos ya no está disponible. Revisa tu pedido.");
+                }
+                PedidoLinea l = new PedidoLinea();
+                l.producto = prod;
+                l.nombre = prod.nombre;
+                l.cantidad = ModoPedido.CITA.equals(modo) ? 1 : Math.min(e.getValue(), 99);
+                l.precioUnitario = prod.precio;
+                l.unidad = prod.unidadPrecio;
+                l.orden = lineas.size();
+                lineas.add(l);
+                total = total.add(l.subtotal());
+            }
+
+            String entrega = switch (modo) {
+                case ModoPedido.RENTA -> Pedido.DOMICILIO;
+                case ModoPedido.CITA -> Pedido.RECOGER;
+                default -> Pedido.RECOGER.equals(req.entrega()) ? Pedido.RECOGER : Pedido.DOMICILIO;
+            };
+            String entregar = limpio(req.entregar());
+            if (Pedido.DOMICILIO.equals(entrega) && entregar == null) {
+                throw Errores.de(Status.BAD_REQUEST, ModoPedido.RENTA.equals(modo)
+                        ? "Falta la dirección del evento." : "Falta a dónde lo llevamos.");
+            }
+            String cuando = limpio(req.cuando());
+            if (cuando == null && !ModoPedido.COMPRA.equals(modo)) {
+                throw Errores.de(Status.BAD_REQUEST, ModoPedido.RENTA.equals(modo)
+                        ? "Falta la fecha del evento." : "Falta el día que quieres venir.");
+            }
+
+            Pedido p = new Pedido();
+            p.negocio = n;
+            p.modo = modo;
+            p.tipo = tipo(modo, lineas);
+            p.cliente = Cliente.findById(s.clienteId());
+            p.clienteNombre = s.nombre();
+            p.clienteTelefono = s.telefono();
+            p.entrega = entrega;
+            p.entregar = entregar != null ? entregar
+                    : ModoPedido.CITA.equals(modo) ? "Visita al negocio" : "Recoge en el negocio";
+            p.cuando = cuando != null ? cuando : "Lo antes posible";
+            p.notas = limpio(req.notas());
+            p.totalEstimado = total;
+            p.mensaje = req.mensaje().trim();
+            p.creado = Instant.now();
+            p.actualizado = p.creado;
+            p.persistAndFlush();
+            p.folio = Pedido.folioDe(n, p.id);
+            for (PedidoLinea l : lineas) {
+                l.pedido = p;
+                l.persist();
+            }
+            return new PedidoRegistrado(p.id, p.folio, total);
+        });
+        CompletableFuture.runAsync(() -> notificador.pedidoNuevo(r.id()));
+        return Response.status(Status.CREATED).entity(r).build();
+    }
+
+    /** Lo que se ve en el panel y en la notificación: "Pedido · 3 productos", "Cita · Pickup 2012". */
+    static String tipo(String modo, List<PedidoLinea> lineas) {
+        int piezas = lineas.stream().mapToInt(l -> l.cantidad).sum();
+        String t = switch (modo) {
+            case ModoPedido.CITA -> "Cita · " + lineas.get(0).nombre;
+            case ModoPedido.RENTA -> "Renta · " + piezas + (piezas == 1 ? " artículo" : " artículos");
+            default -> lineas.size() == 1 && piezas == 1
+                    ? "Pedido · " + lineas.get(0).nombre
+                    : "Pedido · " + piezas + (piezas == 1 ? " producto" : " productos");
+        };
+        return t.length() <= 60 ? t : t.substring(0, 59) + "…";
+    }
+
+    private static String limpio(String s) {
+        return s == null || s.isBlank() ? null : s.trim();
     }
 
     private String ip() {
