@@ -1,6 +1,7 @@
 import { ApplicationConfig, LOCALE_ID, isDevMode, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { autorizacionInterceptor } from './admin/autorizacion';
+import { clienteInterceptor } from './cuenta/cliente-sesion';
 import { registerLocaleData } from '@angular/common';
 import localeEsMx from '@angular/common/locales/es-MX';
 import { provideRouter, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
@@ -12,7 +13,7 @@ registerLocaleData(localeEsMx);
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
-    provideHttpClient(withFetch(), withInterceptors([autorizacionInterceptor])),
+    provideHttpClient(withFetch(), withInterceptors([autorizacionInterceptor, clienteInterceptor])),
     provideRouter(
       routes,
       withComponentInputBinding(),

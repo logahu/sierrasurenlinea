@@ -1,4 +1,6 @@
-import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import { ClienteSesionService } from '../cuenta/cliente-sesion';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
@@ -16,12 +18,12 @@ import {
 
 /**
  * Página de un negocio de tipo SERVICIO (Encarguitos): la "lista del mandado" y los
- * viajes en moto. El cliente llena el formulario y se abre WhatsApp con el mensaje ya
- * armado. No se guarda nada en la base; el negocio confirma por WhatsApp.
+ * viajes en moto. Para enviar se necesita la cuenta del cliente: el pedido se registra
+ * (panel y repartidores) y se abre WhatsApp con el mensaje y el folio.
  */
 @Component({
   selector: 'app-encargo-form',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterLink],
   templateUrl: './encargo-form.html',
   styleUrl: './encargo-form.scss',
 })
@@ -108,7 +110,30 @@ export class EncargoForm {
     ),
   );
 
+  protected readonly cliente = inject(ClienteSesionService);
+  private readonly router = inject(Router);
+  /** Ruta de esta página, para volver aquí después de iniciar sesión. */
+  protected readonly aqui = computed(() => '/' + this.negocio().slug);
+
   constructor() {
+    // Si el cliente salió a iniciar sesión, recupera lo que llevaba escrito.
+    const borrador = leerBorrador();
+    if (borrador) {
+      this.form.patchValue(borrador.datos);
+      if (borrador.lugarId !== null) this.lugarId.set(borrador.lugarId);
+      this.cantidades.set(borrador.cantidades);
+    }
+    // Con sesión, los datos de la cuenta se llenan solos (sin pisar lo que ya escribió).
+    effect(() => {
+      const c = this.cliente.cliente();
+      if (!c) return;
+      untracked(() => {
+        const f = this.form.controls;
+        if (!f.nombre.value.trim()) f.nombre.setValue(c.nombre);
+        if (!f.telefono.value.trim()) f.telefono.setValue(c.telefono);
+        if (!f.entregar.value.trim() && c.direccion) f.entregar.setValue(c.direccion);
+      });
+    });
     // Elige la primera opción en cuanto llegan; al cambiar de opción se limpia la zona
     // (las de viaje y las de mandado son distintas) y se respeta "solo con reservación".
     effect(() => {
@@ -161,6 +186,11 @@ export class EncargoForm {
    * sin folio y el registro se completa en segundo plano.
    */
   protected async enviar(): Promise<void> {
+    if (!this.cliente.activa()) {
+      guardarBorrador({ datos: this.form.getRawValue(), lugarId: this.lugarId(), cantidades: this.cantidades() });
+      void this.router.navigate(['/cuenta/entrar'], { queryParams: { volver: this.aqui(), pedido: 1 } });
+      return;
+    }
     this.intentado.set(true);
     if (this.faltan().length || this.enviando()) return;
     // La ventana se abre ya (con el clic) para que el navegador no la bloquee.
@@ -185,5 +215,33 @@ export class EncargoForm {
 
   protected falta(...campos: string[]): boolean {
     return this.intentado() && campos.some((c) => this.faltan().includes(c));
+  }
+}
+
+const CLAVE_BORRADOR = 'ssl:borrador-encargo';
+
+interface Borrador {
+  datos: Partial<DatosEncargo>;
+  lugarId: number | null;
+  cantidades: Record<number, number>;
+}
+
+/** Guarda el pedido a medio llenar mientras el cliente inicia sesión (solo esta pestaña). */
+function guardarBorrador(b: Borrador): void {
+  try {
+    sessionStorage.setItem(CLAVE_BORRADOR, JSON.stringify(b));
+  } catch {
+    /* sin almacenamiento: se vuelve a llenar */
+  }
+}
+
+/** Lo lee una sola vez y lo borra. */
+function leerBorrador(): Borrador | null {
+  try {
+    const crudo = sessionStorage.getItem(CLAVE_BORRADOR);
+    sessionStorage.removeItem(CLAVE_BORRADOR);
+    return crudo ? (JSON.parse(crudo) as Borrador) : null;
+  } catch {
+    return null;
   }
 }

@@ -13,6 +13,19 @@ export interface Usuario {
   bloqueado: boolean;
 }
 
+/** Cliente registrado en el sitio, visto desde el panel. */
+export interface ClienteAdmin {
+  id: number;
+  nombre: string;
+  telefono: string;
+  correo: string | null;
+  direccion: string | null;
+  activo: boolean;
+  creado: string;
+  ultimoAcceso: string | null;
+  pedidos: number;
+}
+
 export interface Sesion {
   token: string;
   /** Fecha ISO en que vence el token. */

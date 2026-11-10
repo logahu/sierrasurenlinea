@@ -8,6 +8,13 @@ export const routes: Routes = [
   },
   // Panel de administración (va antes de :negocio para que "admin" no se tome como negocio).
   { path: 'admin', loadChildren: () => import('./admin/admin.routes').then((m) => m.ADMIN_ROUTES) },
+  // Cuenta del cliente: iniciar sesión, crear cuenta y mis pedidos.
+  { path: 'cuenta', loadChildren: () => import('./cuenta/cuenta.routes').then((m) => m.CUENTA_ROUTES) },
+  {
+    path: 'privacidad',
+    title: 'Aviso de privacidad · Sierra Sur en Línea',
+    loadComponent: () => import('./cuenta/privacidad-page').then((m) => m.PrivacidadPage),
+  },
   // "Cosméticos" ahora es "Belleza": los enlaces viejos siguen funcionando.
   { path: 'cosmeticos', redirectTo: 'belleza', pathMatch: 'full' },
   { path: 'cosmeticos/producto/:id', redirectTo: 'belleza/producto/:id' },

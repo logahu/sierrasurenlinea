@@ -2,6 +2,25 @@
   <form class="libreta" [formGroup]="form" (ngSubmit)="enviar()" novalidate>
     <h2 id="titulo-lista" class="mano">Tu lista del mandado</h2>
 
+    @if (cliente.cliente(); as c) {
+      <p class="cuenta-aviso con-sesion">
+        Pedido a nombre de <strong>{{ c.nombre }}</strong>. Tus datos ya están listos.
+        <a routerLink="/cuenta">Mi cuenta</a>
+      </p>
+    } @else {
+      <div class="cuenta-aviso" role="note">
+        <p>
+          <strong>Para realizar un pedido es necesario contar con una cuenta.</strong>
+          Así tus pedidos llegan con datos verificados, el negocio te atiende con mayor confianza y tus próximas
+          visitas son más ágiles.
+        </p>
+        <p class="cuenta-acciones">
+          <a class="btn-cuenta" routerLink="/cuenta/entrar" [queryParams]="{ volver: aqui() }">Iniciar sesión</a>
+          <a class="btn-cuenta claro" routerLink="/cuenta/registro" [queryParams]="{ volver: aqui() }">Crear cuenta</a>
+        </p>
+      </div>
+    }
+
     <fieldset class="tipos">
       <legend>¿Qué necesitas?</legend>
       <div class="opciones">
@@ -217,11 +236,15 @@
       <p class="faltan" role="alert">Para enviar tu encargo falta: {{ faltan().join(', ') }}.</p>
     }
 
-    <button type="submit" class="enviar" [disabled]="enviando()">@if (enviando()) { Registrando tu pedido… } @else {
+    <button type="submit" class="enviar" [disabled]="enviando()">@if (enviando()) { Registrando tu pedido… } @else if (!cliente.cliente()) {
+        Iniciar sesión para enviar
+      } @else {
         {{ viaje() ? 'Pedir viaje por WhatsApp' : comida() ? 'Pedir comida por WhatsApp' : 'Enviar encargo por WhatsApp' }}
       }</button>
     <p class="nota">
-      @if (viaje()) {
+      @if (!cliente.cliente()) {
+        Guardamos lo que llevas escrito: al iniciar sesión regresas aquí para enviarlo.
+      } @else if (viaje()) {
         Se abre WhatsApp con tu viaje ya escrito. Te confirmamos el precio y en cuántos minutos llega la moto.
       } @else {
         Se abre WhatsApp con tu lista ya escrita. Antes de salir te confirmamos el total y el tiempo de llegada.

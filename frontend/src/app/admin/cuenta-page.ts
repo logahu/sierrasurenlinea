@@ -13,7 +13,7 @@ const MINIMO = 10;
     <header class="panel-titulo">
       <h1>Mi cuenta</h1>
       @if (sesion.usuario(); as u) {
-        <p class="ayuda">{{ u.correo }} · {{ u.rol === 'DUENO' ? 'Dueño' : 'Encargado de ' + u.negocioNombre }}</p>
+        <p class="ayuda">{{ u.correo }} · {{ u.rol === 'DUENO' ? 'Administrador' : (u.rol === 'REPARTIDOR' ? 'Repartidor de ' : 'Encargado de ') + u.negocioNombre }}</p>
       }
     </header>
     <form class="ficha" [formGroup]="form" (ngSubmit)="cambiar()" novalidate>

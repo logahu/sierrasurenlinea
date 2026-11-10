@@ -74,7 +74,7 @@ export const ADMIN_ROUTES: Routes = [
               },
               {
                 path: 'usuarios',
-                title: 'Encargados · Panel',
+                title: 'Usuarios · Panel',
                 canActivate: [soloDueno],
                 loadComponent: () => import('./usuarios-page').then((m) => m.UsuariosPage),
               },

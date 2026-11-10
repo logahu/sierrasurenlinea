@@ -8,6 +8,16 @@
       </svg>
       <span>Sierra Sur <em>en Línea</em></span>
     </a>
+    @if (!enPanel()) {
+      @if (cliente.cliente()) {
+        <a class="sesion" routerLink="/cuenta" routerLinkActive="activo" aria-label="Mi cuenta">
+          <span class="inicial" aria-hidden="true">{{ cliente.primerNombre().charAt(0) }}</span>
+          <span class="texto-sesion">Mi cuenta</span>
+        </a>
+      } @else {
+        <a class="sesion" routerLink="/cuenta/entrar" routerLinkActive="activo">Iniciar sesión</a>
+      }
+    }
   </div>
   @if (!enPanel() && negocios.value(); as lista) {
     <nav class="contenedor menu" aria-label="Negocios">
@@ -24,7 +34,7 @@
 
 <footer class="pie">
   <div class="contenedor fila-pie">
-    <span>© {{ anio }} Sierra Sur en Línea · Miahuatlán de Porfirio Díaz, Oax.</span>
+    <span>© {{ anio }} Sierra Sur en Línea · Miahuatlán de Porfirio Díaz, Oax. · <a routerLink="/privacidad">Aviso de privacidad</a></span>
     @if (instalar.disponible()) {
       <button type="button" class="instalar" (click)="instalar.instalar()">📲 Instalar la app</button>
     }

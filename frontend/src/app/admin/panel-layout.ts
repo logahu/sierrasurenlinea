@@ -25,7 +25,7 @@ import { SesionService } from './sesion';
           }
           @if (sesion.esDueno()) {
             <a routerLink="/admin/visibilidad" routerLinkActive="activo">En el sitio</a>
-            <a routerLink="/admin/usuarios" routerLinkActive="activo">Equipo</a>
+            <a routerLink="/admin/usuarios" routerLinkActive="activo">Usuarios</a>
           }
           <a routerLink="/admin/cuenta" routerLinkActive="activo">Mi cuenta</a>
           <span class="panel-quien">{{ u.nombre }}</span>

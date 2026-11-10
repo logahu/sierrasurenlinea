@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Platillo, Restaurante, TipoEncargo } from '../catalogo/catalogo.model';
 import {
-  CategoriaAdmin, CategoriaEdicion, NegocioAdmin, NegocioEdicion, ProductoAdmin, ProductoEdicion, Usuario,
+  CategoriaAdmin, CategoriaEdicion, ClienteAdmin, NegocioAdmin, NegocioEdicion, ProductoAdmin, ProductoEdicion, Usuario,
 } from './admin.model';
 
 /** Endpoints del panel (/api/admin/...). El token lo agrega autorizacionInterceptor. */
@@ -33,11 +33,19 @@ export class AdminApi {
     return this.http.put<NegocioAdmin>(`${this.base}/negocios/${encodeURIComponent(slug)}/visible-app`, { visible });
   }
 
+  clientes(q = ''): Observable<ClienteAdmin[]> {
+    return this.http.get<ClienteAdmin[]>(`${this.base}/clientes`, { params: q ? { q } : {} });
+  }
+
+  cambiarAccesoCliente(id: number, activo: boolean): Observable<ClienteAdmin> {
+    return this.http.put<ClienteAdmin>(`${this.base}/clientes/${id}/activo`, { activo });
+  }
+
   usuarios(): Observable<Usuario[]> {
     return this.http.get<Usuario[]>(`${this.base}/usuarios`);
   }
 
-  crearEncargado(datos: { nombre: string; correo: string; contrasena: string; negocioSlug: string; rol?: string }): Observable<Usuario> {
+  crearEncargado(datos: { nombre: string; correo: string; contrasena: string; negocioSlug: string | null; rol?: string }): Observable<Usuario> {
     return this.http.post<Usuario>(`${this.base}/usuarios`, datos);
   }
 

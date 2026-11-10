@@ -224,3 +224,13 @@ configuradas. Las fotos que se reemplazan se quedan en el bucket (no estorban).
   se duerme a los 15 min; el primer pedido después de eso tarda hasta un minuto en registrarse
   (el cliente no espera: WhatsApp se abre igual y el pedido llega cuando el servidor despierta).
 
+
+## Cuentas de clientes y aviso de privacidad
+
+- Para hacer un pedido el cliente necesita cuenta (teléfono + contraseña). Se registra en `/cuenta/registro`
+  y debe aceptar el aviso de privacidad; queda guardada la fecha y la versión que aceptó.
+- **Pendiente:** llenar los datos del responsable en `frontend/src/app/cuenta/privacidad-page.ts`
+  (`[NOMBRE]`, `[DOMICILIO]`, `[CORREO]`). Si cambias el texto del aviso, sube también
+  `VERSION_PRIVACIDAD` en `ClienteResource.java`. Conviene que un abogado lo revise.
+- Panel → Usuarios: pestañas **Equipo** (hasta 2 administradores, encargados y repartidores) y
+  **Clientes**. Nada se borra: "Quitar acceso" es una baja lógica y se puede revertir.

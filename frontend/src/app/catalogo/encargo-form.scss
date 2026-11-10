@@ -329,3 +329,29 @@ textarea { resize: vertical; min-height: 6.5rem; line-height: 1.5; }
   output { min-width: 1.4rem; text-align: center; font-weight: 700; }
 }
 .subtotal { margin: 0; font-size: 1rem; strong { color: var(--naranja); } }
+
+// --- Aviso de cuenta ---------------------------------------------------------------
+.cuenta-aviso {
+  margin: 0;
+  padding: .9rem 1rem;
+  border-radius: .5rem;
+  background: #eef6f1;
+  border: 1px solid #cfe5d8;
+  color: #1f3a2c;
+  line-height: 1.5;
+  font-size: .95rem;
+
+  p { margin: 0; }
+  a { color: #157a3d; font-weight: 700; }
+  &.con-sesion { background: transparent; border-style: dashed; a { margin-left: .35rem; } }
+}
+.cuenta-acciones { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: .75rem !important; }
+.btn-cuenta {
+  display: inline-block;
+  padding: .5rem 1.1rem;
+  border-radius: 999px;
+  background: #157a3d;
+  color: #fff !important;
+  text-decoration: none;
+  &.claro { background: #fff; color: #157a3d !important; border: 1px solid #157a3d; }
+}
