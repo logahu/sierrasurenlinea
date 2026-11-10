@@ -437,6 +437,17 @@
   background: var(--fondo-alt);
   [data-estado='NUEVO'] & { background: #e8590c; color: #fff; }
 }
+.pedido-cuando, .pedido-notas { margin: 0; font-size: .92rem; }
+.pedido-lineas {
+  list-style: none;
+  margin: 0;
+  padding: .5rem .75rem;
+  border-radius: .5rem;
+  background: var(--fondo-alt);
+  font-size: .92rem;
+  li { display: flex; justify-content: space-between; gap: 1rem; padding: .15rem 0; }
+  li span:last-child { font-variant-numeric: tabular-nums; color: var(--tinta-suave); }
+}
 .mensaje-pedido {
   white-space: pre-wrap;
   font: inherit;

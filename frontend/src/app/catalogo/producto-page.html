@@ -47,27 +47,39 @@
         <p class="aviso-edad" role="note">Venta exclusiva para mayores de 18 años.</p>
       }
 
+      @if (modo(); as m) {
+        <div class="agregar">
+          @if (m !== 'CITA') {
+            <div class="cantidad" role="group" aria-label="Cantidad">
+              <button type="button" (click)="cantidad.set(cantidad() - 1)" [disabled]="cantidad() <= 1" aria-label="Uno menos">−</button>
+              <output aria-live="polite">{{ cantidad() }}</output>
+              <button type="button" (click)="cantidad.set(cantidad() + 1)" [disabled]="cantidad() >= 99" aria-label="Uno más">+</button>
+            </div>
+          }
+          <button type="button" class="btn primario grande" (click)="agregar(p, m)">{{ textos()?.agregar }}</button>
+        </div>
+        @if (agregado()) {
+          <p class="agregado" role="status">
+            ✓ Listo, está en {{ textos()?.titulo?.toLowerCase() }}.
+            <a [routerLink]="['/', p.negocioSlug, 'pedido']">{{ textos()?.ver }}</a>
+          </p>
+        }
+      }
+
       <div class="acciones">
         @if (whatsapp(); as wa) {
-          <a class="btn whatsapp grande" [href]="wa" target="_blank" rel="noopener">
-            {{ negocio.value()?.tipo === 'RENTA' ? 'Apartar por WhatsApp' : p.negocioSlug === 'autos' ? 'Preguntar por WhatsApp' : 'Pedir por WhatsApp' }}
-          </a>
+          <a class="btn secundario grande" [href]="wa" target="_blank" rel="noopener">Preguntar por WhatsApp</a>
         }
         @if (telefono(); as tel) {
           <a class="btn secundario grande" [href]="tel">Llamar</a>
         }
       </div>
-      <p class="nota">
-        @if (p.negocioSlug === 'autos') {
-          Te respondemos por WhatsApp para agendar una cita, ver el auto en persona y hacer prueba de manejo.
-        } @else {
-          Te respondemos por WhatsApp para confirmar disponibilidad, entrega y forma de pago.
-        }
-      </p>
+      @if (textos(); as t) { <p class="nota">{{ t.nota }}</p> }
     </div>
   </article>
 
   @if (negocio.value(); as n) { <app-contacto-negocio [negocio]="n" /> }
+  @if (modo(); as m) { <app-barra-carrito [slug]="p.negocioSlug" [modo]="m" /> }
 } @else {
   <div class="estado" aria-busy="true">Cargando…</div>
 }

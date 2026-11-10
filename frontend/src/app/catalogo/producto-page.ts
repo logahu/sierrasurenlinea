@@ -1,7 +1,10 @@
 import { Component, computed, effect, inject, input, numberAttribute, linkedSignal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { BarraCarrito } from './barra-carrito';
+import { CarritoService, TEXTOS_PEDIDO, modoDe } from './carrito';
+import { ModoPedido, Producto } from './catalogo.model';
 import { CatalogoService } from './catalogo.service';
 import { soloEnWeb } from '../modo-app';
 import { ContactoNegocio } from './contacto-negocio';
@@ -10,7 +13,7 @@ import { enlaceTelefono, enlaceWhatsapp, mensajeProducto, precioConUnidad } from
 /** Detalle de un producto: /turamohoy/producto/5 */
 @Component({
   selector: 'app-producto-page',
-  imports: [RouterLink, ContactoNegocio],
+  imports: [RouterLink, ContactoNegocio, BarraCarrito],
   templateUrl: './producto-page.html',
   styleUrl: './producto-page.scss',
   host: {
@@ -52,6 +55,32 @@ export class ProductoPage {
   });
 
   protected readonly precio = precioConUnidad;
+
+  // --- Carrito ---------------------------------------------------------------------
+  private readonly carrito = inject(CarritoService);
+  private readonly router = inject(Router);
+  /** Cómo se pide en este negocio (null en servicios o si aún no carga). */
+  protected readonly modo = computed(() => {
+    const p = this.producto.value();
+    const n = this.negocio.value();
+    return p && n && n.slug === p.negocioSlug ? modoDe(n) : null;
+  });
+  protected readonly textos = computed(() => {
+    const m = this.modo();
+    return m ? TEXTOS_PEDIDO[m] : null;
+  });
+  protected readonly cantidad = linkedSignal({ source: this.id, computation: () => 1 });
+  protected readonly agregado = linkedSignal({ source: this.id, computation: () => false });
+
+  protected agregar(p: Producto, modo: ModoPedido): void {
+    this.carrito.agregar(p.negocioSlug, p, Math.max(1, Math.min(99, this.cantidad())), modo);
+    if (modo === 'CITA') {
+      void this.router.navigate(['/', p.negocioSlug, 'pedido']);
+      return;
+    }
+    this.agregado.set(true);
+    this.cantidad.set(1);
+  }
 
   /** Foto principal y galería; la elegida se muestra en grande. */
   protected readonly fotos = computed(() => {

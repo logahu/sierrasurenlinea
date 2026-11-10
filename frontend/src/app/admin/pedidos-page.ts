@@ -2,7 +2,7 @@ import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Pedido } from './admin.model';
 import { mensajeDeError } from './autorizacion';
-import { NOMBRE_ESTADO, PedidosService, hace, siguientePaso, sonar } from './pedidos';
+import { PedidosService, hace, nombreEstado, siguientePaso, sonar } from './pedidos';
 import { SesionService } from './sesion';
 
 const CADA_MS = 15000;
@@ -44,7 +44,7 @@ const CADA_MS = 15000;
       @for (p of pedidos(); track p.id) {
         <li class="pedido" [attr.data-estado]="p.estado">
           <div class="pedido-cabeza">
-            <span class="estado-pedido">{{ nombreEstado[p.estado] }}</span>
+            <span class="estado-pedido">{{ nombreEstado(p) }}</span>
             <strong>{{ p.tipo }}</strong>
             <span class="ayuda">{{ p.folio }} · {{ hace(p.creado) }}</span>
           </div>
@@ -53,7 +53,16 @@ const CADA_MS = 15000;
             @if (p.zona) { <span class="ayuda"> · {{ p.zona }}</span> }
             @if (p.totalEstimado !== null) { <span class="ayuda"> · aprox. {{ pesos(p.totalEstimado) }}</span> }
           </p>
-          @if (sesion.esDueno()) { <p class="ayuda">{{ p.negocioNombre }}</p> }
+          @if (p.cuando) { <p class="pedido-cuando">🗓️ {{ p.cuando }}@if (p.entrega === 'RECOGER' && p.modo !== 'CITA') { · pasa a recogerlo } </p> }
+          @if (p.lineas.length) {
+            <ul class="pedido-lineas">
+              @for (l of p.lineas; track $index) {
+                <li><span>{{ l.cantidad }} × {{ l.nombre }}</span> <span>{{ pesos(l.subtotal) }}</span></li>
+              }
+            </ul>
+          }
+          @if (p.notas) { <p class="pedido-notas">📝 {{ p.notas }}</p> }
+          @if (!esDeUnNegocio()) { <p class="ayuda">{{ p.negocioNombre }}</p> }
           @if (p.repartidorNombre) { <p class="ayuda">🛵 {{ p.repartidorNombre }}</p> }
 
           <details>
@@ -83,9 +92,11 @@ const CADA_MS = 15000;
 export class PedidosPage {
   protected readonly sesion = inject(SesionService);
   private readonly servicio = inject(PedidosService);
-  protected readonly nombreEstado = NOMBRE_ESTADO;
+  protected readonly nombreEstado = nombreEstado;
   protected readonly hace = hace;
   protected readonly siguiente = siguientePaso;
+  /** Encargados y repartidores de un solo negocio no necesitan ver de qué negocio es cada pedido. */
+  protected readonly esDeUnNegocio = computed(() => !!this.sesion.usuario()?.negocioSlug);
 
   protected readonly pedidos = signal<Pedido[]>([]);
   protected readonly activos = signal(true);

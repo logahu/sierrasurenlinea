@@ -34,8 +34,8 @@
   margin-inline: calc(50% - 50vw);
   padding-inline: max(1rem, calc(50vw - 36rem));
   background: var(--t-fondo);
-  margin-bottom: -3rem;
-  padding-bottom: 3rem;
+  margin-bottom: -6rem;
+  padding-bottom: 6rem;
   min-height: 70vh;
 }
 
@@ -121,6 +121,31 @@ h1, h2, h3 { font-family: var(--t-fuente-titulo); font-weight: var(--t-peso-titu
   @media (max-width: 480px) { grid-template-columns: repeat(2, 1fr); gap: .75rem; }
 }
 
+.grid > li { position: relative; }
+
+// Botón "+" para agregar al pedido sin abrir el producto.
+.mas {
+  position: absolute;
+  right: .6rem;
+  bottom: .6rem;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  border: 0;
+  background: var(--acento);
+  color: #fff;
+  font: inherit;
+  font-size: 1.4rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgb(0 0 0 / .18);
+  transition: transform .15s, background .15s;
+  &:hover { transform: scale(1.06); }
+  &:focus-visible { outline: 3px solid var(--acento); outline-offset: 3px; }
+  &.hecho { background: #1fa855; }
+}
+
 .card {
   display: flex;
   flex-direction: column;
@@ -163,7 +188,7 @@ h1, h2, h3 { font-family: var(--t-fuente-titulo); font-weight: var(--t-peso-titu
   .cat { font-size: .8rem; color: var(--t-tinta-suave); }
   h3 { margin: 0; font-size: 1.02rem; line-height: 1.3; }
   .dato { display: none; font-size: .85rem; color: var(--t-tinta-suave); }
-  .precio { margin-top: auto; padding-top: .4rem; font-weight: 700; color: var(--t-acento-texto); }
+  .precio { margin-top: auto; padding-top: .4rem; padding-right: 2.6rem; font-weight: 700; color: var(--t-acento-texto); }
 }
 
 .skeleton {

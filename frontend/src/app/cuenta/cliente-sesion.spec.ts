@@ -9,6 +9,7 @@ describe('cuenta del cliente', () => {
     expect(esPeticionDelCliente('GET', `${api}/clientes/yo`)).toBe(true);
     expect(esPeticionDelCliente('GET', `${api}/clientes/pedidos`)).toBe(true);
     expect(esPeticionDelCliente('POST', `${api}/pedidos`)).toBe(true);
+    expect(esPeticionDelCliente('POST', `${api}/pedidos/carrito`)).toBe(true);
     expect(esPeticionDelCliente('POST', `${api}/clientes/entrar`)).toBe(false);
     expect(esPeticionDelCliente('POST', `${api}/clientes/registro`)).toBe(false);
     expect(esPeticionDelCliente('GET', `${api}/negocios`)).toBe(false);

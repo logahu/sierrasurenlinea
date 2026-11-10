@@ -101,7 +101,7 @@ export function esPeticionDelCliente(metodo: string, url: string): boolean {
   if (!url.startsWith(api + '/')) return false;
   const ruta = url.slice(api.length).split('?')[0];
   if (ruta === '/clientes/registro' || ruta === '/clientes/entrar') return false;
-  return ruta.startsWith('/clientes/') || (metodo === 'POST' && ruta === '/pedidos');
+  return ruta.startsWith('/clientes/') || (metodo === 'POST' && (ruta === '/pedidos' || ruta === '/pedidos/carrito'));
 }
 
 /**

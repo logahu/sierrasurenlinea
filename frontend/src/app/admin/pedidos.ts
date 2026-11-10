@@ -53,14 +53,25 @@ export class PedidosService {
 export function siguientePaso(p: Pedido): { estado: EstadoPedido; texto: string } | null {
   switch (p.estado) {
     case 'NUEVO':
-      return { estado: 'ACEPTADO', texto: 'Aceptar' };
+      return { estado: 'ACEPTADO', texto: p.modo === 'CITA' ? 'Confirmar cita' : 'Aceptar' };
     case 'ACEPTADO':
+      if (p.modo === 'CITA') return { estado: 'EN_CAMINO', texto: 'Llegó el cliente' };
+      if (p.entrega === 'RECOGER') return { estado: 'EN_CAMINO', texto: 'Listo para recoger' };
       return { estado: 'EN_CAMINO', texto: p.modo === 'VIAJE' ? 'Voy por el pasajero' : 'Voy en camino' };
     case 'EN_CAMINO':
+      if (p.modo === 'CITA') return { estado: 'ENTREGADO', texto: 'Visita terminada' };
       return { estado: 'ENTREGADO', texto: p.modo === 'VIAJE' ? 'Viaje terminado' : 'Entregado' };
     default:
       return null;
   }
+}
+
+/** Nombre del estado según el tipo de pedido ("Listo para recoger" en vez de "En camino"). */
+export function nombreEstado(p: Pick<Pedido, 'estado' | 'modo' | 'entrega'>): string {
+  if (p.estado === 'EN_CAMINO' && p.modo === 'CITA') return 'En visita';
+  if (p.estado === 'EN_CAMINO' && p.entrega === 'RECOGER') return 'Listo para recoger';
+  if (p.estado === 'ACEPTADO' && p.modo === 'CITA') return 'Cita confirmada';
+  return NOMBRE_ESTADO[p.estado];
 }
 
 export const NOMBRE_ESTADO: Record<EstadoPedido, string> = {

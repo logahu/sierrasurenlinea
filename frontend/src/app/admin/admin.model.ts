@@ -117,7 +117,7 @@ export interface Pedido {
   negocioSlug: string;
   negocioNombre: string;
   tipo: string;
-  modo: 'MANDADO' | 'VIAJE' | 'COMIDA';
+  modo: 'MANDADO' | 'VIAJE' | 'COMIDA' | 'COMPRA' | 'RENTA' | 'CITA';
   clienteNombre: string;
   clienteTelefono: string;
   entregar: string;
@@ -129,4 +129,18 @@ export interface Pedido {
   repartidorNombre: string | null;
   creado: string;
   actualizado: string;
+  /** DOMICILIO o RECOGER (pasa al negocio). */
+  entrega: 'DOMICILIO' | 'RECOGER';
+  cuando: string | null;
+  notas: string | null;
+  /** Renglones del carrito (vacío en encargos). */
+  lineas: LineaPedido[];
+}
+
+export interface LineaPedido {
+  nombre: string;
+  cantidad: number;
+  precioUnitario: number;
+  unidad: string | null;
+  subtotal: number;
 }

@@ -78,6 +78,12 @@
                 <span class="precio">{{ precio(p) }}</span>
               </div>
             </a>
+            @if (modo() && modo() !== 'CITA') {
+              <button type="button" class="mas" (click)="agregar(p)" [class.hecho]="recien() === p.id"
+                      [attr.aria-label]="'Agregar ' + p.nombre + ' a ' + textos()?.titulo?.toLowerCase()">
+                {{ recien() === p.id ? '✓' : '+' }}
+              </button>
+            }
           </li>
         }
       </ul>
@@ -87,4 +93,5 @@
   }
 
   @if (n) { <app-contacto-negocio [negocio]="n" /> }
+  @if (n && modo(); as m) { <app-barra-carrito [slug]="n.slug" [modo]="m" /> }
 }

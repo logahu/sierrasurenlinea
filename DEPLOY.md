@@ -234,3 +234,13 @@ configuradas. Las fotos que se reemplazan se quedan en el bucket (no estorban).
   `VERSION_PRIVACIDAD` en `ClienteResource.java`. Conviene que un abogado lo revise.
 - Panel → Usuarios: pestañas **Equipo** (hasta 2 administradores, encargados y repartidores) y
   **Clientes**. Nada se borra: "Quitar acceso" es una baja lógica y se puede revertir.
+
+## Pedidos con carrito (todos los negocios)
+
+- Cada negocio que vende o renta tiene carrito: botón "+" en el catálogo, "Agregar al pedido" en el
+  producto y la página `/<negocio>/pedido` para confirmar. Se registra en el panel con folio
+  (TUR-00015, INF-…, AUT-…) y se abre WhatsApp con el pedido escrito.
+- Cómo se pide depende del negocio (`negocio.modo_pedido`): COMPRA (domicilio o recoger),
+  RENTA (fecha y lugar del evento) y CITA (autos: día de la visita).
+- Avisos push: administradores, encargado del negocio, repartidores del negocio y, si es a domicilio,
+  los repartidores generales (Panel → Usuarios → Repartidor con "Todos los negocios").

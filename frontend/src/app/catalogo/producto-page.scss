@@ -26,9 +26,9 @@
   font-family: var(--t-fuente-texto);
   color: var(--t-tinta);
   margin-inline: calc(50% - 50vw);
-  padding: 1.25rem max(1rem, calc(50vw - 36rem)) 3rem;
+  padding: 1.25rem max(1rem, calc(50vw - 36rem)) 6rem;
   background: var(--t-fondo);
-  margin-bottom: -3rem;
+  margin-bottom: -6rem;
   min-height: 70vh;
 }
 
@@ -94,6 +94,36 @@ h1 { font-family: var(--t-fuente-titulo); font-weight: var(--t-peso-titulo); }
 }
 
 .acciones { display: flex; flex-wrap: wrap; gap: .6rem; }
+
+// --- Agregar al pedido -------------------------------------------------------------
+.agregar { display: flex; flex-wrap: wrap; gap: .6rem; margin-bottom: .6rem; }
+.btn.primario { background: var(--acento); color: #fff; }
+.cantidad {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--t-linea);
+  border-radius: 999px;
+  overflow: hidden;
+  button {
+    width: 2.8rem;
+    height: 100%;
+    min-height: 3rem;
+    border: 0;
+    background: transparent;
+    color: var(--t-tinta);
+    font: inherit;
+    font-size: 1.25rem;
+    cursor: pointer;
+    &:disabled { opacity: .35; cursor: default; }
+  }
+  output { min-width: 2rem; text-align: center; font-weight: 700; font-variant-numeric: tabular-nums; }
+}
+.agregado {
+  margin: 0 0 .9rem;
+  font-weight: 600;
+  color: var(--t-tinta);
+  a { color: var(--t-acento-texto); margin-left: .25rem; }
+}
 .btn.secundario { color: var(--t-tinta); border-color: var(--t-linea); }
 
 .estado {

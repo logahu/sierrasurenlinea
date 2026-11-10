@@ -77,7 +77,8 @@ export function nombreDelRol(rol: Rol): string {
       <p class="ayuda">
         <strong>Administradores</strong> (hasta {{ maxAdmin }}): todo el sitio y los usuarios.
         <strong>Encargados</strong> (uno por negocio): su catálogo y sus pedidos.
-        <strong>Repartidores</strong>: reciben los pedidos en el celular y los entregan.
+        <strong>Repartidores</strong>: reciben los pedidos en el celular y los entregan; pueden ser de un negocio o de
+        todos.
       </p>
       <ul class="lista">
         @for (u of usuarios.value() ?? []; track u.id) {
@@ -87,7 +88,7 @@ export function nombreDelRol(rol: Rol): string {
               @if (u.id === yo()?.id) { <small> (tú)</small> }
               <span class="ayuda">{{ u.correo }}</span>
               <span class="ayuda">
-                {{ rol(u.rol) }}{{ u.rol === 'DUENO' ? ' · todo el sitio' : ' · ' + u.negocioNombre }}
+                {{ rol(u.rol) }}{{ u.rol === 'DUENO' ? ' · todo el sitio' : ' · ' + (u.negocioNombre ?? 'todos los negocios') }}
                 @if (!u.activo) { · sin acceso }
                 @if (u.bloqueado) { · bloqueado por intentos }
               </span>
@@ -136,7 +137,11 @@ export function nombreDelRol(rol: Rol): string {
               <label>
                 Negocio
                 <select formControlName="negocioSlug">
-                  <option value="" disabled>Elige…</option>
+                  @if (rolNuevo() === 'REPARTIDOR') {
+                    <option value="">Todos los negocios (entrega los pedidos a domicilio de todos)</option>
+                  } @else {
+                    <option value="" disabled>Elige…</option>
+                  }
                   @for (n of (rolNuevo() === 'ENCARGADO' ? libres() : negocios.value() ?? []); track n.slug) {
                     <option [value]="n.slug">{{ n.nombre }}</option>
                   }
@@ -220,11 +225,11 @@ export class UsuariosPage {
     const c = this.form.controls;
     const datos = this.form.getRawValue();
     const esAdmin = datos.rol === 'DUENO';
-    if (!esAdmin && !datos.negocioSlug) return this.falla('Elige el negocio.');
+    if (datos.rol === 'ENCARGADO' && !datos.negocioSlug) return this.falla('Elige el negocio.');
     if (c.nombre.invalid) return this.falla('Escribe el nombre.');
     if (c.correo.invalid) return this.falla('Escribe un correo válido.');
     if (c.contrasena.invalid) return this.falla(`La contraseña debe tener al menos ${MINIMO} caracteres.`);
-    this.ejecutar(this.api.crearEncargado({ ...datos, negocioSlug: esAdmin ? null : datos.negocioSlug }), (u) => {
+    this.ejecutar(this.api.crearEncargado({ ...datos, negocioSlug: esAdmin ? null : datos.negocioSlug || null }), (u) => {
       this.form.reset();
       return `${u.nombre} ya puede entrar al panel con ${u.correo}.`;
     });

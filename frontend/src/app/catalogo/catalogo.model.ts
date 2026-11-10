@@ -1,4 +1,6 @@
 export type TipoNegocio = 'VENTA' | 'RENTA' | 'SERVICIO';
+/** COMPRA: domicilio o recoger · RENTA: fecha del evento · CITA: ver el producto en persona. */
+export type ModoPedido = 'COMPRA' | 'RENTA' | 'CITA';
 
 export interface Categoria {
   id: number;
@@ -24,6 +26,8 @@ export interface Negocio {
   soloMayoresEdad: boolean;
   /** Si se muestra dentro de la app de Google Play (en la web siempre). */
   visibleApp?: boolean;
+  /** Cómo se piden sus productos en línea; null en servicios (Encarguitos). */
+  modoPedido?: ModoPedido | null;
   /** Solo servicios: cuánto adelanta el repartidor, en MXN. */
   topeAdelanto?: number | null;
   /** Vacío en el listado; con datos en el detalle de un negocio. */

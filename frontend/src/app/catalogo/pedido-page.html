@@ -1,0 +1,177 @@
+@let n = negocio.value();
+@let m = modo() ?? 'COMPRA';
+
+@if (soloWeb()) {
+  <div class="estado">
+    <p>Esta sección está disponible en la página web.</p>
+    <a routerLink="/">Ver los demás negocios</a>
+  </div>
+} @else if (negocio.error()) {
+  <div class="estado" role="alert">
+    <p>No pudimos cargar el negocio. Revisa tu conexión o inténtalo en un momento.</p>
+    <a routerLink="/">Ver todos los negocios</a>
+  </div>
+} @else if (!n) {
+  <div class="estado" aria-busy="true">Cargando…</div>
+} @else if (enviado(); as e) {
+  <section class="hoja listo" role="status">
+    <span class="palomita" aria-hidden="true">✓</span>
+    <h1>¡Gracias! Recibimos tu solicitud</h1>
+    @if (e.folio) {
+      <p class="folio">Folio <strong>{{ e.folio }}</strong></p>
+    }
+    <p>
+      Se abrió WhatsApp con tu solicitud ya escrita para enviársela a <strong>{{ n.nombre }}</strong>.
+      {{ textos().nota }}
+    </p>
+    <p class="nota">Si WhatsApp no se abrió, revisa que tu navegador permita ventanas emergentes.</p>
+    <div class="botones">
+      <a class="btn-principal" routerLink="/cuenta">Ver mis pedidos</a>
+      <a class="btn-claro" [routerLink]="['/', n.slug]">Seguir viendo {{ n.nombre }}</a>
+    </div>
+  </section>
+} @else {
+  <a class="volver" [routerLink]="['/', n.slug]">← {{ n.nombre }}</a>
+  <h1>{{ textos().titulo }}</h1>
+
+  @if (!lineas().length) {
+    <section class="hoja vacio">
+      <p>Aún no has agregado nada.</p>
+      <a class="btn-principal" [routerLink]="['/', n.slug]">Ver el catálogo de {{ n.nombre }}</a>
+    </section>
+  } @else {
+    <div class="columnas">
+      <section class="hoja" aria-labelledby="titulo-lista">
+        <h2 id="titulo-lista">{{ cuantos() }}</h2>
+        <ul class="lineas">
+          @for (l of lineas(); track l.productoId) {
+            <li>
+              <img [src]="l.imagenUrl" alt="" width="64" height="64" loading="lazy" />
+              <div class="datos">
+                <a [routerLink]="['/', n.slug, 'producto', l.productoId]">{{ l.nombre }}</a>
+                <span class="unitario">{{ precio(l) }}</span>
+              </div>
+              @if (m !== 'CITA') {
+                <div class="cantidad" role="group" [attr.aria-label]="'Cantidad de ' + l.nombre">
+                  <button type="button" (click)="cambiar(l, -1)" [attr.aria-label]="'Uno menos de ' + l.nombre">−</button>
+                  <output>{{ l.cantidad }}</output>
+                  <button type="button" (click)="cambiar(l, 1)" [disabled]="l.cantidad >= 99" [attr.aria-label]="'Uno más de ' + l.nombre">+</button>
+                </div>
+                <strong class="subtotal">{{ pesos(l.precio * l.cantidad) }}</strong>
+              }
+              <button type="button" class="quitar" (click)="quitar(l)" [attr.aria-label]="'Quitar ' + l.nombre">✕</button>
+            </li>
+          }
+        </ul>
+        @if (m !== 'CITA') {
+          <p class="total"><span>Total aproximado</span> <strong>{{ pesos(total()) }}</strong></p>
+          <p class="nota">
+            @if (m === 'COMPRA') { El costo de envío, si aplica, te lo confirma el negocio. }
+            @else { Los precios son por el periodo indicado; el negocio te confirma el total. }
+          </p>
+        }
+        <a class="seguir" [routerLink]="['/', n.slug]">+ Agregar más</a>
+      </section>
+
+      <section class="hoja" aria-labelledby="titulo-entrega">
+        <h2 id="titulo-entrega">{{ m === 'COMPRA' ? 'Entrega' : m === 'RENTA' ? 'Datos del evento' : 'Tu visita' }}</h2>
+
+        @if (!cliente.cliente()) {
+          <div class="aviso-cuenta" role="note">
+            <p>
+              <strong>Para enviar tu solicitud es necesario contar con una cuenta.</strong>
+              Así tus pedidos llegan con datos verificados y tus próximas visitas son más ágiles. Tu carrito se conserva.
+            </p>
+            <p class="botones">
+              <a class="btn-principal" routerLink="/cuenta/entrar" [queryParams]="{ volver: '/' + n.slug + '/pedido' }">Iniciar sesión</a>
+              <a class="btn-claro" routerLink="/cuenta/registro" [queryParams]="{ volver: '/' + n.slug + '/pedido' }">Crear cuenta</a>
+            </p>
+          </div>
+        }
+
+        <form (submit)="$event.preventDefault(); enviar()" novalidate>
+          @if (m === 'COMPRA') {
+            <fieldset class="opciones">
+              <legend>¿Cómo lo recibes?</legend>
+              <label [class.elegida]="entrega() === 'DOMICILIO'">
+                <input type="radio" name="entrega" [checked]="entrega() === 'DOMICILIO'" (change)="entrega.set('DOMICILIO')" />
+                A domicilio
+              </label>
+              <label [class.elegida]="entrega() === 'RECOGER'">
+                <input type="radio" name="entrega" [checked]="entrega() === 'RECOGER'" (change)="entrega.set('RECOGER')" />
+                Paso a recogerlo
+              </label>
+            </fieldset>
+          }
+
+          @if (m === 'RENTA' || (m === 'COMPRA' && entrega() === 'DOMICILIO')) {
+            <label class="campo" [class.con-error]="falta('la dirección de entrega', 'la dirección del evento')">
+              {{ m === 'RENTA' ? 'Dirección del evento' : 'Dirección de entrega' }}
+              <textarea rows="2" maxlength="300" autocomplete="street-address" [value]="entregar()"
+                        (input)="entregar.set(texto($event))"
+                        placeholder="Calle, número, colonia y una referencia"></textarea>
+            </label>
+          } @else if (n.direccion) {
+            <p class="nota">📍 {{ m === 'CITA' ? 'Te esperamos en' : 'Recoges en' }}: {{ n.direccion }}@if (n.horario) { · {{ n.horario }} }</p>
+          }
+
+          @if (m === 'COMPRA') {
+            <fieldset class="opciones">
+              <legend>¿Para cuándo?</legend>
+              <label [class.elegida]="!programado()">
+                <input type="radio" name="cuando" [checked]="!programado()" (change)="programado.set(false)" />
+                Lo antes posible
+              </label>
+              <label [class.elegida]="programado()">
+                <input type="radio" name="cuando" [checked]="programado()" (change)="programado.set(true)" />
+                Elegir día y hora
+              </label>
+            </fieldset>
+          }
+          @if (m !== 'COMPRA' || programado()) {
+            <div class="par">
+              <label class="campo" [class.con-error]="falta('la fecha del evento', 'el día de tu visita', 'el día de entrega')">
+                {{ m === 'RENTA' ? 'Fecha del evento' : m === 'CITA' ? 'Día de tu visita' : 'Día' }}
+                <input type="date" [min]="hoy" [value]="fecha()" (input)="fecha.set(texto($event))" />
+              </label>
+              <label class="campo">
+                {{ m === 'RENTA' ? 'Horario (opcional)' : 'Hora (opcional)' }}
+                <input type="text" maxlength="40" [value]="hora()" (input)="hora.set(texto($event))"
+                       [placeholder]="m === 'RENTA' ? 'De 4 a 9 pm' : m === 'CITA' ? 'Por la tarde' : '10:00 am'" />
+              </label>
+            </div>
+          }
+
+          <label class="campo">
+            Notas para el negocio (opcional)
+            <textarea rows="2" maxlength="500" [value]="notas()" (input)="notas.set(texto($event))"
+                      [placeholder]="m === 'COMPRA' ? 'Ej. mensaje para la tarjeta, color preferido…' : m === 'RENTA' ? 'Ej. tipo de piso, si hay contacto de luz…' : 'Ej. quiero saber si acepta cambio…'"></textarea>
+          </label>
+
+          @if (n.soloMayoresEdad) {
+            <label class="casilla" [class.con-error]="falta('confirmar que eres mayor de 18 años')">
+              <input type="checkbox" [checked]="mayorDeEdad()" (change)="mayorDeEdad.set(!mayorDeEdad())" />
+              Confirmo que soy mayor de 18 años. Entiendo que se me pedirá identificación al entregar.
+            </label>
+          }
+
+          @if (cliente.cliente(); as c) {
+            <p class="nota">A nombre de <strong>{{ c.nombre }}</strong> · {{ c.telefono }} · <a routerLink="/cuenta">Cambiar mis datos</a></p>
+          }
+
+          @if (intentado() && faltan().length) {
+            <p class="faltan" role="alert">Para enviar falta: {{ faltan().join(', ') }}.</p>
+          }
+          @if (error(); as e) { <p class="faltan" role="alert">{{ e }}</p> }
+
+          <button type="submit" class="enviar" [disabled]="enviando()">
+            @if (enviando()) { Registrando… }
+            @else if (!cliente.cliente()) { Iniciar sesión para enviar }
+            @else { {{ textos().enviar }} }
+          </button>
+          <p class="nota">{{ textos().nota }}</p>
+        </form>
+      </section>
+    </div>
+  }
+}

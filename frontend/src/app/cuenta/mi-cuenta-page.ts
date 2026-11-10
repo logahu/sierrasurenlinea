@@ -6,7 +6,7 @@ import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { mensajeDeError } from '../admin/autorizacion';
 import { ClienteSesionService } from './cliente-sesion';
-import { ESTADO_PARA_CLIENTE, MINIMO_CONTRASENA } from './cuenta.model';
+import { MINIMO_CONTRASENA, estadoParaCliente } from './cuenta.model';
 
 @Component({
   selector: 'app-mi-cuenta-page',
@@ -46,9 +46,10 @@ import { ESTADO_PARA_CLIENTE, MINIMO_CONTRASENA } from './cuenta.model';
             @for (p of pedidos.value() ?? []; track p.id) {
               <li class="pedido">
                 <strong>{{ p.negocioNombre }} · {{ p.tipo }}</strong>
-                <span class="estado" [class]="p.estado">{{ estado[p.estado] }}</span>
+                <span class="estado" [class]="p.estado">{{ estado(p) }}</span>
                 <small>
                   Folio {{ p.folio }} · {{ p.creado | date: "d MMM y, h:mm a" }}
+                  @if (p.cuando && p.cuando !== 'Lo antes posible') { · para {{ p.cuando }} }
                   @if (p.totalEstimado) { · {{ p.totalEstimado | currency: 'MXN' : 'symbol-narrow' }} aprox. }
                 </small>
               </li>
@@ -112,7 +113,7 @@ import { ESTADO_PARA_CLIENTE, MINIMO_CONTRASENA } from './cuenta.model';
 export class MiCuentaPage {
   protected readonly sesion = inject(ClienteSesionService);
   private readonly router = inject(Router);
-  protected readonly estado = ESTADO_PARA_CLIENTE;
+  protected readonly estado = estadoParaCliente;
   protected readonly minimo = MINIMO_CONTRASENA;
 
   protected readonly pedidos = rxResource({ stream: () => this.sesion.pedidos() });

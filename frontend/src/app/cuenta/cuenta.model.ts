@@ -30,7 +30,10 @@ export interface MiPedido {
   folio: string;
   negocioNombre: string;
   tipo: string;
+  modo: string;
+  entrega: 'DOMICILIO' | 'RECOGER';
   entregar: string;
+  cuando: string | null;
   totalEstimado: number | null;
   estado: 'NUEVO' | 'ACEPTADO' | 'EN_CAMINO' | 'ENTREGADO' | 'CANCELADO';
   creado: string;
@@ -44,6 +47,15 @@ export const ESTADO_PARA_CLIENTE: Record<MiPedido['estado'], string> = {
   ENTREGADO: 'Entregado',
   CANCELADO: 'Cancelado',
 };
+
+/** Estado en palabras del cliente, según si es a domicilio, para recoger o una cita. */
+export function estadoParaCliente(p: Pick<MiPedido, 'estado' | 'modo' | 'entrega'>): string {
+  if (p.modo === 'CITA') {
+    return { NUEVO: 'Solicitada', ACEPTADO: 'Cita confirmada', EN_CAMINO: 'En visita', ENTREGADO: 'Realizada', CANCELADO: 'Cancelada' }[p.estado];
+  }
+  if (p.estado === 'EN_CAMINO' && p.entrega === 'RECOGER') return 'Listo para recoger';
+  return ESTADO_PARA_CLIENTE[p.estado];
+}
 
 /** Mínimo de caracteres de la contraseña (igual que el backend). */
 export const MINIMO_CONTRASENA = 10;
