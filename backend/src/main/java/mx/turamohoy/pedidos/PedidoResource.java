@@ -90,8 +90,7 @@ public class PedidoResource {
             p.mensaje = req.mensaje().trim();
             p.creado = Instant.now();
             p.actualizado = p.creado;
-            p.persist();
-            p.flush();
+            p.persistAndFlush();
             p.folio = Pedido.folioDe(n, p.id);
             return new PedidoRegistrado(p.id, p.folio);
         });
