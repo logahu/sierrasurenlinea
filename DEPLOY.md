@@ -244,3 +244,14 @@ configuradas. Las fotos que se reemplazan se quedan en el bucket (no estorban).
   RENTA (fecha y lugar del evento) y CITA (autos: día de la visita).
 - Avisos push: administradores, encargado del negocio, repartidores del negocio y, si es a domicilio,
   los repartidores generales (Panel → Usuarios → Repartidor con "Todos los negocios").
+
+## Historial, fotos y recuperación del administrador
+
+- **Historial** (Panel → Historial): cada cambio queda registrado con quién y cuándo. No se edita ni se borra.
+  El encargado ve solo lo de su negocio.
+- **Fotos** (Panel → negocio → Fotos): muestra dónde se usa cada foto. Las que no se usan se pueden borrar
+  para liberar espacio en R2; el registro queda en el historial.
+- **¿Olvidaste la contraseña del administrador?** Lo más fácil es entrar con el otro administrador y ponerle una
+  contraseña nueva en Usuarios. Si no hay otro: en Render agrega `ADMIN_REINICIAR=true`, `ADMIN_CORREO` (tu correo
+  del panel) y `ADMIN_CONTRASENA` (la nueva, mínimo 10 caracteres), espera a que reinicie, entra y **borra
+  las tres variables**. Después cambia la contraseña en Mi cuenta.

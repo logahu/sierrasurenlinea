@@ -92,7 +92,8 @@ const ICONOS: Record<string, string> = {
     .filtros-historial label { display: grid; gap: .25rem; font-size: .85rem; font-weight: 600; }
     .filtros-historial .crece { flex: 1 1 12rem; }
     .historial { list-style: none; margin: 0; padding: 0; }
-    .dia { margin: 1.1rem 0 .4rem; font-weight: 700; font-size: .85rem; color: var(--tinta-suave); text-transform: capitalize; }
+    .dia { margin: 1.1rem 0 .4rem; font-weight: 700; font-size: .85rem; color: var(--tinta-suave); }
+    .dia::first-letter { text-transform: uppercase; }
     .renglon { display: flex; gap: .75rem; padding: .65rem 0; border-bottom: 1px solid var(--linea); }
     .icono { font-size: 1.15rem; line-height: 1.4; }
     .accion { margin: 0; font-weight: 600; }

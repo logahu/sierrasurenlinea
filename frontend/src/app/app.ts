@@ -40,7 +40,8 @@ export class App {
         tap((ruta) => {
           this.folio.set(null);
           this.enPanel.set(esRutaDelPanel(ruta));
-          this.enCuenta.set(ruta === '/cuenta');
+          // En Mi cuenta y en la confirmación del pedido ya se ve el seguimiento.
+          this.enCuenta.set(ruta === '/cuenta' || ruta.endsWith('/pedido'));
         }),
         // El panel no cuenta como visita.
         switchMap((ruta) => (esRutaDelPanel(ruta) ? of(null) : visitas.registrar(ruta))),
