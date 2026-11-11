@@ -5,6 +5,7 @@ import { finalize } from 'rxjs';
 import { mensajeDeError } from '../admin/autorizacion';
 import { ClienteSesionService } from './cliente-sesion';
 import { destinoSeguro } from './destino';
+import { telefonoValido } from '../catalogo/encargo';
 
 @Component({
   selector: 'app-entrar-cliente-page',
@@ -69,6 +70,11 @@ export class EntrarClientePage {
   protected entrar(): void {
     if (this.form.invalid) {
       this.error.set('Escribe tu teléfono y tu contraseña.');
+      return;
+    }
+    if (!telefonoValido(this.form.controls.telefono.value)) {
+      const digitos = this.form.controls.telefono.value.replace(/\D/g, '').length;
+      this.error.set(`El teléfono debe tener 10 dígitos (escribiste ${digitos}). Revísalo e inténtalo de nuevo.`);
       return;
     }
     this.error.set(null);
