@@ -12,6 +12,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import mx.turamohoy.admin.Rol;
 import mx.turamohoy.catalogo.model.Visita;
+import mx.turamohoy.catalogo.model.VisitaDia;
 
 import java.util.List;
 import java.util.regex.Pattern;
@@ -59,12 +60,26 @@ public class VisitaResource {
                 .toList();
     }
 
+    /** Igual, pero en el renglón del día (para el tablero). */
+    private static void sumarDia(String ruta) {
+        java.time.LocalDate hoy = VisitaDia.hoy();
+        if (QuarkusTransaction.requiringNew().call(() -> VisitaDia.sumar(ruta, hoy)) > 0) {
+            return;
+        }
+        try {
+            QuarkusTransaction.requiringNew().run(() -> VisitaDia.nueva(ruta, hoy).persist());
+        } catch (RuntimeException e) {
+            QuarkusTransaction.requiringNew().run(() -> VisitaDia.sumar(ruta, hoy));
+        }
+    }
+
     /**
      * Suma 1 de forma atómica. La primera visita de una página crea su fila; si dos
      * visitas llegan a la vez y ambas intentan crearla, la que pierde suma sobre la fila
      * que ya existe.
      */
     private static void sumar(String ruta) {
+        sumarDia(ruta);
         if (QuarkusTransaction.requiringNew().call(() -> Visita.sumar(ruta)) > 0) {
             return;
         }
