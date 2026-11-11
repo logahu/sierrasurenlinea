@@ -48,7 +48,7 @@ export function nombreDelRol(rol: Rol): string {
     }
 
     @if (enClientes()) {
-      <form class="en-linea buscar" (ngSubmit)="busqueda.set(q.value.trim())">
+      <form class="en-linea buscar" (submit)="$event.preventDefault(); busqueda.set(q.value.trim())">
         <input #q type="search" placeholder="Buscar por nombre o teléfono" [value]="busqueda()" aria-label="Buscar cliente" />
         <button class="btn secundario" type="submit">Buscar</button>
       </form>
@@ -79,7 +79,7 @@ export function nombreDelRol(rol: Rol): string {
               </button>
             </div>
             @if (reiniciandoCliente() === c.id) {
-              <form class="en-linea" (ngSubmit)="reiniciarCliente(c, nuevaCliente.value)">
+              <form class="en-linea" (submit)="$event.preventDefault(); reiniciarCliente(c, nuevaCliente.value)">
                 <input #nuevaCliente type="text" autocomplete="off" [placeholder]="'Mínimo ' + minimo + ' caracteres'" />
                 <button class="btn primario" type="submit" [disabled]="ocupado()">Guardar</button>
               </form>
@@ -124,7 +124,7 @@ export function nombreDelRol(rol: Rol): string {
                 </button>
               </div>
               @if (reiniciando() === u.id) {
-                <form class="en-linea" (ngSubmit)="reiniciar(u, nueva.value)">
+                <form class="en-linea" (submit)="$event.preventDefault(); reiniciar(u, nueva.value)">
                   <input #nueva type="text" autocomplete="off" [placeholder]="'Mínimo ' + minimo + ' caracteres'" />
                   <button class="btn primario" type="submit" [disabled]="ocupado()">Guardar</button>
                 </form>
