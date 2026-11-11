@@ -1,4 +1,5 @@
 import { Platillo, Producto, Restaurante, TipoEncargo } from './catalogo.model';
+import { Punto, enlaceVer } from '../mapa/ubicacion';
 import { precioConUnidad } from './contacto';
 
 /**
@@ -50,6 +51,8 @@ export interface DatosEncargo {
   /** Enlace de Google Maps con la ubicación del cliente (botón "Usar mi ubicación"). */
   ubicacion: string;
   entregar: string;
+  /** Punto de entrega marcado en el mapa (no es parte del formulario). */
+  puntoEntrega?: Punto | null;
   /** Id de la tarifa (producto) de la zona. */
   zona: string;
   cuando: Cuando;
@@ -197,6 +200,7 @@ export function armarMensajeEncargo(
   if (d.recoger.trim()) lineas.push(`*${etiquetaRecoger}:* ${d.recoger.trim()}`);
   if (d.ubicacion) lineas.push(`*Mi ubicación:* ${d.ubicacion}`);
   lineas.push(`*${viaje ? 'Voy a' : 'Entregar en'}:* ${d.entregar.trim()}`);
+  if (d.puntoEntrega) lineas.push(`*Ubicación de entrega:* ${enlaceVer(d.puntoEntrega)}`);
   if (zona) lineas.push(`*Zona:* ${zona.nombre} (${precioConUnidad(zona)})`);
   if (esComida(opcion) && comida && zona && !zona.unidadPrecio?.startsWith('extra')) {
     lineas.push(`*Total aproximado:* ${pesos(subtotalComida(comida) + zona.precio)} (comida + envío)`);
@@ -234,6 +238,8 @@ export function datosDelPedido(
     entregar: d.entregar.trim(),
     zona: zona?.nombre ?? null,
     total,
+    lat: d.puntoEntrega?.lat ?? null,
+    lng: d.puntoEntrega?.lng ?? null,
     mensaje,
   };
 }

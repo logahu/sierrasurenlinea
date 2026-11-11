@@ -49,7 +49,13 @@ export class ClienteSesionService {
     return this.http.get<Cliente>(`${this.base}/yo`).pipe(tap((c) => this.actualizar(c)));
   }
 
-  editar(datos: { nombre: string; correo: string | null; direccion: string | null }): Observable<Cliente> {
+  editar(datos: {
+    nombre: string;
+    correo: string | null;
+    direccion: string | null;
+    lat: number | null;
+    lng: number | null;
+  }): Observable<Cliente> {
     return this.http.put<Cliente>(`${this.base}/yo`, datos).pipe(tap((c) => this.actualizar(c)));
   }
 

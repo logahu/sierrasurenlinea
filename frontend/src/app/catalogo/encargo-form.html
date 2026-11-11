@@ -164,6 +164,13 @@
       </label>
     </div>
 
+    @if (!viaje()) {
+      <div class="campo campo-mapa">
+        <span class="etiqueta">Marca en el mapa dónde entregamos <small>(recomendado)</small></span>
+        <app-mapa-ubicacion [(punto)]="puntoEntrega" />
+      </div>
+    }
+
     <div class="par">
       <label class="campo" [class.con-error]="falta('la zona de entrega', 'la zona de destino')">
         <span class="etiqueta">{{ textos().zona }}</span>

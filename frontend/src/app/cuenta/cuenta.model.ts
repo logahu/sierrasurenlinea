@@ -5,6 +5,8 @@ export interface Cliente {
   telefono: string;
   correo: string | null;
   direccion: string | null;
+  lat: number | null;
+  lng: number | null;
   activo: boolean;
   creado: string;
   ultimoAcceso: string | null;

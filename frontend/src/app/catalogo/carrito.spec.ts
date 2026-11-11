@@ -74,5 +74,8 @@ describe('carrito', () => {
     expect(m).toContain('*Entregar en:* Hidalgo 4');
     expect(m).toContain('*Notas:* Tarjeta: Te quiero');
     expect(m).toContain('*Teléfono:* 9511234567');
+    const conPunto = armarMensajeCarrito({ nombre: 'TuRamoHoy' }, 'COMPRA', l, datos({ punto: { lat: 16.33, lng: -96.6 } }),
+      { nombre: 'Rosa', telefono: '9511234567' });
+    expect(conPunto).toContain('*Ubicación:* https://maps.google.com/?q=16.330000,-96.600000');
   });
 });

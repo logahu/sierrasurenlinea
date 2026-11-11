@@ -1,6 +1,7 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { ModoPedido, Negocio, Producto } from './catalogo.model';
 import { precioConUnidad } from './contacto';
+import { Punto, enlaceVer } from '../mapa/ubicacion';
 
 /** Un renglón del carrito (se guarda en este navegador). */
 export interface LineaCarrito {
@@ -21,6 +22,8 @@ export interface DatosPedido {
   /** Texto final de "para cuándo", ya armado (ver textoCuando). */
   cuando: string;
   notas: string;
+  /** Punto de entrega marcado en el mapa (opcional). */
+  punto?: Punto | null;
 }
 
 export const MAXIMO_POR_PRODUCTO = 99;
@@ -137,9 +140,11 @@ export function armarMensajeCarrito(
   r.push('');
   if (modo === 'COMPRA') {
     r.push(d.entrega === 'RECOGER' ? '*Entrega:* Paso a recogerlo' : `*Entregar en:* ${d.entregar.trim()}`);
+    if (d.entrega === 'DOMICILIO' && d.punto) r.push(`*Ubicación:* ${enlaceVer(d.punto)}`);
     r.push(`*Para cuándo:* ${d.cuando}`);
   } else if (modo === 'RENTA') {
     r.push(`*Fecha del evento:* ${d.cuando}`, `*Lugar del evento:* ${d.entregar.trim()}`);
+    if (d.punto) r.push(`*Ubicación:* ${enlaceVer(d.punto)}`);
   } else {
     r.push(`*Día de la visita:* ${d.cuando}`);
   }

@@ -1,6 +1,8 @@
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { ClienteSesionService } from '../cuenta/cliente-sesion';
+import { MapaUbicacion } from '../mapa/mapa-ubicacion';
+import { Punto, puntoDe } from '../mapa/ubicacion';
 import { UltimoPedido } from '../cuenta/ultimo-pedido';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { HttpClient } from '@angular/common/http';
@@ -24,7 +26,7 @@ import {
  */
 @Component({
   selector: 'app-encargo-form',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, MapaUbicacion],
   templateUrl: './encargo-form.html',
   styleUrl: './encargo-form.scss',
 })
@@ -45,7 +47,11 @@ export class EncargoForm {
 
   protected readonly form = inject(FormBuilder).nonNullable.group({ ...ENCARGO_VACIO });
   private readonly valores = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
-  protected readonly datos = computed(() => ({ ...ENCARGO_VACIO, ...this.valores() }) as DatosEncargo);
+  /** Punto de entrega en el mapa (se llena con la ubicación habitual de la cuenta). */
+  protected readonly puntoEntrega = signal<Punto | null>(null);
+  protected readonly datos = computed(
+    () => ({ ...ENCARGO_VACIO, ...this.valores(), puntoEntrega: this.puntoEntrega() }) as DatosEncargo,
+  );
 
   protected readonly opcion = computed(() => opcionDe(this.tipos(), this.datos().tipo));
   protected readonly viaje = computed(() => esViaje(this.opcion()));
@@ -134,6 +140,8 @@ export class EncargoForm {
         if (!f.nombre.value.trim()) f.nombre.setValue(c.nombre);
         if (!f.telefono.value.trim()) f.telefono.setValue(c.telefono);
         if (!f.entregar.value.trim() && c.direccion) f.entregar.setValue(c.direccion);
+        const habitual = puntoDe(c.lat, c.lng);
+        if (habitual && !this.puntoEntrega()) this.puntoEntrega.set(habitual);
       });
     });
     // Elige la primera opción en cuanto llegan; al cambiar de opción se limpia la zona

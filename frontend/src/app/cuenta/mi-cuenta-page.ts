@@ -8,15 +8,18 @@ import { mensajeDeError } from '../admin/autorizacion';
 import { ClienteSesionService } from './cliente-sesion';
 import { AvisosCliente } from './avisos-cliente';
 import { BotonAvisos } from './boton-avisos';
+import { MapaUbicacion } from '../mapa/mapa-ubicacion';
+import { Punto, puntoDe } from '../mapa/ubicacion';
 import { MINIMO_CONTRASENA, estadoParaCliente } from './cuenta.model';
 
 @Component({
   selector: 'app-mi-cuenta-page',
-  imports: [ReactiveFormsModule, RouterLink, DatePipe, CurrencyPipe, BotonAvisos],
+  imports: [ReactiveFormsModule, RouterLink, DatePipe, CurrencyPipe, BotonAvisos, MapaUbicacion],
   styleUrl: './cuenta.scss',
   styles: `
     .encabezado { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
     app-boton-avisos { display: block; margin-bottom: .9rem; }
+    .campo-mapa { display: grid; gap: .3rem; font-weight: 600; font-size: .9rem; small { font-weight: 400; color: var(--tinta-suave); } }
     .pedidos { list-style: none; margin: 0; padding: 0; display: grid; gap: .6rem; }
     .pedido {
       display: grid; grid-template-columns: 1fr auto; gap: .15rem 1rem;
@@ -84,6 +87,10 @@ import { MINIMO_CONTRASENA, estadoParaCliente } from './cuenta.model';
                       placeholder="Calle, número, colonia y alguna referencia"></textarea>
             <small>La llenamos por ti en tus próximos pedidos.</small>
           </label>
+          <div class="campo-mapa">
+            <span>Ubicación habitual en el mapa <small>(opcional)</small></span>
+            <app-mapa-ubicacion [(punto)]="punto" />
+          </div>
           @if (avisoDatos(); as a) { <p class="exito" role="status">{{ a }}</p> }
           @if (errorDatos(); as e) { <p class="error" role="alert">{{ e }}</p> }
           <button class="btn primario" type="submit" [disabled]="ocupado()">Guardar cambios</button>
@@ -130,6 +137,7 @@ export class MiCuentaPage {
     direccion: [this.sesion.cliente()?.direccion ?? ''],
   });
   protected readonly claves = this.fb.group({ actual: [''], nueva: [''] });
+  protected readonly punto = signal<Punto | null>(puntoDe(this.sesion.cliente()?.lat, this.sesion.cliente()?.lng));
 
   protected readonly ocupado = signal(false);
   protected readonly avisoDatos = signal<string | null>(null);
@@ -146,7 +154,10 @@ export class MiCuentaPage {
     inject(DestroyRef).onDestroy(() => clearInterval(reloj));
     // Trae los datos al día (y detecta si la sesión ya no es válida).
     this.sesion.refrescar().subscribe({
-      next: (c) => this.datos.patchValue({ nombre: c.nombre, correo: c.correo ?? '', direccion: c.direccion ?? '' }),
+      next: (c) => {
+        this.datos.patchValue({ nombre: c.nombre, correo: c.correo ?? '', direccion: c.direccion ?? '' });
+        this.punto.set(puntoDe(c.lat, c.lng));
+      },
       error: () => {
         if (!this.sesion.activa()) void this.router.navigate(['/cuenta/entrar']);
       },
@@ -161,7 +172,13 @@ export class MiCuentaPage {
     this.errorDatos.set(null);
     this.ocupado.set(true);
     this.sesion
-      .editar({ nombre: d.nombre.trim(), correo: d.correo.trim() || null, direccion: d.direccion.trim() || null })
+      .editar({
+        nombre: d.nombre.trim(),
+        correo: d.correo.trim() || null,
+        direccion: d.direccion.trim() || null,
+        lat: this.punto()?.lat ?? null,
+        lng: this.punto()?.lng ?? null,
+      })
       .pipe(finalize(() => this.ocupado.set(false)))
       .subscribe({
         next: () => this.avisoDatos.set('Tus datos se guardaron.'),

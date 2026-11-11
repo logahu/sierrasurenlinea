@@ -473,3 +473,6 @@
 @keyframes latido { 50% { box-shadow: 0 0 0 4px rgb(232 89 12 / .25); } }
 
 .pasos-permiso { flex-basis: 100%; margin: .25rem 0 .5rem; padding-left: 1.25rem; line-height: 1.5; font-size: .93rem; li { margin: .2rem 0; } }
+
+.pedido-mapa { margin: 0; font-size: .92rem; a { color: var(--follaje); } }
+.pedido-mapa .enlace { font: inherit; background: none; border: 0; padding: 0; color: var(--follaje); text-decoration: underline; cursor: pointer; }

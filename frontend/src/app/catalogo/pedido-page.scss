@@ -242,3 +242,6 @@ form { display: grid; gap: 1rem; }
 
 .listo app-boton-avisos { display: block; text-align: left; margin: 1rem 0; }
 .seguimiento { font-weight: 600; a { color: var(--t-acento-texto); } }
+
+.campo-mapa { display: grid; gap: .4rem; }
+.titulo-mapa { font-weight: 700; font-size: .92rem; small { font-weight: 400; color: var(--t-tinta-suave); } }

@@ -115,6 +115,10 @@
                         (input)="entregar.set(texto($event))"
                         placeholder="Calle, número, colonia y una referencia"></textarea>
             </label>
+            <div class="campo-mapa">
+              <span class="titulo-mapa">Marca el punto en el mapa <small>(recomendado)</small></span>
+              <app-mapa-ubicacion [(punto)]="punto" />
+            </div>
           } @else if (n.direccion) {
             <p class="nota">📍 {{ m === 'CITA' ? 'Te esperamos en' : 'Recoges en' }}: {{ n.direccion }}@if (n.horario) { · {{ n.horario }} }</p>
           }

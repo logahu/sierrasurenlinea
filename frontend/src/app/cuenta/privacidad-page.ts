@@ -37,7 +37,7 @@ import { RouterLink } from '@angular/router';
       <ul>
         <li>Datos de identificación: nombre completo.</li>
         <li>Datos de contacto: número de teléfono celular y, de forma opcional, correo electrónico.</li>
-        <li>Datos de entrega: dirección, referencias y, si decides compartirla, tu ubicación.</li>
+        <li>Datos de entrega: dirección, referencias y, si decides marcarlo, el punto de entrega en el mapa (tu ubicación).</li>
         <li>Datos de tus pedidos: productos o servicios solicitados, fechas, montos estimados y su estado.</li>
       </ul>
       <p>

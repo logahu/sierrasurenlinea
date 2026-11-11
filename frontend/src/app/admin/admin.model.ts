@@ -191,6 +191,9 @@ export interface Pedido {
   notas: string | null;
   /** Renglones del carrito (vacío en encargos). */
   lineas: LineaPedido[];
+  /** Punto de entrega marcado en el mapa. */
+  lat: number | null;
+  lng: number | null;
 }
 
 export interface LineaPedido {

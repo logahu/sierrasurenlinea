@@ -1,4 +1,6 @@
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { MapaUbicacion } from '../mapa/mapa-ubicacion';
+import { enlaceComoLlegar, puntoDe } from '../mapa/ubicacion';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { Pedido } from './admin.model';
 import { mensajeDeError } from './autorizacion';
@@ -14,6 +16,7 @@ const CADA_MS = 15000;
  */
 @Component({
   selector: 'app-pedidos-page',
+  imports: [MapaUbicacion],
   template: `
     <header class="panel-titulo">
       <h1>Pedidos</h1>
@@ -72,6 +75,13 @@ const CADA_MS = 15000;
             </ul>
           }
           @if (p.notas) { <p class="pedido-notas">📝 {{ p.notas }}</p> }
+          @if (puntoDe(p.lat, p.lng); as punto) {
+            <p class="pedido-mapa">
+              📍 <a [href]="comoLlegar(punto)" target="_blank" rel="noopener"><strong>Cómo llegar</strong></a>
+              · <button type="button" class="enlace" (click)="alternarMapa(p.id)">{{ mapaAbierto() === p.id ? 'Ocultar mapa' : 'Ver mapa' }}</button>
+            </p>
+            @if (mapaAbierto() === p.id) { <app-mapa-ubicacion [punto]="punto" [soloLectura]="true" /> }
+          }
           @if (!esDeUnNegocio()) { <p class="ayuda">{{ p.negocioNombre }}</p> }
           @if (p.repartidorNombre) { <p class="ayuda">🛵 {{ p.repartidorNombre }}</p> }
 
@@ -105,6 +115,14 @@ export class PedidosPage {
   protected readonly nombreEstado = nombreEstado;
   protected readonly hace = hace;
   protected readonly siguiente = siguientePaso;
+  protected readonly puntoDe = puntoDe;
+  protected readonly comoLlegar = enlaceComoLlegar;
+  /** Pedido cuyo mapa está abierto (uno a la vez). */
+  protected readonly mapaAbierto = signal<number | null>(null);
+
+  protected alternarMapa(id: number): void {
+    this.mapaAbierto.set(this.mapaAbierto() === id ? null : id);
+  }
   /** Encargados y repartidores de un solo negocio no necesitan ver de qué negocio es cada pedido. */
   protected readonly esDeUnNegocio = computed(() => !!this.sesion.usuario()?.negocioSlug);
 

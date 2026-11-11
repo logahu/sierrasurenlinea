@@ -8,6 +8,8 @@ import { environment } from '../../environments/environment';
 import { mensajeDeError } from '../admin/autorizacion';
 import { ClienteSesionService } from '../cuenta/cliente-sesion';
 import { BotonAvisos } from '../cuenta/boton-avisos';
+import { MapaUbicacion } from '../mapa/mapa-ubicacion';
+import { Punto, puntoDe } from '../mapa/ubicacion';
 import { UltimoPedido } from '../cuenta/ultimo-pedido';
 import { soloEnWeb } from '../modo-app';
 import { CatalogoService } from './catalogo.service';
@@ -30,7 +32,7 @@ interface Enviado {
  */
 @Component({
   selector: 'app-pedido-page',
-  imports: [RouterLink, BotonAvisos],
+  imports: [RouterLink, BotonAvisos, MapaUbicacion],
   templateUrl: './pedido-page.html',
   styleUrl: './pedido-page.scss',
   host: {
@@ -70,6 +72,8 @@ export class PedidoPage {
   protected readonly fecha = signal('');
   protected readonly hora = signal('');
   protected readonly notas = signal('');
+  /** Punto de entrega en el mapa (se llena con la ubicación habitual de la cuenta). */
+  protected readonly punto = signal<Punto | null>(null);
   protected readonly mayorDeEdad = signal(false);
 
   protected readonly datos = computed<DatosPedido>(() => ({
@@ -77,6 +81,7 @@ export class PedidoPage {
     entregar: this.entregar(),
     cuando: textoCuando(this.modo() ?? 'COMPRA', this.programado(), this.fecha(), this.hora()),
     notas: this.notas(),
+    punto: this.punto(),
   }));
   protected readonly faltan = computed(() =>
     faltantesPedido(this.modo() ?? 'COMPRA', this.lineas(), this.datos(), !!this.negocio.value()?.soloMayoresEdad, this.mayorDeEdad()),
@@ -96,6 +101,8 @@ export class PedidoPage {
     effect(() => {
       const c = this.cliente.cliente();
       if (c?.direccion && !untracked(this.entregar).trim()) this.entregar.set(c.direccion);
+      const habitual = puntoDe(c?.lat, c?.lng);
+      if (habitual && !untracked(this.punto)) this.punto.set(habitual);
     });
     // Encarguitos tiene su propio formulario.
     effect(() => {
@@ -148,6 +155,8 @@ export class PedidoPage {
       cuando: datos.cuando,
       notas: datos.notas.trim() || null,
       mayorDeEdad: this.mayorDeEdad(),
+      lat: datos.entrega === 'DOMICILIO' ? (datos.punto?.lat ?? null) : null,
+      lng: datos.entrega === 'DOMICILIO' ? (datos.punto?.lng ?? null) : null,
       mensaje: armarMensajeCarrito(n, modo, lineas, datos, quien),
     };
 
