@@ -39,6 +39,9 @@ import { telefonoValido } from '../catalogo/encargo';
         }
         <p class="nota">¿Olvidaste tu contraseña? Escríbenos por WhatsApp a cualquiera de los negocios y te ayudamos a recuperarla.</p>
       </form>
+      <p class="nota equipo">
+        ¿Eres del equipo (administrador, encargado o repartidor)? Entra en el <a href="/admin/entrar">panel</a>.
+      </p>
       <p class="cambio">
         ¿Aún no tienes cuenta?
         <a routerLink="/cuenta/registro" [queryParams]="{ volver: volver() }">Crear cuenta</a>

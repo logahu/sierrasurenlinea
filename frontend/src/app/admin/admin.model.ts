@@ -4,7 +4,9 @@ export type Rol = 'DUENO' | 'ENCARGADO' | 'REPARTIDOR';
 
 export interface Usuario {
   id: number;
-  correo: string;
+  /** Opcional: se puede entrar con el teléfono o con el correo. */
+  correo: string | null;
+  telefono: string | null;
   nombre: string;
   rol: Rol;
   negocioSlug: string | null;

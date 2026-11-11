@@ -69,11 +69,21 @@ export class AdminApi {
     return this.http.get<Usuario[]>(`${this.base}/usuarios`);
   }
 
-  crearEncargado(datos: { nombre: string; correo: string; contrasena: string; negocioSlug: string | null; rol?: string }): Observable<Usuario> {
+  crearEncargado(datos: {
+    nombre: string;
+    telefono: string;
+    correo: string | null;
+    contrasena: string;
+    negocioSlug: string | null;
+    rol?: string;
+  }): Observable<Usuario> {
     return this.http.post<Usuario>(`${this.base}/usuarios`, datos);
   }
 
-  editarUsuario(id: number, datos: { nombre: string; negocioSlug?: string | null; activo?: boolean }): Observable<Usuario> {
+  editarUsuario(
+    id: number,
+    datos: { nombre: string; negocioSlug?: string | null; activo?: boolean; telefono?: string; correo?: string },
+  ): Observable<Usuario> {
     return this.http.put<Usuario>(`${this.base}/usuarios/${id}`, datos);
   }
 

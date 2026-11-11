@@ -1,4 +1,5 @@
 import { DatePipe } from '@angular/common';
+import { telefonoValido } from '../catalogo/encargo';
 import { Component, computed, inject, input, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -107,13 +108,29 @@ export function nombreDelRol(rol: Rol): string {
             <div>
               <strong>{{ u.nombre }}</strong>
               @if (u.id === yo()?.id) { <small> (tú)</small> }
-              <span class="ayuda">{{ u.correo }}</span>
+              <span class="ayuda">
+                @if (u.telefono) { {{ u.telefono }} } @else { <strong class="falta-tel">Sin teléfono: agrégalo para que pueda entrar con él</strong> }
+                @if (u.correo) { · {{ u.correo }} }
+              </span>
               <span class="ayuda">
                 {{ rol(u.rol) }}{{ u.rol === 'DUENO' ? ' · todo el sitio' : ' · ' + (u.negocioNombre ?? 'todos los negocios') }}
                 @if (!u.activo) { · sin acceso }
                 @if (u.bloqueado) { · bloqueado por intentos }
               </span>
             </div>
+            <div class="acciones-fila">
+              <button type="button" class="btn secundario" (click)="editando.set(editando() === u.id ? null : u.id)">
+                Editar datos
+              </button>
+            </div>
+            @if (editando() === u.id) {
+              <form class="ficha-edicion" (submit)="$event.preventDefault(); guardarDatos(u, en.value, et.value, ec.value)">
+                <label>Nombre <input #en type="text" maxlength="80" [value]="u.nombre" /></label>
+                <label>Teléfono <input #et type="tel" inputmode="tel" [value]="u.telefono ?? ''" placeholder="951 123 4567" /></label>
+                <label>Correo <small>(opcional)</small> <input #ec type="email" inputmode="email" [value]="u.correo ?? ''" /></label>
+                <button class="btn primario" type="submit" [disabled]="ocupado()">Guardar</button>
+              </form>
+            }
             @if (u.id !== yo()?.id) {
               <div class="acciones-fila">
                 <button type="button" class="btn secundario" (click)="alternarAcceso(u)" [disabled]="ocupado()">
@@ -174,7 +191,12 @@ export function nombreDelRol(rol: Rol): string {
               <input formControlName="nombre" maxlength="80" autocomplete="off" />
             </label>
             <label>
-              Correo
+              Teléfono celular
+              <input type="tel" formControlName="telefono" inputmode="tel" autocomplete="off" placeholder="951 123 4567" />
+              <small>10 dígitos. Con este número entra al panel.</small>
+            </label>
+            <label>
+              Correo <small>(opcional)</small>
               <input type="email" formControlName="correo" inputmode="email" autocomplete="off" />
             </label>
             <label>
@@ -193,6 +215,9 @@ export function nombreDelRol(rol: Rol): string {
     .pestanas a { background: none; border: 0; border-radius: 0; padding: .4rem 0 .6rem; color: var(--tinta-suave); text-decoration: none; font-weight: 600; border-bottom: 3px solid transparent; }
     .pestanas a.elegida { color: var(--tinta); border-bottom-color: var(--follaje); }
     .buscar { margin-bottom: 1rem; display: flex; flex-wrap: nowrap; gap: .5rem; }
+    .ficha-edicion { display: grid; gap: .6rem; margin-top: .75rem; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); align-items: end; }
+    .ficha-edicion label { display: grid; gap: .25rem; font-size: .85rem; font-weight: 600; }
+    .falta-tel { color: #c2410c; font-weight: 600; }
     .buscar input { flex: 1; min-width: 0; }
   `,
 })
@@ -229,7 +254,8 @@ export class UsuariosPage {
     rol: ['ENCARGADO' as Rol],
     negocioSlug: [''],
     nombre: ['', Validators.required],
-    correo: ['', [Validators.required, Validators.email]],
+    telefono: ['', Validators.required],
+    correo: ['', Validators.email],
     contrasena: ['', [Validators.required, Validators.minLength(MINIMO)]],
   });
   protected readonly rolNuevo = signal<Rol>('ENCARGADO');
@@ -249,11 +275,12 @@ export class UsuariosPage {
     const esAdmin = datos.rol === 'DUENO';
     if (datos.rol === 'ENCARGADO' && !datos.negocioSlug) return this.falla('Elige el negocio.');
     if (c.nombre.invalid) return this.falla('Escribe el nombre.');
-    if (c.correo.invalid) return this.falla('Escribe un correo válido.');
+    if (!telefonoValido(datos.telefono)) return this.falla('El teléfono debe tener 10 dígitos.');
+    if (c.correo.invalid) return this.falla('El correo no es válido.');
     if (c.contrasena.invalid) return this.falla(`La contraseña debe tener al menos ${MINIMO} caracteres.`);
-    this.ejecutar(this.api.crearEncargado({ ...datos, negocioSlug: esAdmin ? null : datos.negocioSlug || null }), (u) => {
+    this.ejecutar(this.api.crearEncargado({ ...datos, negocioSlug: esAdmin ? null : datos.negocioSlug || null, correo: datos.correo.trim() || null }), (u) => {
       this.form.reset();
-      return `${u.nombre} ya puede entrar al panel con ${u.correo}.`;
+      return `${u.nombre} ya puede entrar al panel en sierrasurenlinea.com.mx/admin con su teléfono ${u.telefono}.`;
     });
   }
 
@@ -282,6 +309,21 @@ export class UsuariosPage {
       this.reiniciandoCliente.set(null);
       return `Listo: ${c.nombre} ya entra con la contraseña nueva.`;
     });
+  }
+
+  protected readonly editando = signal<number | null>(null);
+
+  protected guardarDatos(u: Usuario, nombre: string, telefono: string, correo: string): void {
+    this.fila.set(null);
+    if (!nombre.trim()) return this.falla('Escribe el nombre.');
+    if (!telefonoValido(telefono)) return this.falla('El teléfono debe tener 10 dígitos.');
+    this.ejecutar(
+      this.api.editarUsuario(u.id, { nombre: nombre.trim(), telefono, correo: correo.trim() }),
+      (r) => {
+        this.editando.set(null);
+        return `Datos de ${r.nombre} guardados. Entra al panel con el teléfono ${r.telefono}.`;
+      },
+    );
   }
 
   protected reiniciar(u: Usuario, nueva: string): void {

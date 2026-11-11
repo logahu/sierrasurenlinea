@@ -12,14 +12,14 @@ import { SesionService } from './sesion';
   template: `
     <section class="entrar">
       <h1>Panel de Sierra Sur en Línea</h1>
-      <p class="ayuda">Entra con el correo y la contraseña que te dieron.</p>
+      <p class="ayuda">Entra con tu teléfono (o tu correo) y la contraseña que te dieron.</p>
       @if (vencida()) {
         <p class="aviso" role="status">Tu sesión terminó. Vuelve a entrar.</p>
       }
       <form [formGroup]="form" (ngSubmit)="entrar()" novalidate>
         <label>
-          Correo
-          <input type="email" formControlName="correo" autocomplete="username" inputmode="email" required />
+          Teléfono o correo
+          <input type="text" formControlName="correo" autocomplete="username" required placeholder="951 123 4567" />
         </label>
         <label>
           Contraseña
@@ -49,7 +49,7 @@ export class EntrarPage {
   private readonly destroyRef = inject(DestroyRef);
 
   protected readonly form = inject(FormBuilder).nonNullable.group({
-    correo: ['', [Validators.required, Validators.email]],
+    correo: ['', Validators.required],
     contrasena: ['', Validators.required],
   });
   protected readonly enviando = signal(false);
@@ -62,7 +62,7 @@ export class EntrarPage {
 
   protected entrar(): void {
     if (this.form.invalid) {
-      this.error.set('Escribe tu correo y tu contraseña.');
+      this.error.set('Escribe tu teléfono (o correo) y tu contraseña.');
       return;
     }
     this.error.set(null);
