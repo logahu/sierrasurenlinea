@@ -49,7 +49,7 @@ class PedidosTest {
     }
 
     private static int repartidor(String dueno, String correo) {
-        return como(dueno).body(Map.of("nombre", "Repartidor " + correo, "correo", correo,
+        return como(dueno).body(Map.of("telefono", mx.turamohoy.clientes.Clientes.telefonoNuevo(), "nombre", "Repartidor " + correo, "correo", correo,
                         "contrasena", "clave-segura-1", "negocioSlug", "encarguitos", "rol", "REPARTIDOR"))
                 .when().post("/api/admin/usuarios").then().statusCode(201)
                 .body("rol", equalTo("REPARTIDOR")).extract().path("id");

@@ -58,7 +58,7 @@ class TableroTest {
     @Test
     void elEncargadoVeSoloSuNegocio() {
         String dueno = Sesiones.dueno();
-        int id = como(dueno).body(Map.of("nombre", "Encargada tablero", "correo", "tablero@sierrasur.local",
+        int id = como(dueno).body(Map.of("telefono", mx.turamohoy.clientes.Clientes.telefonoNuevo(), "nombre", "Encargada tablero", "correo", "tablero@sierrasur.local",
                         "contrasena", "clave-segura-1", "negocioSlug", "belleza"))
                 .when().post("/api/admin/usuarios").then().statusCode(201).extract().path("id");
         try {

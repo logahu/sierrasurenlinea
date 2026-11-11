@@ -25,9 +25,13 @@ public class Usuario extends PanacheEntityBase {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
-    /** Siempre en minúsculas y sin espacios: es el usuario para entrar. */
-    @Column(nullable = false, unique = true, length = 120)
+    /** Siempre en minúsculas y sin espacios. Opcional: también se puede entrar con el teléfono. */
+    @Column(unique = true, length = 120)
     public String correo;
+
+    /** 10 dígitos; con él se entra al panel (igual que los clientes en el sitio). */
+    @Column(unique = true, length = 10)
+    public String telefono;
 
     @Column(nullable = false, length = 80)
     public String nombre;
@@ -74,6 +78,19 @@ public class Usuario extends PanacheEntityBase {
 
     public static Optional<Usuario> porCorreo(String correo) {
         return find("correo", normalizarCorreo(correo)).firstResultOptional();
+    }
+
+    public static Optional<Usuario> porTelefono(String telefono) {
+        String t = mx.turamohoy.clientes.Cliente.normalizarTelefono(telefono);
+        return t == null ? Optional.empty() : find("telefono", t).firstResultOptional();
+    }
+
+    /** Lo que escribió para entrar: si tiene @ es correo; si no, teléfono. */
+    public static Optional<Usuario> porCorreoOTelefono(String usuario) {
+        if (usuario == null || usuario.isBlank()) {
+            return Optional.empty();
+        }
+        return usuario.contains("@") ? porCorreo(usuario) : porTelefono(usuario);
     }
 
     /** Encargado activo de un negocio, si lo tiene. */

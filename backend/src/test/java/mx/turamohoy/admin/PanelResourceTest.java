@@ -38,7 +38,7 @@ class PanelResourceTest {
 
     private static int crearEncargado(String dueno, String correo, String negocio) {
         return como(dueno)
-                .body(Map.of("nombre", "Encargado " + negocio, "correo", correo,
+                .body(Map.of("telefono", mx.turamohoy.clientes.Clientes.telefonoNuevo(), "nombre", "Encargado " + negocio, "correo", correo,
                         "contrasena", "clave-segura-1", "negocioSlug", negocio))
                 .when().post("/api/admin/usuarios")
                 .then().statusCode(201)
@@ -165,7 +165,7 @@ class PanelResourceTest {
             como(encargado).when().get("/api/visitas").then().statusCode(403);
 
             // Un encargado por negocio.
-            como(dueno).body(Map.of("nombre", "Otra", "correo", "otra@sierrasur.local",
+            como(dueno).body(Map.of("telefono", mx.turamohoy.clientes.Clientes.telefonoNuevo(), "nombre", "Otra", "correo", "otra@sierrasur.local",
                             "contrasena", "clave-segura-1", "negocioSlug", "belleza"))
                     .when().post("/api/admin/usuarios")
                     .then().statusCode(409)
@@ -185,16 +185,16 @@ class PanelResourceTest {
     @Test
     void reglasDeAltaDeUsuarios() {
         String dueno = Sesiones.dueno();
-        como(dueno).body(Map.of("nombre", "Corta", "correo", "corta@sierrasur.local",
+        como(dueno).body(Map.of("telefono", mx.turamohoy.clientes.Clientes.telefonoNuevo(), "nombre", "Corta", "correo", "corta@sierrasur.local",
                         "contrasena", "corta", "negocioSlug", "turamohoy"))
                 .when().post("/api/admin/usuarios")
                 .then().statusCode(400)
                 .body("mensaje", containsString("al menos 10"));
-        como(dueno).body(Map.of("nombre", "Repetido", "correo", Sesiones.DUENO,
+        como(dueno).body(Map.of("telefono", mx.turamohoy.clientes.Clientes.telefonoNuevo(), "nombre", "Repetido", "correo", Sesiones.DUENO,
                         "contrasena", "clave-segura-1", "negocioSlug", "turamohoy"))
                 .when().post("/api/admin/usuarios")
                 .then().statusCode(409);
-        como(dueno).body(Map.of("nombre", "Sin negocio", "correo", "sin@sierrasur.local",
+        como(dueno).body(Map.of("telefono", mx.turamohoy.clientes.Clientes.telefonoNuevo(), "nombre", "Sin negocio", "correo", "sin@sierrasur.local",
                         "contrasena", "clave-segura-1", "negocioSlug", "no-existe"))
                 .when().post("/api/admin/usuarios")
                 .then().statusCode(400);
@@ -298,13 +298,13 @@ class PanelResourceTest {
     @Test
     void hastaDosAdministradores() {
         String dueno = Sesiones.dueno();
-        int id = como(dueno).body(Map.of("nombre", "Segunda admin", "correo", "admin2@sierrasur.local",
+        int id = como(dueno).body(Map.of("telefono", mx.turamohoy.clientes.Clientes.telefonoNuevo(), "nombre", "Segunda admin", "correo", "admin2@sierrasur.local",
                         "contrasena", "clave-segura-1", "rol", Rol.DUENO))
                 .when().post("/api/admin/usuarios").then().statusCode(201)
                 .body("rol", equalTo(Rol.DUENO)).extract().path("id");
         try {
             // Ya hay dos: no cabe un tercero.
-            como(dueno).body(Map.of("nombre", "Tercero", "correo", "admin3@sierrasur.local",
+            como(dueno).body(Map.of("telefono", mx.turamohoy.clientes.Clientes.telefonoNuevo(), "nombre", "Tercero", "correo", "admin3@sierrasur.local",
                             "contrasena", "clave-segura-1", "rol", Rol.DUENO))
                     .when().post("/api/admin/usuarios").then().statusCode(409);
             // La segunda entra al panel y administra usuarios.
@@ -316,6 +316,39 @@ class PanelResourceTest {
         } finally {
             como(dueno).body(Map.of("nombre", "Segunda admin", "activo", false))
                     .when().put("/api/admin/usuarios/" + id).then().statusCode(200).body("activo", equalTo(false));
+        }
+    }
+
+    @Test
+    void elEquipoEntraConSuTelefono() {
+        String dueno = Sesiones.dueno();
+        String tel = mx.turamohoy.clientes.Clientes.telefonoNuevo();
+        // Sin teléfono no se da de alta.
+        como(dueno).body(Map.of("nombre", "Sin tel", "contrasena", "clave-segura-1", "rol", "REPARTIDOR"))
+                .when().post("/api/admin/usuarios").then().statusCode(400);
+        // El correo es opcional.
+        int id = como(dueno).body(Map.of("nombre", "Moto por teléfono", "telefono", tel, "contrasena", "clave-segura-1",
+                        "rol", "REPARTIDOR"))
+                .when().post("/api/admin/usuarios").then().statusCode(201)
+                .body("telefono", equalTo(tel)).body("correo", equalTo(null)).extract().path("id");
+        try {
+            // Mismo teléfono, otra persona: no.
+            como(dueno).body(Map.of("nombre", "Copia", "telefono", tel, "contrasena", "clave-segura-1", "rol", "REPARTIDOR"))
+                    .when().post("/api/admin/usuarios").then().statusCode(409);
+            // Entra al panel con el teléfono, con o sin espacios.
+            given().contentType(ContentType.JSON)
+                    .body(Map.of("correo", tel.substring(0, 3) + " " + tel.substring(3), "contrasena", "clave-segura-1"))
+                    .when().post("/api/auth/entrar").then().statusCode(200).body("usuario.telefono", equalTo(tel));
+            // Se le puede cambiar el teléfono y agregar correo.
+            String otro = mx.turamohoy.clientes.Clientes.telefonoNuevo();
+            como(dueno).body(Map.of("nombre", "Moto por teléfono", "telefono", otro, "correo", "moto-tel@sierrasur.local"))
+                    .when().put("/api/admin/usuarios/" + id).then().statusCode(200)
+                    .body("telefono", equalTo(otro)).body("correo", equalTo("moto-tel@sierrasur.local"));
+            given().contentType(ContentType.JSON).body(Map.of("correo", "moto-tel@sierrasur.local", "contrasena", "clave-segura-1"))
+                    .when().post("/api/auth/entrar").then().statusCode(200);
+        } finally {
+            como(dueno).body(Map.of("nombre", "Moto por teléfono", "activo", false))
+                    .when().put("/api/admin/usuarios/" + id).then().statusCode(200);
         }
     }
 }

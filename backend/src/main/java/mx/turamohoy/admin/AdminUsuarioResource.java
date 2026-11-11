@@ -39,8 +39,10 @@ public class AdminUsuarioResource {
 
     public record NuevoEncargado(
             @NotBlank(message = "El nombre es obligatorio.") @Size(max = 80) String nombre,
-            @NotBlank(message = "El correo es obligatorio.") @Email(message = "El correo no es válido.")
-            @Size(max = 120) String correo,
+            /** 10 dígitos: con él entra al panel. */
+            @NotBlank(message = "El teléfono es obligatorio.") String telefono,
+            /** Opcional; también sirve para entrar. */
+            @Email(message = "El correo no es válido.") @Size(max = 120) String correo,
             @NotBlank(message = "La contraseña es obligatoria.") String contrasena,
             /** Obligatorio para encargados; vacío en administradores y en repartidores generales. */
             String negocioSlug,
@@ -48,9 +50,13 @@ public class AdminUsuarioResource {
             String rol) {
     }
 
-    /** Para el dueño solo se toma en cuenta el nombre. */
+    /** Para el administrador solo se toman en cuenta nombre, teléfono, correo y acceso. */
     public record EdicionUsuario(
             @NotBlank(message = "El nombre es obligatorio.") @Size(max = 80) String nombre,
+            /** Si viene, se cambia (10 dígitos, sin repetir). */
+            String telefono,
+            /** Si viene, se cambia; vacío lo quita. */
+            @Email(message = "El correo no es válido.") @Size(max = 120) String correo,
             String negocioSlug,
             Boolean activo) {
     }
@@ -68,10 +74,8 @@ public class AdminUsuarioResource {
     @Transactional
     public Response crear(@Valid @NotNull NuevoEncargado req) {
         sesion.usuario();
-        String correo = Usuario.normalizarCorreo(req.correo());
-        if (Usuario.porCorreo(correo).isPresent()) {
-            throw Errores.de(Status.CONFLICT, "Ya existe un usuario con el correo " + correo + ".");
-        }
+        String telefono = telefonoLibre(req.telefono(), null);
+        String correo = correoLibre(req.correo(), null);
         Contrasenas.validarNueva(req.contrasena());
         String rol = req.rol() == null || req.rol().isBlank() ? Rol.ENCARGADO : req.rol();
         if (!Rol.DUENO.equals(rol) && !Rol.ENCARGADO.equals(rol) && !Rol.REPARTIDOR.equals(rol)) {
@@ -94,13 +98,15 @@ public class AdminUsuarioResource {
 
         Usuario u = new Usuario();
         u.correo = correo;
+        u.telefono = telefono;
         u.nombre = req.nombre().trim();
         u.rol = rol;
         u.negocio = negocio;
         u.contrasenaHash = Contrasenas.cifrar(req.contrasena());
         u.persist();
         Bitacora.anotar(sesion.usuario(), negocio, Bitacora.USUARIO, u.id,
-                "Dio de alta a " + u.nombre + " como " + nombreRol(u), u.correo);
+                "Dio de alta a " + u.nombre + " como " + nombreRol(u),
+                "Teléfono " + u.telefono + (u.correo == null ? "" : " · " + u.correo));
         return Response.status(Status.CREATED).entity(UsuarioDto.de(u)).build();
     }
 
@@ -110,6 +116,17 @@ public class AdminUsuarioResource {
     public UsuarioDto editar(@PathParam("id") Long id, @Valid @NotNull EdicionUsuario req) {
         Usuario u = buscar(id);
         u.nombre = req.nombre().trim();
+        if (req.telefono() != null) {
+            String t = telefonoLibre(req.telefono(), u);
+            if (!t.equals(u.telefono)) {
+                Bitacora.anotar(sesion.usuario(), u.negocio, Bitacora.USUARIO, u.id, "Cambió el teléfono de " + u.nombre,
+                        (u.telefono == null ? "(vacío)" : u.telefono) + " → " + t);
+                u.telefono = t;
+            }
+        }
+        if (req.correo() != null) {
+            u.correo = req.correo().isBlank() ? null : correoLibre(req.correo(), u);
+        }
         if (u.esDueno()) {
             // Administradores: solo nombre y baja lógica; nadie se da de baja a sí mismo
             // y siempre queda al menos uno activo.
@@ -180,6 +197,33 @@ public class AdminUsuarioResource {
     private static Negocio negocio(String slug) {
         return Negocio.porSlug(slug)
                 .orElseThrow(() -> Errores.de(Status.BAD_REQUEST, "No existe el negocio " + slug + "."));
+    }
+
+    /** Teléfono normalizado a 10 dígitos que nadie más del equipo usa. */
+    private static String telefonoLibre(String telefono, Usuario excepto) {
+        String t = mx.turamohoy.clientes.Cliente.normalizarTelefono(telefono);
+        if (t == null) {
+            throw Errores.de(Status.BAD_REQUEST, "El teléfono debe tener 10 dígitos.");
+        }
+        Usuario.<Usuario>find("telefono", t).firstResultOptional()
+                .filter(otro -> excepto == null || !otro.id.equals(excepto.id))
+                .ifPresent(otro -> {
+                    throw Errores.de(Status.CONFLICT, "El teléfono " + t + " ya es de " + otro.nombre + ".");
+                });
+        return t;
+    }
+
+    /** Correo normalizado (o null si no se dio) que nadie más del equipo usa. */
+    private static String correoLibre(String correo, Usuario excepto) {
+        if (correo == null || correo.isBlank()) {
+            return null;
+        }
+        String c = Usuario.normalizarCorreo(correo);
+        Usuario.porCorreo(c).filter(otro -> excepto == null || !otro.id.equals(excepto.id))
+                .ifPresent(otro -> {
+                    throw Errores.de(Status.CONFLICT, "Ya existe un usuario con el correo " + c + ".");
+                });
+        return c;
     }
 
     /** Máximo dos administradores activos. */

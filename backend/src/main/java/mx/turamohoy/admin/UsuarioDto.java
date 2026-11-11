@@ -6,6 +6,7 @@ import java.time.Instant;
 public record UsuarioDto(
         Long id,
         String correo,
+        String telefono,
         String nombre,
         String rol,
         String negocioSlug,
@@ -14,7 +15,7 @@ public record UsuarioDto(
         boolean bloqueado) {
 
     public static UsuarioDto de(Usuario u) {
-        return new UsuarioDto(u.id, u.correo, u.nombre, u.rol,
+        return new UsuarioDto(u.id, u.correo, u.telefono, u.nombre, u.rol,
                 u.negocio == null ? null : u.negocio.slug,
                 u.negocio == null ? null : u.negocio.nombre,
                 u.activo,

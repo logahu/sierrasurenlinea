@@ -138,7 +138,7 @@ class CatalogoAdminTest {
     void elEncargadoSoloEditaElCatalogoDeSuNegocio() {
         String dueno = Sesiones.dueno();
         int id = como(dueno)
-                .body(Map.of("nombre", "Encargada inflables", "correo", "inflables@sierrasur.local",
+                .body(Map.of("telefono", mx.turamohoy.clientes.Clientes.telefonoNuevo(), "nombre", "Encargada inflables", "correo", "inflables@sierrasur.local",
                         "contrasena", "clave-segura-1", "negocioSlug", "inflables"))
                 .when().post("/api/admin/usuarios").then().statusCode(201).extract().path("id");
         try {

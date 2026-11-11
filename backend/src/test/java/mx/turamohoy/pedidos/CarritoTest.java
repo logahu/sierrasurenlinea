@@ -145,7 +145,7 @@ class CarritoTest {
     @Test
     void elRepartidorGeneralVeLosPedidosADomicilioDeTodos() {
         String dueno = Sesiones.dueno();
-        int r = como(dueno).body(Map.of("nombre", "Moto general", "correo", "general@sierrasur.local",
+        int r = como(dueno).body(Map.of("telefono", mx.turamohoy.clientes.Clientes.telefonoNuevo(), "nombre", "Moto general", "correo", "general@sierrasur.local",
                         "contrasena", "clave-segura-1", "rol", "REPARTIDOR"))
                 .when().post("/api/admin/usuarios").then().statusCode(201)
                 .body("negocioSlug", equalTo(null)).extract().path("id");

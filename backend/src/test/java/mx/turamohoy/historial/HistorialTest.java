@@ -65,7 +65,7 @@ class HistorialTest {
     @Test
     void elEncargadoSoloVeSuNegocioYLosClientesNada() {
         String dueno = Sesiones.dueno();
-        int id = como(dueno).body(Map.of("nombre", "Encargada belleza", "correo", "belleza-historial@sierrasur.local",
+        int id = como(dueno).body(Map.of("telefono", mx.turamohoy.clientes.Clientes.telefonoNuevo(), "nombre", "Encargada belleza", "correo", "belleza-historial@sierrasur.local",
                         "contrasena", "clave-segura-1", "negocioSlug", "belleza"))
                 .when().post("/api/admin/usuarios").then().statusCode(201).extract().path("id");
         try {

@@ -24,7 +24,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Set;
 
-/** Entrada al panel: correo y contraseña a cambio de un token que dura 8 horas. */
+/** Entrada al panel: teléfono (o correo) y contraseña a cambio de un token que dura 8 horas. */
 @Path("/api/auth")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -40,6 +40,7 @@ public class AuthResource {
     @Inject
     SesionActual sesion;
 
+    /** {@code correo}: el teléfono (10 dígitos) o el correo, lo que la persona escriba. */
     public record EntrarRequest(@NotBlank String correo, @NotBlank String contrasena) {
     }
 
@@ -66,13 +67,13 @@ public class AuthResource {
                     + (intento.minutos() == 1 ? " minuto." : " minutos."));
         }
         if (intento.estado() == Estado.FALLIDO) {
-            throw Errores.de(Status.UNAUTHORIZED, "Correo o contraseña incorrectos.");
+            throw Errores.de(Status.UNAUTHORIZED, "Teléfono, correo o contraseña incorrectos.");
         }
         UsuarioDto u = intento.usuario();
         Instant expira = Instant.now().plus(DURACION_SESION);
         String token = Jwt.issuer(Jwts.EMISOR)
                 .subject(String.valueOf(u.id()))
-                .upn(u.correo())
+                .upn(u.correo() != null ? u.correo() : u.telefono())
                 .groups(Set.of(u.rol()))
                 .issuedAt(Instant.now())
                 .expiresAt(expira)
@@ -81,7 +82,7 @@ public class AuthResource {
     }
 
     private Intento intentar(String correo, String contrasena) {
-        Usuario u = Usuario.porCorreo(correo).orElse(null);
+        Usuario u = Usuario.porCorreoOTelefono(correo).orElse(null);
         if (u == null || !u.activo) {
             Contrasenas.coincide(contrasena, HASH_SIMULADO);
             return new Intento(Estado.FALLIDO, null, 0);
