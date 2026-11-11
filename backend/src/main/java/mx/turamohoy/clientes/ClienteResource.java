@@ -70,7 +70,10 @@ public class ClienteResource {
     public record Edicion(
             @NotBlank(message = "Escribe tu nombre.") @Size(max = 80) String nombre,
             @Email(message = "El correo no es válido.") @Size(max = 120) String correo,
-            @Size(max = 300) String direccion) {
+            @Size(max = 300) String direccion,
+            /** Ubicación habitual en el mapa; las dos vacías la quitan. */
+            Double lat,
+            Double lng) {
     }
 
     public record CambioContrasena(@NotBlank String actual, @NotBlank String nueva) {
@@ -80,7 +83,8 @@ public class ClienteResource {
     }
 
     public record MiPedido(Long id, String folio, String negocioNombre, String tipo, String modo, String entrega,
-                           String entregar, String cuando, BigDecimal totalEstimado, String estado, Instant creado) {
+                           String entregar, String cuando, BigDecimal totalEstimado, String estado, Instant creado,
+                           BigDecimal lat, BigDecimal lng) {
     }
 
     @POST
@@ -167,6 +171,9 @@ public class ClienteResource {
         c.nombre = e.nombre().trim();
         c.correo = limpio(e.correo());
         c.direccion = limpio(e.direccion());
+        mx.turamohoy.pedidos.Ubicacion u = mx.turamohoy.pedidos.Ubicacion.de(e.lat(), e.lng());
+        c.lat = u == null ? null : u.lat();
+        c.lng = u == null ? null : u.lng();
         return ClienteDto.de(c);
     }
 
@@ -193,7 +200,7 @@ public class ClienteResource {
                 .page(0, 50).list().stream()
                 .map(p -> new MiPedido(p.id, p.folio, p.negocio.nombre, p.tipo, p.modo,
                         p.entrega == null ? Pedido.DOMICILIO : p.entrega, p.entregar, p.cuando, p.totalEstimado,
-                        p.estado, p.creado))
+                        p.estado, p.creado, p.lat, p.lng))
                 .toList();
     }
 

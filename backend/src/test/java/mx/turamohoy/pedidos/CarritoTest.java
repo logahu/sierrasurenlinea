@@ -171,4 +171,25 @@ class CarritoTest {
                     .when().put("/api/admin/usuarios/" + r).then().statusCode(200);
         }
     }
+
+    @Test
+    void guardaElPuntoDelMapa() {
+        String cliente = Clientes.nuevo("Mapa");
+        Object flor = productos("turamohoy").get(0).get("id");
+        Map<String, Object> body = pedido("turamohoy", List.of(linea(flor, 1)));
+        body.put("lat", 16.3283451);
+        body.put("lng", -96.5961234);
+        int id = como(cliente).body(body).when().post("/api/pedidos/carrito").then().statusCode(201).extract().path("id");
+        como(Sesiones.dueno()).when().get("/api/admin/pedidos").then()
+                .body("find { it.id == " + id + " }.lat", equalTo(16.328345f))
+                .body("find { it.id == " + id + " }.lng", equalTo(-96.596123f));
+        // Fuera de México: no.
+        body.put("lat", 48.85);
+        body.put("lng", 2.35);
+        como(cliente).body(body).when().post("/api/pedidos/carrito").then().statusCode(400);
+        // Solo una de las dos: no.
+        body.remove("lng");
+        body.put("lat", 16.3);
+        como(cliente).body(body).when().post("/api/pedidos/carrito").then().statusCode(400);
+    }
 }

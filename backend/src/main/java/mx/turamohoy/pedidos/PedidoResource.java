@@ -71,7 +71,10 @@ public class PedidoResource {
             @NotBlank(message = "Falta a dónde lo llevamos.") @Size(max = 300) String entregar,
             @Size(max = 80) String zona,
             @DecimalMin("0") BigDecimal total,
-            @NotBlank @Size(max = 4000) String mensaje) {
+            @NotBlank @Size(max = 4000) String mensaje,
+            /** Punto de entrega marcado en el mapa (opcional). */
+            Double lat,
+            Double lng) {
     }
 
     public record PedidoRegistrado(Long id, String folio, BigDecimal total) {
@@ -93,7 +96,10 @@ public class PedidoResource {
             boolean mayorDeEdad,
             @Size(max = 80) String nombre,
             String telefono,
-            @NotBlank @Size(max = 4000) String mensaje) {
+            @NotBlank @Size(max = 4000) String mensaje,
+            /** Punto de entrega marcado en el mapa (opcional). */
+            Double lat,
+            Double lng) {
     }
 
     /** Quién pide: los datos de la cuenta, salvo que mande otro nombre o teléfono. */
@@ -120,6 +126,7 @@ public class PedidoResource {
         if (!TipoEncargo.MODOS.contains(req.modo())) {
             throw Errores.de(Status.BAD_REQUEST, "Tipo de encargo no válido.");
         }
+        Ubicacion punto = Ubicacion.de(req.lat(), req.lng());
         String nombre = s.nombre();
         String tel = s.telefono();
         Long clienteId = s.clienteId();
@@ -136,6 +143,10 @@ public class PedidoResource {
             p.clienteTelefono = tel;
             p.entregar = req.entregar().trim();
             p.zona = req.zona() == null || req.zona().isBlank() ? null : req.zona().trim();
+            if (punto != null) {
+                p.lat = punto.lat();
+                p.lng = punto.lng();
+            }
             p.totalEstimado = req.total();
             p.mensaje = req.mensaje().trim();
             p.creado = Instant.now();
@@ -158,6 +169,7 @@ public class PedidoResource {
     @RolesAllowed(SesionCliente.ROL)
     public Response registrarCarrito(@Valid @NotNull PedidoCarrito req) {
         Solicitante s = solicitante(req.nombre(), req.telefono());
+        Ubicacion punto = Ubicacion.de(req.lat(), req.lng());
         PedidoRegistrado r = QuarkusTransaction.requiringNew().call(() -> {
             Negocio n = Negocio.visiblePorSlug(req.negocio())
                     .filter(x -> x.modoPedido() != null)
@@ -218,6 +230,11 @@ public class PedidoResource {
                     : ModoPedido.CITA.equals(modo) ? "Visita al negocio" : "Recoge en el negocio";
             p.cuando = cuando != null ? cuando : "Lo antes posible";
             p.notas = limpio(req.notas());
+            // El punto en el mapa solo tiene sentido si se lleva a domicilio.
+            if (punto != null && Pedido.DOMICILIO.equals(entrega)) {
+                p.lat = punto.lat();
+                p.lng = punto.lng();
+            }
             p.totalEstimado = total;
             p.mensaje = req.mensaje().trim();
             p.creado = Instant.now();

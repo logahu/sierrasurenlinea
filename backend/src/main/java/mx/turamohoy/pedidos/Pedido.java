@@ -96,6 +96,13 @@ public class Pedido extends PanacheEntityBase {
     @Column(length = 500)
     public String notas;
 
+    /** Punto de entrega marcado en el mapa (opcional). */
+    @Column(precision = 9, scale = 6)
+    public BigDecimal lat;
+
+    @Column(precision = 9, scale = 6)
+    public BigDecimal lng;
+
     @OneToMany(mappedBy = "pedido", fetch = FetchType.LAZY)
     @OrderBy("orden")
     public List<PedidoLinea> lineas = new ArrayList<>();

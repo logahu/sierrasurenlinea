@@ -32,6 +32,13 @@ public class Cliente extends PanacheEntityBase {
     @Column(length = 300)
     public String direccion;
 
+    /** Ubicación habitual marcada en el mapa (opcional). */
+    @Column(precision = 9, scale = 6)
+    public java.math.BigDecimal lat;
+
+    @Column(precision = 9, scale = 6)
+    public java.math.BigDecimal lng;
+
     @Column(name = "contrasena_hash", nullable = false, length = 100)
     public String contrasenaHash;
 

@@ -39,10 +39,13 @@ class ClienteTest {
         Map<String, Object> edicion = new HashMap<>();
         edicion.put("nombre", "Rosa María");
         edicion.put("direccion", "Calle 5 de Mayo 3");
+        edicion.put("lat", 16.3283);
+        edicion.put("lng", -96.5961);
         given().auth().oauth2(token).contentType(ContentType.JSON).body(edicion)
                 .when().put("/api/clientes/yo").then().statusCode(200).body("direccion", equalTo("Calle 5 de Mayo 3"));
         given().auth().oauth2(token).when().get("/api/clientes/yo").then().statusCode(200)
-                .body("nombre", equalTo("Rosa María")).body("telefono", equalTo(tel));
+                .body("nombre", equalTo("Rosa María")).body("telefono", equalTo(tel))
+                .body("lat", equalTo(16.3283f)).body("lng", equalTo(-96.5961f));
 
         // El token del cliente no abre el panel.
         given().auth().oauth2(token).when().get("/api/admin/pedidos").then().statusCode(403);
