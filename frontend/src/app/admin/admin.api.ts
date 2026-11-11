@@ -57,6 +57,10 @@ export class AdminApi {
     return this.http.get<ClienteAdmin[]>(`${this.base}/clientes`, { params: q ? { q } : {} });
   }
 
+  reiniciarContrasenaCliente(id: number, nueva: string): Observable<void> {
+    return this.http.put<void>(`${this.base}/clientes/${id}/contrasena`, { nueva });
+  }
+
   cambiarAccesoCliente(id: number, activo: boolean): Observable<ClienteAdmin> {
     return this.http.put<ClienteAdmin>(`${this.base}/clientes/${id}/activo`, { activo });
   }

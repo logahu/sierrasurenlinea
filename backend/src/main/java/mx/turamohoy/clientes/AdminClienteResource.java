@@ -38,6 +38,29 @@ public class AdminClienteResource {
     public record Activo(boolean activo) {
     }
 
+    public record NuevaContrasena(@jakarta.validation.constraints.NotBlank String nueva) {
+    }
+
+    /**
+     * El administrador pone una contraseña nueva a un cliente que la olvidó (después de
+     * confirmar por teléfono o WhatsApp que es él) y le quita el bloqueo por intentos.
+     */
+    @PUT
+    @Path("/{id}/contrasena")
+    @Transactional
+    public void reiniciarContrasena(@PathParam("id") Long id, @jakarta.validation.Valid @NotNull NuevaContrasena r) {
+        Cliente c = Cliente.findById(id);
+        if (c == null) {
+            throw Errores.de(Status.NOT_FOUND, "No existe ese cliente.");
+        }
+        mx.turamohoy.admin.Contrasenas.validarNueva(r.nueva());
+        c.contrasenaHash = mx.turamohoy.admin.Contrasenas.cifrar(r.nueva());
+        c.intentosFallidos = 0;
+        c.bloqueadoHasta = null;
+        mx.turamohoy.historial.Bitacora.anotar(sesion.usuario(), null, mx.turamohoy.historial.Bitacora.CLIENTE, c.id,
+                "Puso una contraseña nueva al cliente " + c.nombre, c.telefono);
+    }
+
     /** Los más recientes primero; {@code q} busca por nombre o teléfono. */
     @GET
     public List<ClienteAdminDto> listar(@QueryParam("q") String q) {

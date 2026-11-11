@@ -55,7 +55,12 @@ export function nombreDelRol(rol: Rol): string {
           <li class="fila-usuario" [class.inactivo]="!c.activo">
             <div>
               <strong>{{ c.nombre }}</strong>
-              <span class="ayuda"><a [href]="'tel:' + c.telefono">{{ c.telefono }}</a>@if (c.correo) { · {{ c.correo }} }</span>
+              <span class="ayuda">
+                {{ c.telefono }} ·
+                <a [href]="'https://wa.me/52' + c.telefono" target="_blank" rel="noopener">WhatsApp</a> ·
+                <a [href]="'tel:' + c.telefono">Llamar</a>
+                @if (c.correo) { · {{ c.correo }} }
+              </span>
               <span class="ayuda">
                 Cliente desde {{ c.creado | date: 'd MMM y' }} · {{ c.pedidos }} {{ c.pedidos === 1 ? 'pedido' : 'pedidos' }}
                 @if (c.ultimoAcceso) { · última visita {{ c.ultimoAcceso | date: 'd MMM' }} }
@@ -67,7 +72,17 @@ export function nombreDelRol(rol: Rol): string {
               <button type="button" class="btn secundario" (click)="alternarCliente(c)" [disabled]="ocupado()">
                 {{ c.activo ? 'Quitar acceso' : 'Devolver acceso' }}
               </button>
+              <button type="button" class="btn secundario" (click)="reiniciandoCliente.set(reiniciandoCliente() === c.id ? null : c.id)">
+                Contraseña nueva
+              </button>
             </div>
+            @if (reiniciandoCliente() === c.id) {
+              <form class="en-linea" (ngSubmit)="reiniciarCliente(c, nuevaCliente.value)">
+                <input #nuevaCliente type="text" autocomplete="off" [placeholder]="'Mínimo ' + minimo + ' caracteres'" />
+                <button class="btn primario" type="submit" [disabled]="ocupado()">Guardar</button>
+              </form>
+              <p class="ayuda">Antes, confirma por teléfono o WhatsApp que hablas con el cliente. Dale la contraseña por WhatsApp y pídele que la cambie en Mi cuenta.</p>
+            }
           </li>
         } @empty {
           <li class="ayuda">{{ clientes.isLoading() ? 'Cargando…' : busqueda() ? 'Nadie coincide con la búsqueda.' : 'Aún no hay clientes registrados.' }}</li>
@@ -245,6 +260,16 @@ export class UsuariosPage {
     this.ejecutar(this.api.cambiarAccesoCliente(c.id, !c.activo), (r) =>
       r.activo ? `${r.nombre} puede volver a pedir.` : `${r.nombre} ya no puede iniciar sesión.`,
     );
+  }
+
+  protected readonly reiniciandoCliente = signal<number | null>(null);
+
+  protected reiniciarCliente(c: ClienteAdmin, nueva: string): void {
+    if (nueva.length < MINIMO) return this.falla(`La contraseña debe tener al menos ${MINIMO} caracteres.`);
+    this.ejecutar(this.api.reiniciarContrasenaCliente(c.id, nueva), () => {
+      this.reiniciandoCliente.set(null);
+      return `Listo: ${c.nombre} ya entra con la contraseña nueva.`;
+    });
   }
 
   protected reiniciar(u: Usuario, nueva: string): void {

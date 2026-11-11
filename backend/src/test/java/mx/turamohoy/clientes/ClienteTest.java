@@ -66,6 +66,15 @@ class ClienteTest {
         given().contentType(ContentType.JSON).body(Map.of("telefono", tel, "contrasena", "clave-cliente-1"))
                 .when().post("/api/clientes/entrar").then().statusCode(401);
         given().auth().oauth2(dueno).when().get("/api/admin/clientes?q=" + tel).then().body("[0].activo", equalTo(false));
+        // Contraseña nueva puesta por el administrador (y se devuelve el acceso).
+        given().auth().oauth2(dueno).contentType(ContentType.JSON).body(Map.of("activo", true))
+                .when().put("/api/admin/clientes/" + id + "/activo").then().statusCode(200);
+        given().auth().oauth2(dueno).contentType(ContentType.JSON).body(Map.of("nueva", "corta"))
+                .when().put("/api/admin/clientes/" + id + "/contrasena").then().statusCode(400);
+        given().auth().oauth2(dueno).contentType(ContentType.JSON).body(Map.of("nueva", "nueva-clave-22"))
+                .when().put("/api/admin/clientes/" + id + "/contrasena").then().statusCode(204);
+        given().contentType(ContentType.JSON).body(Map.of("telefono", tel, "contrasena", "nueva-clave-22"))
+                .when().post("/api/clientes/entrar").then().statusCode(200);
         // Un cliente no ve la lista.
         given().auth().oauth2(Clientes.nuevo("Curioso")).when().get("/api/admin/clientes").then().statusCode(403);
     }
