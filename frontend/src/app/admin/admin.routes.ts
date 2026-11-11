@@ -72,6 +72,11 @@ export const ADMIN_ROUTES: Routes = [
                 loadComponent: () => import('./fotos-page').then((m) => m.FotosPage),
               },
               {
+                path: 'tablero',
+                title: 'Tablero · Panel',
+                loadComponent: () => import('./tablero-page').then((m) => m.TableroPage),
+              },
+              {
                 path: 'historial',
                 title: 'Historial · Panel',
                 loadComponent: () => import('./historial-page').then((m) => m.HistorialPage),

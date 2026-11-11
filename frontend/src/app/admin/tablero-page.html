@@ -1,0 +1,150 @@
+<header class="panel-titulo">
+  <h1>Tablero</h1>
+  <p class="ayuda">Visitas al sitio y pedidos recibidos. Las visitas cuentan una vez por persona y página en cada sesión.</p>
+</header>
+
+<div class="filtros-tablero">
+  <div class="chips" role="group" aria-label="Periodo">
+    @for (d of [7, 30, 90]; track d) {
+      <button type="button" [class.activo]="dias() === d" (click)="dias.set(d)">{{ d }} días</button>
+    }
+  </div>
+  @if (sesion.esDueno()) {
+    <select aria-label="Negocio" [value]="negocio()" (change)="negocio.set(valor($event))">
+      <option value="">Todos los negocios</option>
+      @for (n of negocios.value() ?? []; track n.slug) { <option [value]="n.slug">{{ n.nombre }}</option> }
+    </select>
+  }
+</div>
+
+@if (datos.error(); as e) {
+  <p class="error" role="alert">{{ mensaje(e) }} <button type="button" class="btn secundario" (click)="datos.reload()">Reintentar</button></p>
+}
+
+@if (datos.value(); as d) {
+  <p class="ayuda periodo">Del {{ d.desde | date: "d 'de' MMMM" }} al {{ d.hasta | date: "d 'de' MMMM 'de' y" }}, comparado con los {{ d.dias }} días anteriores.</p>
+
+  <section class="kpis" aria-label="Resumen">
+    <div class="kpi">
+      <span class="nombre-kpi">Visitas</span>
+      <strong>{{ d.visitas | number }}</strong>
+      @if (variacion(d.visitas, d.visitasPrevias); as v) {
+        @if (v.texto) { <span class="cambio" [class.sube]="v.sube === true" [class.baja]="v.sube === false">{{ v.sube === true ? '▲' : v.sube === false ? '▼' : '' }} {{ v.texto }}</span> }
+      }
+    </div>
+    <div class="kpi">
+      <span class="nombre-kpi">Pedidos</span>
+      <strong>{{ d.pedidos | number }}</strong>
+      @if (variacion(d.pedidos, d.pedidosPrevios); as v) {
+        @if (v.texto) { <span class="cambio" [class.sube]="v.sube === true" [class.baja]="v.sube === false">{{ v.sube === true ? '▲' : v.sube === false ? '▼' : '' }} {{ v.texto }}</span> }
+      }
+    </div>
+    <div class="kpi">
+      <span class="nombre-kpi">Entregados</span>
+      <strong>{{ d.entregados | number }}</strong>
+      @if (d.cancelados) { <span class="cambio">{{ d.cancelados }} cancelados</span> }
+    </div>
+    <div class="kpi">
+      <span class="nombre-kpi">Ventas aprox.</span>
+      <strong>{{ d.ventas | currency: 'MXN' : 'symbol-narrow' : '1.0-0' }}</strong>
+      @if (conversion(); as c) { <span class="cambio">{{ c | number: '1.0-1' }} % de visitas piden</span> }
+    </div>
+  </section>
+
+  @for (g of [{ id: 'visitas', titulo: 'Visitas por día', datos: graficaVisitas() }, { id: 'pedidos', titulo: 'Pedidos por día', datos: graficaPedidos() }]; track g.id) {
+    <section class="tarjeta-grafica" [attr.aria-label]="g.titulo">
+      <h2>{{ g.titulo }}</h2>
+      <div class="grafica" (mouseleave)="enfocado.set(null)">
+        <svg [attr.viewBox]="'0 0 ' + ancho + ' ' + alto" role="img" [attr.aria-label]="g.titulo + '; los datos están en la tabla de abajo'">
+          @for (m of g.datos.marcas; track $index) {
+            <line class="reja" [attr.x1]="margenIzq" [attr.x2]="ancho" [attr.y1]="m.y" [attr.y2]="m.y" />
+            <text class="eje" [attr.x]="margenIzq - 6" [attr.y]="m.y + 4" text-anchor="end">{{ m.v | number: '1.0-0' }}</text>
+          }
+          @for (b of g.datos.barras; track b.dia; let i = $index) {
+            <rect class="barra" [class.pedido]="g.id === 'pedidos'"
+                  [class.atenuada]="enfocado() && enfocado()!.grafica === g.id && enfocado()!.i !== i"
+                  [attr.x]="b.x" [attr.y]="b.y" [attr.width]="b.ancho" [attr.height]="b.alto"
+                  [attr.rx]="b.ancho > 6 ? 3 : 1" />
+            <rect class="zona" [attr.x]="b.x - 1" y="0" [attr.width]="g.datos.paso" [attr.height]="alto - margenAbajo"
+                  (mouseenter)="enfocado.set({ grafica: $any(g.id), i })" (click)="enfocado.set({ grafica: $any(g.id), i })" />
+          }
+          @for (e of g.datos.etiquetas; track $index) {
+            <text class="eje" [attr.x]="e.x" [attr.y]="alto - 6" [attr.text-anchor]="$first ? 'start' : $last ? 'end' : 'middle'">{{ e.dia | date: 'd MMM' }}</text>
+          }
+        </svg>
+        @if (enfocado(); as f) {
+          @if (f.grafica === g.id && g.datos.barras[f.i]; as b) {
+            <div class="globo" [style.left.%]="((b.x + b.ancho / 2) / ancho) * 100">
+              <span>{{ b.dia | date: "EEE d 'de' MMM" }}</span>
+              <strong>{{ b.valor | number }} {{ g.id === 'visitas' ? (b.valor === 1 ? 'visita' : 'visitas') : (b.valor === 1 ? 'pedido' : 'pedidos') }}</strong>
+            </div>
+          }
+        }
+      </div>
+    </section>
+  }
+
+  <details class="tabla-datos">
+    <summary>Ver los datos por día</summary>
+    <table>
+      <thead><tr><th scope="col">Día</th><th scope="col">Visitas</th><th scope="col">Pedidos</th></tr></thead>
+      <tbody>
+        @for (s of d.serie; track s.dia) {
+          <tr><td>{{ s.dia | date: "EEE d MMM" }}</td><td>{{ s.visitas | number }}</td><td>{{ s.pedidos | number }}</td></tr>
+        }
+      </tbody>
+    </table>
+  </details>
+
+  <div class="columnas-tablero">
+    <section class="tarjeta-grafica" aria-labelledby="t-negocios">
+      <h2 id="t-negocios">Por negocio</h2>
+      <ul class="ranking">
+        @for (n of d.negocios; track n.slug) {
+          <li>
+            <div class="fila-ranking">
+              <a [routerLink]="['/', n.slug]" target="_blank">{{ n.nombre }}</a>
+              <span>{{ n.visitas | number }} visitas</span>
+            </div>
+            <div class="riel"><span [style.width.%]="(n.visitas / maxNegocio()) * 100" [style.background]="n.color"></span></div>
+            <small>
+              {{ n.pedidos }} {{ n.pedidos === 1 ? 'pedido' : 'pedidos' }} · {{ n.entregados }} entregados
+              @if (n.ventas) { · {{ n.ventas | currency: 'MXN' : 'symbol-narrow' : '1.0-0' }} aprox. }
+            </small>
+          </li>
+        }
+      </ul>
+    </section>
+
+    <section class="tarjeta-grafica" aria-labelledby="t-productos">
+      <h2 id="t-productos">Productos más vistos</h2>
+      @if (d.productos.length) {
+        <ol class="ranking">
+          @for (p of d.productos; track p.id) {
+            <li>
+              <div class="fila-ranking">
+                <a [routerLink]="['/', p.negocioSlug, 'producto', p.id]" target="_blank">{{ p.nombre }}</a>
+                <span>{{ p.visitas | number }}</span>
+              </div>
+              <div class="riel"><span [style.width.%]="(p.visitas / maxProducto()) * 100"></span></div>
+              @if (sesion.esDueno() && !negocio()) { <small>{{ p.negocioNombre }}</small> }
+            </li>
+          }
+        </ol>
+      } @else {
+        <p class="ayuda">Todavía no hay visitas a productos en este periodo.</p>
+      }
+
+      @if (d.paginas.length) {
+        <h3>Páginas más visitadas</h3>
+        <ul class="paginas">
+          @for (p of d.paginas; track p.ruta) {
+            <li><code>{{ p.ruta }}</code> <span>{{ p.visitas | number }}</span></li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+} @else if (datos.isLoading()) {
+  <p class="ayuda">Cargando el tablero…</p>
+}

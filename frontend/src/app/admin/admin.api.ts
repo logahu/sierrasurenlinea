@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Platillo, Restaurante, TipoEncargo } from '../catalogo/catalogo.model';
 import {
-  CategoriaAdmin, CategoriaEdicion, ClienteAdmin, FotosNegocio, PaginaHistorial, NegocioAdmin, NegocioEdicion, ProductoAdmin, ProductoEdicion, Usuario,
+  CategoriaAdmin, CategoriaEdicion, ClienteAdmin, FotosNegocio, PaginaHistorial, Tablero, NegocioAdmin, NegocioEdicion, ProductoAdmin, ProductoEdicion, Usuario,
 } from './admin.model';
 
 /** Endpoints del panel (/api/admin/...). El token lo agrega autorizacionInterceptor. */
@@ -31,6 +31,12 @@ export class AdminApi {
 
   cambiarVisibleApp(slug: string, visible: boolean): Observable<NegocioAdmin> {
     return this.http.put<NegocioAdmin>(`${this.base}/negocios/${encodeURIComponent(slug)}/visible-app`, { visible });
+  }
+
+  tablero(dias: number, negocio = ''): Observable<Tablero> {
+    const params: Record<string, string> = { dias: String(dias) };
+    if (negocio) params['negocio'] = negocio;
+    return this.http.get<Tablero>(`${this.base}/tablero`, { params });
   }
 
   historial(filtro: { entidad?: string; negocio?: string; q?: string; pagina?: number }): Observable<PaginaHistorial> {

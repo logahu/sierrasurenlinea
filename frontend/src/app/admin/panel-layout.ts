@@ -24,6 +24,7 @@ import { SesionService } from './sesion';
             <a routerLink="/admin" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }">Negocios</a>
           }
           @if (!sesion.esRepartidor()) {
+            <a routerLink="/admin/tablero" routerLinkActive="activo">Tablero</a>
             <a routerLink="/admin/historial" routerLinkActive="activo">Historial</a>
           }
           @if (sesion.esDueno()) {

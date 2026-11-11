@@ -13,6 +13,24 @@ export interface Usuario {
   bloqueado: boolean;
 }
 
+/** Tablero de visitas y pedidos. */
+export interface Tablero {
+  dias: number;
+  desde: string;
+  hasta: string;
+  visitas: number;
+  visitasPrevias: number;
+  pedidos: number;
+  pedidosPrevios: number;
+  entregados: number;
+  cancelados: number;
+  ventas: number;
+  serie: { dia: string; visitas: number; pedidos: number }[];
+  negocios: { slug: string; nombre: string; color: string; visitas: number; pedidos: number; entregados: number; ventas: number }[];
+  productos: { id: number; nombre: string; negocioSlug: string; negocioNombre: string; visitas: number }[];
+  paginas: { ruta: string; visitas: number }[];
+}
+
 /** Un renglón del historial de cambios. */
 export interface RenglonHistorial {
   id: number;
