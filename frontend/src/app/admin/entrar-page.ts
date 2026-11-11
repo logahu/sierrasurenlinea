@@ -1,4 +1,5 @@
 import { Component, DestroyRef, inject, input, signal } from '@angular/core';
+import { VerContrasena } from '../compartido/ver-contrasena';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -7,7 +8,7 @@ import { SesionService } from './sesion';
 
 @Component({
   selector: 'app-entrar-page',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, VerContrasena],
   template: `
     <section class="entrar">
       <h1>Panel de Sierra Sur en Línea</h1>
@@ -22,7 +23,7 @@ import { SesionService } from './sesion';
         </label>
         <label>
           Contraseña
-          <input type="password" formControlName="contrasena" autocomplete="current-password" required />
+          <input type="password" verContrasena formControlName="contrasena" autocomplete="current-password" required />
         </label>
         @if (error()) {
           <p class="error" role="alert">{{ error() }}</p>

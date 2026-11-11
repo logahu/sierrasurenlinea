@@ -1,4 +1,5 @@
 import { Component, DestroyRef, inject, input, signal } from '@angular/core';
+import { VerContrasena } from '../compartido/ver-contrasena';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -9,7 +10,7 @@ import { telefonoValido } from '../catalogo/encargo';
 
 @Component({
   selector: 'app-entrar-cliente-page',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, VerContrasena],
   styleUrl: './cuenta.scss',
   template: `
     <section class="tarjeta-cuenta">
@@ -25,7 +26,7 @@ import { telefonoValido } from '../catalogo/encargo';
         </label>
         <label>
           Contraseña
-          <input type="password" formControlName="contrasena" autocomplete="current-password" />
+          <input type="password" verContrasena formControlName="contrasena" autocomplete="current-password" />
         </label>
         @if (error(); as e) {
           <p class="error" role="alert">{{ e }}</p>

@@ -1,4 +1,5 @@
 import { Component, DestroyRef, inject, input, signal } from '@angular/core';
+import { VerContrasena } from '../compartido/ver-contrasena';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -10,7 +11,7 @@ import { destinoSeguro } from './destino';
 
 @Component({
   selector: 'app-registro-page',
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [ReactiveFormsModule, RouterLink, VerContrasena],
   styleUrl: './cuenta.scss',
   template: `
     <section class="tarjeta-cuenta">
@@ -40,7 +41,7 @@ import { destinoSeguro } from './destino';
         </label>
         <label>
           Contraseña
-          <input type="password" formControlName="contrasena" autocomplete="new-password" />
+          <input type="password" verContrasena formControlName="contrasena" autocomplete="new-password" />
           <small>Mínimo {{ minimo }} caracteres.</small>
         </label>
         <label class="casilla">

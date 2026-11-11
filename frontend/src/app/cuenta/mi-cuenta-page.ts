@@ -1,4 +1,5 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
+import { VerContrasena } from '../compartido/ver-contrasena';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -14,7 +15,7 @@ import { MINIMO_CONTRASENA, estadoParaCliente } from './cuenta.model';
 
 @Component({
   selector: 'app-mi-cuenta-page',
-  imports: [ReactiveFormsModule, RouterLink, DatePipe, CurrencyPipe, BotonAvisos, MapaUbicacion],
+  imports: [ReactiveFormsModule, RouterLink, DatePipe, CurrencyPipe, BotonAvisos, MapaUbicacion, VerContrasena],
   styleUrl: './cuenta.scss',
   styles: `
     .encabezado { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
@@ -101,11 +102,11 @@ import { MINIMO_CONTRASENA, estadoParaCliente } from './cuenta.model';
           <form [formGroup]="claves" (ngSubmit)="cambiarContrasena()" novalidate>
             <label>
               Contraseña actual
-              <input type="password" formControlName="actual" autocomplete="current-password" />
+              <input type="password" verContrasena formControlName="actual" autocomplete="current-password" />
             </label>
             <label>
               Contraseña nueva
-              <input type="password" formControlName="nueva" autocomplete="new-password" />
+              <input type="password" verContrasena formControlName="nueva" autocomplete="new-password" />
               <small>Mínimo {{ minimo }} caracteres.</small>
             </label>
             @if (avisoClave(); as a) { <p class="exito" role="status">{{ a }}</p> }

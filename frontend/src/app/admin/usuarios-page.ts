@@ -38,11 +38,13 @@ export function nombreDelRol(rol: Rol): string {
       <a routerLink="." [queryParams]="{ ver: 'clientes' }" [class.elegida]="enClientes()">Clientes</a>
     </nav>
 
-    @if (aviso(); as a) {
-      <p class="exito" role="status">{{ a }}</p>
-    }
-    @if (error(); as e) {
-      <p class="error" role="alert">{{ e }}</p>
+    @if (fila() === null) {
+      @if (aviso(); as a) {
+        <p class="exito" role="status">{{ a }}</p>
+      }
+      @if (error(); as e) {
+        <p class="error" role="alert">{{ e }}</p>
+      }
     }
 
     @if (enClientes()) {
@@ -82,6 +84,10 @@ export function nombreDelRol(rol: Rol): string {
                 <button class="btn primario" type="submit" [disabled]="ocupado()">Guardar</button>
               </form>
               <p class="ayuda">Antes, confirma por teléfono o WhatsApp que hablas con el cliente. Dale la contraseña por WhatsApp y pídele que la cambie en Mi cuenta.</p>
+            }
+            @if (fila() === c.id) {
+              @if (aviso(); as a) { <p class="exito" role="status">{{ a }}</p> }
+              @if (error(); as e) { <p class="error" role="alert">{{ e }}</p> }
             }
           </li>
         } @empty {
@@ -237,6 +243,7 @@ export class UsuariosPage {
   }
 
   protected crear(): void {
+    this.fila.set(null);
     const c = this.form.controls;
     const datos = this.form.getRawValue();
     const esAdmin = datos.rol === 'DUENO';
@@ -251,20 +258,25 @@ export class UsuariosPage {
   }
 
   protected alternarAcceso(u: Usuario): void {
+    this.fila.set(null);
     this.ejecutar(this.api.editarUsuario(u.id, { nombre: u.nombre, activo: !u.activo }), (r) =>
       r.activo ? `${r.nombre} puede volver a entrar.` : `${r.nombre} ya no puede entrar.`,
     );
   }
 
   protected alternarCliente(c: ClienteAdmin): void {
+    this.fila.set(c.id);
     this.ejecutar(this.api.cambiarAccesoCliente(c.id, !c.activo), (r) =>
       r.activo ? `${r.nombre} puede volver a pedir.` : `${r.nombre} ya no puede iniciar sesión.`,
     );
   }
 
   protected readonly reiniciandoCliente = signal<number | null>(null);
+  /** Cliente cuyo aviso (éxito o error) se muestra junto a su renglón. */
+  protected readonly fila = signal<number | null>(null);
 
   protected reiniciarCliente(c: ClienteAdmin, nueva: string): void {
+    this.fila.set(c.id);
     if (nueva.length < MINIMO) return this.falla(`La contraseña debe tener al menos ${MINIMO} caracteres.`);
     this.ejecutar(this.api.reiniciarContrasenaCliente(c.id, nueva), () => {
       this.reiniciandoCliente.set(null);
@@ -273,6 +285,7 @@ export class UsuariosPage {
   }
 
   protected reiniciar(u: Usuario, nueva: string): void {
+    this.fila.set(null);
     if (nueva.length < MINIMO) return this.falla(`La contraseña debe tener al menos ${MINIMO} caracteres.`);
     this.ejecutar(this.api.reiniciarContrasena(u.id, nueva), () => {
       this.reiniciando.set(null);

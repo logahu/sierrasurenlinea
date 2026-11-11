@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { VerContrasena } from '../compartido/ver-contrasena';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { mensajeDeError } from './autorizacion';
@@ -8,7 +9,7 @@ const MINIMO = 10;
 
 @Component({
   selector: 'app-cuenta-page',
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, VerContrasena],
   template: `
     <header class="panel-titulo">
       <h1>Mi cuenta</h1>
@@ -21,16 +22,16 @@ const MINIMO = 10;
         <legend>Cambiar contraseña</legend>
         <label>
           Contraseña actual
-          <input type="password" formControlName="actual" autocomplete="current-password" />
+          <input type="password" verContrasena formControlName="actual" autocomplete="current-password" />
         </label>
         <label>
           Contraseña nueva
-          <input type="password" formControlName="nueva" autocomplete="new-password" />
+          <input type="password" verContrasena formControlName="nueva" autocomplete="new-password" />
           <small>Mínimo {{ minimo }} caracteres.</small>
         </label>
         <label>
           Repite la nueva
-          <input type="password" formControlName="repetida" autocomplete="new-password" />
+          <input type="password" verContrasena formControlName="repetida" autocomplete="new-password" />
         </label>
         @if (error()) {
           <p class="error" role="alert">{{ error() }}</p>
