@@ -246,7 +246,7 @@
     <button type="submit" class="enviar" [disabled]="enviando()">@if (enviando()) { Registrando tu pedido… } @else if (!cliente.cliente()) {
         Iniciar sesión para enviar
       } @else {
-        {{ viaje() ? 'Pedir viaje por WhatsApp' : comida() ? 'Pedir comida por WhatsApp' : 'Enviar encargo por WhatsApp' }}
+        Realizar pedido
       }</button>
     <p class="nota">
       @if (!cliente.cliente()) {

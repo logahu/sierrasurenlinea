@@ -74,7 +74,10 @@ export class MapaUbicacion {
 
   private async iniciar(): Promise<void> {
     try {
-      this.L = await import('leaflet');
+      // Leaflet no es un módulo ES: según cómo se empaquete, llega directo o dentro de "default".
+      const modulo = (await import('leaflet')) as typeof import('leaflet') & { default?: typeof import('leaflet') };
+      this.L = modulo.default ?? modulo;
+      if (typeof this.L.map !== 'function') throw new Error('Leaflet no cargó');
     } catch {
       this.fallo.set(true);
       return;
