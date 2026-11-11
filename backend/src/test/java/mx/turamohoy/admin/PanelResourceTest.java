@@ -64,7 +64,7 @@ class PanelResourceTest {
                 .body(Map.of("correo", Sesiones.DUENO, "contrasena", "otra-cosa-123"))
                 .when().post("/api/auth/entrar")
                 .then().statusCode(401)
-                .body("mensaje", equalTo("Correo o contraseña incorrectos."));
+                .body("mensaje", equalTo("Teléfono, correo o contraseña incorrectos."));
         given().contentType(ContentType.JSON)
                 .body(Map.of("correo", "nadie@sierrasur.local", "contrasena", "otra-cosa-123"))
                 .when().post("/api/auth/entrar")
