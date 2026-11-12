@@ -10,6 +10,8 @@ export interface Cliente {
   activo: boolean;
   creado: string;
   ultimoAcceso: string | null;
+  /** Ve los negocios en pruebas; sus pedidos se marcan como prueba. */
+  probador: boolean;
 }
 
 export interface SesionCliente {

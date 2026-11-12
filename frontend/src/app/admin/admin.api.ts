@@ -25,6 +25,14 @@ export class AdminApi {
     return this.http.put<NegocioAdmin>(`${this.base}/negocios/${encodeURIComponent(slug)}`, datos);
   }
 
+  cambiarEstado(slug: string, estado: 'PUBLICO' | 'PRUEBAS' | 'OCULTO'): Observable<NegocioAdmin> {
+    return this.http.put<NegocioAdmin>(`${this.base}/negocios/${encodeURIComponent(slug)}/estado`, { estado });
+  }
+
+  cambiarProbador(id: number, probador: boolean): Observable<ClienteAdmin> {
+    return this.http.put<ClienteAdmin>(`${this.base}/clientes/${id}/probador`, { probador });
+  }
+
   cambiarVisible(slug: string, visible: boolean): Observable<NegocioAdmin> {
     return this.http.put<NegocioAdmin>(`${this.base}/negocios/${encodeURIComponent(slug)}/visible`, { visible });
   }

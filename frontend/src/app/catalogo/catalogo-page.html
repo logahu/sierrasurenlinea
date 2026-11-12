@@ -17,6 +17,7 @@
 } @else {
   @let n = negocio.value();
 
+  @if (n?.estado === 'PRUEBAS') { <p class="franja-prueba" role="note">🧪 <strong>Vista de prueba:</strong> este negocio aún no es visible para el público. Tus pedidos se marcan como prueba.</p> }
   <section class="encabezado">
     <!-- Decoración propia de cada negocio (banderines, papel kraft...), dibujada en CSS. -->
     <div class="adorno" aria-hidden="true"></div>

@@ -116,18 +116,18 @@ class PanelResourceTest {
     void unNegocioOcultoDesapareceDelSitio() {
         String token = Sesiones.dueno();
         try {
-            como(token).body(edicion(token, "vinateria", "visible", false))
+            como(token).body(edicion(token, "vinateria", "estado", "OCULTO"))
                     .when().put("/api/admin/negocios/vinateria")
-                    .then().statusCode(200).body("visible", equalTo(false));
+                    .then().statusCode(200).body("visible", equalTo(false)).body("estado", equalTo("OCULTO"));
             given().when().get("/api/negocios").then().statusCode(200)
                     .body("slug", not(hasItem("vinateria")));
             given().when().get("/api/negocios/vinateria").then().statusCode(404);
             given().when().get("/api/productos").then().statusCode(200)
                     .body("negocioSlug", not(hasItem("vinateria")));
         } finally {
-            como(token).body(edicion(token, "vinateria", "visible", true))
+            como(token).body(edicion(token, "vinateria", "estado", "PUBLICO"))
                     .when().put("/api/admin/negocios/vinateria")
-                    .then().statusCode(200).body("visible", equalTo(true));
+                    .then().statusCode(200).body("visible", equalTo(true)).body("estado", equalTo("PUBLICO"));
         }
     }
 

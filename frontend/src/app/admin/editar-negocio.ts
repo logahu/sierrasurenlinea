@@ -1,3 +1,4 @@
+import { RouterLink } from '@angular/router';
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -28,7 +29,7 @@ export function whatsappValido(texto: string): boolean {
 
 @Component({
   selector: 'app-editar-negocio',
-  imports: [ReactiveFormsModule, NegocioTabs, FotoCampo],
+  imports: [ReactiveFormsModule, NegocioTabs, FotoCampo, RouterLink],
   template: `
     <app-negocio-tabs [slug]="slug()" [negocio]="negocio.value()" seccion="datos" />
 
@@ -95,13 +96,11 @@ export function whatsappValido(texto: string): boolean {
               <input type="color" formControlName="colorPrimario" />
               Color del negocio
             </label>
-            <label class="en-linea">
-              <input type="checkbox" formControlName="visible" />
-              Mostrar en el sitio
-            </label>
-            @if (!form.controls.visible.value) {
-              <small class="aviso">Oculto: no aparece en la portada ni en el menú, y su página no abre.</small>
-            }
+            <p class="ayuda">
+              Visibilidad:
+              <strong>{{ n.estado === 'PUBLICO' ? 'Pública' : n.estado === 'PRUEBAS' ? '🧪 En pruebas (solo probadores)' : 'Oculto' }}</strong>
+              · se cambia en <a routerLink="/admin/visibilidad">En el sitio</a>.
+            </p>
           }
         </fieldset>
 
@@ -147,7 +146,6 @@ export class EditarNegocio {
     direccion: [''],
     horario: [''],
     colorPrimario: ['#000000'],
-    visible: [true],
     topeAdelanto: [null as number | null],
   });
   protected readonly guardando = signal(false);
@@ -181,7 +179,6 @@ export class EditarNegocio {
       direccion: n.direccion ?? '',
       horario: n.horario ?? '',
       colorPrimario: n.colorPrimario,
-      visible: n.visible,
       topeAdelanto: n.topeAdelanto,
     });
     if (this.sesion.esDueno()) this.form.controls.nombre.enable();

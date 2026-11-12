@@ -22,7 +22,7 @@
       @for (n of negocios.value() ?? []; track n.id; let i = $index) {
         <li class="fachada" [class]="'f' + (i % 5)" [style.--pintura]="n.colorPrimario">
           <a class="muro" [routerLink]="['/', n.slug]">
-            <span class="rotulo">{{ n.nombre }}</span>
+            <span class="rotulo">{{ n.nombre }}@if (n.estado === 'PRUEBAS') { <small class="en-pruebas">🧪 en pruebas</small> }</span>
             <span class="ventana"><img [src]="n.portadaUrl" alt="" width="400" height="400" /></span>
             @if (n.eslogan) { <span class="letrero">{{ n.eslogan }}</span> }
             @if (n.tipo === 'RENTA') { <span class="aviso">Se rentan</span> }

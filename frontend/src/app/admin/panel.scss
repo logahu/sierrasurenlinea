@@ -476,3 +476,36 @@
 
 .pedido-mapa { margin: 0; font-size: .92rem; a { color: var(--follaje); } }
 .pedido-mapa .enlace { font: inherit; background: none; border: 0; padding: 0; color: var(--follaje); text-decoration: underline; cursor: pointer; }
+
+.fila-visible .interruptores { flex-wrap: wrap; align-items: center; }
+.estados {
+  display: inline-flex;
+  border: 1px solid var(--linea);
+  border-radius: 999px;
+  overflow: hidden;
+  button {
+    font: inherit;
+    font-size: .82rem;
+    font-weight: 600;
+    padding: .4rem .75rem;
+    border: 0;
+    background: transparent;
+    color: var(--tinta-suave);
+    cursor: pointer;
+    & + button { border-left: 1px solid var(--linea); }
+    &.elegido { color: #fff; }
+    &.elegido[data-estado='PUBLICO'] { background: #1a7f45; }
+    &.elegido[data-estado='PRUEBAS'] { background: #b07a00; }
+    &.elegido[data-estado='OCULTO'] { background: #6b6460; }
+    &:disabled { opacity: .6; cursor: default; }
+  }
+}
+.etiqueta-prueba {
+  display: inline-block;
+  padding: .1rem .5rem;
+  border-radius: 999px;
+  background: #fff4d6;
+  color: #5c4300;
+  font-size: .75rem;
+  font-weight: 700;
+}

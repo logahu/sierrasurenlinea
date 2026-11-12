@@ -23,6 +23,7 @@ describe('CatalogoService', () => {
   it('pide la lista de negocios una sola vez aunque se use en varios lugares', () => {
     service.negocios().subscribe();
     service.negocios().subscribe();
+    TestBed.tick(); // la lista depende de la sesión (probador o no): se pide al correr los efectos
     http.expectOne(`${api}/negocios`).flush([]);
   });
 

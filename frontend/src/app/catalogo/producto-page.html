@@ -11,6 +11,9 @@
     <a [routerLink]="['/', slug()]">Ver el catálogo</a>
   </div>
 } @else if (producto.value(); as p) {
+  @if (negocio.value()?.estado === 'PRUEBAS') {
+    <p class="franja-prueba" role="note">🧪 <strong>Vista de prueba:</strong> este negocio aún no es visible para el público. Tus pedidos se marcan como prueba.</p>
+  }
   <a class="volver" [routerLink]="['/', p.negocioSlug]">← {{ p.negocioNombre }}</a>
 
   <article class="detalle">

@@ -82,6 +82,8 @@ export interface ClienteAdmin {
   creado: string;
   ultimoAcceso: string | null;
   pedidos: number;
+  /** Ve los negocios en pruebas; sus pedidos se marcan como prueba. */
+  probador: boolean;
 }
 
 export interface Sesion {
@@ -105,7 +107,10 @@ export interface NegocioAdmin {
   direccion: string | null;
   horario: string | null;
   soloMayoresEdad: boolean;
+  /** true solo si es público (compatibilidad). */
   visible: boolean;
+  /** PUBLICO, PRUEBAS u OCULTO. */
+  estado: 'PUBLICO' | 'PRUEBAS' | 'OCULTO';
   /** Si se muestra dentro de la app de Google Play. */
   visibleApp: boolean;
   topeAdelanto: number | null;
@@ -118,7 +123,7 @@ export interface NegocioAdmin {
 /** Lo que se manda al guardar un negocio. */
 export type NegocioEdicion = Pick<
   NegocioAdmin,
-  'nombre' | 'eslogan' | 'descripcion' | 'whatsapp' | 'telefono' | 'direccion' | 'horario' | 'colorPrimario' | 'visible' | 'topeAdelanto' | 'portadaUrl'
+  'nombre' | 'eslogan' | 'descripcion' | 'whatsapp' | 'telefono' | 'direccion' | 'horario' | 'colorPrimario' | 'topeAdelanto' | 'portadaUrl'
 >;
 
 export interface CategoriaAdmin {
@@ -193,6 +198,8 @@ export interface Pedido {
   notas: string | null;
   /** Renglones del carrito (vacío en encargos). */
   lineas: LineaPedido[];
+  /** Pedido de un cliente probador: no cuenta en el tablero. */
+  prueba: boolean;
   /** Punto de entrega marcado en el mapa. */
   lat: number | null;
   lng: number | null;

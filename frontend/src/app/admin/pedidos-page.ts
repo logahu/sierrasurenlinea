@@ -57,6 +57,7 @@ const CADA_MS = 15000;
       @for (p of pedidos(); track p.id) {
         <li class="pedido" [attr.data-estado]="p.estado">
           <div class="pedido-cabeza">
+            @if (p.prueba) { <span class="etiqueta-prueba" title="Pedido de un probador: no cuenta en el tablero">🧪 PRUEBA</span> }
             <span class="estado-pedido">{{ nombreEstado(p) }}</span>
             <strong>{{ p.tipo }}</strong>
             <span class="ayuda">{{ p.folio }} · {{ hace(p.creado) }}</span>

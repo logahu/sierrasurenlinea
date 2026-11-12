@@ -1,4 +1,6 @@
 export type TipoNegocio = 'VENTA' | 'RENTA' | 'SERVICIO';
+/** PUBLICO: lo ven todos · PRUEBAS: solo los probadores · OCULTO: nadie (solo el panel). */
+export type EstadoNegocio = 'PUBLICO' | 'PRUEBAS' | 'OCULTO';
 /** COMPRA: domicilio o recoger · RENTA: fecha del evento · CITA: ver el producto en persona. */
 export type ModoPedido = 'COMPRA' | 'RENTA' | 'CITA';
 
@@ -26,6 +28,8 @@ export interface Negocio {
   soloMayoresEdad: boolean;
   /** Si se muestra dentro de la app de Google Play (en la web siempre). */
   visibleApp?: boolean;
+  /** PUBLICO; o PRUEBAS si quien lo ve es un probador (el público no lo recibe). */
+  estado?: EstadoNegocio;
   /** Cómo se piden sus productos en línea; null en servicios (Encarguitos). */
   modoPedido?: ModoPedido | null;
   /** Solo servicios: cuánto adelanta el repartidor, en MXN. */

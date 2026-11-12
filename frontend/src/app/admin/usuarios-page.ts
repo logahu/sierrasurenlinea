@@ -58,6 +58,7 @@ export function nombreDelRol(rol: Rol): string {
           <li class="fila-usuario" [class.inactivo]="!c.activo">
             <div>
               <strong>{{ c.nombre }}</strong>
+              @if (c.probador) { <span class="etiqueta-prueba">🧪 Probador</span> }
               <span class="ayuda">
                 {{ c.telefono }} ·
                 <a [href]="'https://wa.me/52' + c.telefono" target="_blank" rel="noopener">WhatsApp</a> ·
@@ -74,6 +75,10 @@ export function nombreDelRol(rol: Rol): string {
             <div class="acciones-fila">
               <button type="button" class="btn secundario" (click)="alternarCliente(c)" [disabled]="ocupado()">
                 {{ c.activo ? 'Quitar acceso' : 'Devolver acceso' }}
+              </button>
+              <button type="button" class="btn secundario" (click)="alternarProbador(c)" [disabled]="ocupado()"
+                      title="Los probadores ven los negocios en pruebas; sus pedidos llegan como prueba">
+                {{ c.probador ? 'Quitar probador' : '🧪 Hacer probador' }}
               </button>
               <button type="button" class="btn secundario" (click)="reiniciandoCliente.set(reiniciandoCliente() === c.id ? null : c.id)">
                 Contraseña nueva
@@ -298,6 +303,16 @@ export class UsuariosPage {
     this.filaEquipo.set(u.id);
     this.ejecutar(this.api.editarUsuario(u.id, { nombre: u.nombre, activo: !u.activo }), (r) =>
       r.activo ? `${r.nombre} puede volver a entrar.` : `${r.nombre} ya no puede entrar.`,
+    );
+  }
+
+  protected alternarProbador(c: ClienteAdmin): void {
+    this.fila.set(c.id);
+    this.filaEquipo.set(null);
+    this.ejecutar(this.api.cambiarProbador(c.id, !c.probador), (r) =>
+      r.probador
+        ? `${r.nombre} ya es probador: al iniciar sesión verá los negocios en pruebas.`
+        : `${r.nombre} ya no es probador.`,
     );
   }
 

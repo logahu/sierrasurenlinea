@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, of } from 'rxjs';
 import { environment } from '../environments/environment';
+import { ClienteSesionService } from './cuenta/cliente-sesion';
 
 /**
  * Contador de visitas por página. Cada página se cuenta una vez por sesión del
@@ -10,10 +11,12 @@ import { environment } from '../environments/environment';
 @Injectable({ providedIn: 'root' })
 export class VisitasService {
   private readonly http = inject(HttpClient);
+  private readonly cliente = inject(ClienteSesionService);
 
   /** Total de la página (o null si no se pudo obtener). Nunca falla: el contador no debe estorbar. */
   registrar(ruta: string): Observable<number | null> {
-    const contar = !yaContada(ruta);
+    // Las visitas de los probadores no se cuentan (solo se consulta el total).
+    const contar = !yaContada(ruta) && !this.cliente.cliente()?.probador;
     return this.http
       .post<{ total: number }>(`${environment.apiUrl}/visitas`, { ruta, contar })
       .pipe(

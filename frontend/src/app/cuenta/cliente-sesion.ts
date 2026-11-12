@@ -101,6 +101,14 @@ function leer(): SesionCliente | null {
   }
 }
 
+/** Lecturas del catálogo público (negocios y productos). */
+export function esCatalogo(metodo: string, url: string): boolean {
+  const api = environment.apiUrl;
+  if (metodo !== 'GET' || !url.startsWith(api + '/')) return false;
+  const ruta = url.slice(api.length).split('?')[0];
+  return ruta === '/negocios' || ruta.startsWith('/negocios/') || ruta === '/productos' || ruta.startsWith('/productos/');
+}
+
 /** Peticiones que van con la sesión del cliente: su cuenta y el envío de pedidos. */
 export function esPeticionDelCliente(metodo: string, url: string): boolean {
   const api = environment.apiUrl;
@@ -115,8 +123,10 @@ export function esPeticionDelCliente(metodo: string, url: string): boolean {
  * backend responde 401, la sesión ya no sirve (venció o se dio de baja) y se cierra.
  */
 export const clienteInterceptor: HttpInterceptorFn = (req, next) => {
-  if (!esPeticionDelCliente(req.method, req.url)) return next(req);
   const sesion = inject(ClienteSesionService);
+  // Los probadores mandan su sesión también al catálogo, para ver los negocios en pruebas.
+  const probador = sesion.cliente()?.probador === true && esCatalogo(req.method, req.url);
+  if (!probador && !esPeticionDelCliente(req.method, req.url)) return next(req);
   const token = sesion.token();
   const conToken = req.clone({
     setParams: { 'ngsw-bypass': 'true' },

@@ -1,6 +1,8 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Injectable, inject } from '@angular/core';
-import { Observable, combineLatest, map, shareReplay } from 'rxjs';
+import { Injectable, computed, inject } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { Observable, combineLatest, distinctUntilChanged, map, shareReplay, switchMap } from 'rxjs';
+import { ClienteSesionService } from '../cuenta/cliente-sesion';
 import { visiblesAqui } from '../modo-app';
 import { Negocio, Producto, Restaurante } from './catalogo.model';
 import { environment } from '../../environments/environment';
@@ -15,13 +17,17 @@ export class CatalogoService {
   private readonly http = inject(HttpClient);
   private readonly base = environment.apiUrl;
 
-  /** La lista de negocios se usa en el encabezado y la portada: se pide una sola vez. */
-  private readonly negocios$ = this.http
-    .get<Negocio[]>(`${this.base}/negocios`)
-    .pipe(
-      map((lista) => visiblesAqui(lista)), // en la app, sin los negocios "solo web"
-      shareReplay({ bufferSize: 1, refCount: false }),
-    );
+  /** Los probadores ven además los negocios en pruebas: la lista cambia si entra o sale uno. */
+  private readonly sesionCliente = inject(ClienteSesionService);
+  private readonly probador = computed(() => this.sesionCliente.cliente()?.probador ?? false);
+
+  /** La lista de negocios se usa en el encabezado y la portada: se pide una vez por tipo de sesión. */
+  private readonly negocios$ = toObservable(this.probador).pipe(
+    distinctUntilChanged(),
+    switchMap(() => this.http.get<Negocio[]>(`${this.base}/negocios`)),
+    map((lista) => visiblesAqui(lista)), // en la app, sin los negocios "solo web"
+    shareReplay({ bufferSize: 1, refCount: false }),
+  );
 
   negocios(): Observable<Negocio[]> {
     return this.negocios$;

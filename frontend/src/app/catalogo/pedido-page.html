@@ -35,6 +35,7 @@
     </div>
   </section>
 } @else {
+  @if (n.estado === 'PRUEBAS') { <p class="franja-prueba" role="note">🧪 <strong>Vista de prueba:</strong> este negocio aún no es visible para el público. Tus pedidos se marcan como prueba.</p> }
   <a class="volver" [routerLink]="['/', n.slug]">← {{ n.nombre }}</a>
   <h1>{{ textos().titulo }}</h1>
 

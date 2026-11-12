@@ -1,5 +1,5 @@
 import { environment } from '../../environments/environment';
-import { esPeticionDelCliente } from './cliente-sesion';
+import { esCatalogo, esPeticionDelCliente } from './cliente-sesion';
 import { destinoSeguro } from './destino';
 
 describe('cuenta del cliente', () => {
@@ -23,5 +23,13 @@ describe('cuenta del cliente', () => {
     expect(destinoSeguro('https://malo.example')).toBe('/cuenta');
     expect(destinoSeguro('//malo.example')).toBe('/cuenta');
     expect(destinoSeguro('/admin/usuarios')).toBe('/cuenta');
+  });
+
+  it('reconoce las lecturas del catálogo (los probadores mandan ahí su sesión)', () => {
+    expect(esCatalogo('GET', `${api}/negocios`)).toBe(true);
+    expect(esCatalogo('GET', `${api}/negocios/belleza/productos?categoria=x`)).toBe(true);
+    expect(esCatalogo('GET', `${api}/productos/5`)).toBe(true);
+    expect(esCatalogo('POST', `${api}/visitas`)).toBe(false);
+    expect(esCatalogo('GET', `${api}/admin/negocios`)).toBe(false);
   });
 });
