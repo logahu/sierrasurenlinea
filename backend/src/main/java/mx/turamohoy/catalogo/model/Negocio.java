@@ -66,9 +66,32 @@ public class Negocio extends PanacheEntityBase {
     @Column(nullable = false)
     public int orden;
 
-    /** Si es false, el negocio no aparece en el sitio (se oculta desde el panel). */
-    @Column(nullable = false)
-    public boolean visible = true;
+    /** Lo ven todos los clientes. */
+    public static final String PUBLICO = "PUBLICO";
+    /** Solo lo ven los clientes probadores (para revisarlo antes de abrirlo). */
+    public static final String PRUEBAS = "PRUEBAS";
+    /** No aparece en el sitio para nadie. */
+    public static final String OCULTO = "OCULTO";
+    public static final java.util.Set<String> ESTADOS = java.util.Set.of(PUBLICO, PRUEBAS, OCULTO);
+
+    /** PUBLICO, PRUEBAS u OCULTO (se cambia desde el panel). */
+    @Column(nullable = false, length = 10)
+    public String estado = PUBLICO;
+
+    /** Si lo ve el público en general. */
+    public boolean publico() {
+        return PUBLICO.equals(estado);
+    }
+
+    /** Si lo puede ver esta persona: el público solo los públicos; un probador también los de pruebas. */
+    public boolean visiblePara(boolean probador) {
+        return PUBLICO.equals(estado) || (probador && PRUEBAS.equals(estado));
+    }
+
+    /** Estados que puede ver alguien en el sitio. */
+    public static java.util.List<String> estadosVisibles(boolean probador) {
+        return probador ? java.util.List.of(PUBLICO, PRUEBAS) : java.util.List.of(PUBLICO);
+    }
 
     /** Si es false, no aparece dentro de la app de Google Play (en la web sí). */
     @Column(name = "visible_app", nullable = false)
@@ -103,6 +126,11 @@ public class Negocio extends PanacheEntityBase {
 
     /** Solo si está visible en el sitio público. */
     public static Optional<Negocio> visiblePorSlug(String slug) {
-        return find("slug = ?1 and visible = true", slug).firstResultOptional();
+        return visiblePorSlug(slug, false);
+    }
+
+    /** Visible para esta persona (un probador también ve los negocios en pruebas). */
+    public static Optional<Negocio> visiblePorSlug(String slug, boolean probador) {
+        return find("slug = ?1 and estado in ?2", slug, estadosVisibles(probador)).firstResultOptional();
     }
 }

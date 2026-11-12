@@ -96,6 +96,10 @@ public class Pedido extends PanacheEntityBase {
     @Column(length = 500)
     public String notas;
 
+    /** Pedido de un cliente probador: no cuenta en el tablero y se marca en el panel. */
+    @Column(nullable = false)
+    public boolean prueba;
+
     /** Punto de entrega marcado en el mapa (opcional). */
     @Column(precision = 9, scale = 6)
     public BigDecimal lat;

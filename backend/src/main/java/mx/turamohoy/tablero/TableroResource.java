@@ -100,9 +100,10 @@ public class TableroResource {
         // --- Pedidos ---------------------------------------------------------------------
         Instant inicio = desde.atStartOfDay(VisitaDia.ZONA).toInstant();
         Instant inicioPrevio = previoDesde.atStartOfDay(VisitaDia.ZONA).toInstant();
+        // Los pedidos de los probadores no cuentan.
         List<Pedido> pedidos = solo == null
-                ? Pedido.list("creado >= ?1", inicioPrevio)
-                : Pedido.list("creado >= ?1 and negocio = ?2", inicioPrevio, solo);
+                ? Pedido.list("creado >= ?1 and prueba = false", inicioPrevio)
+                : Pedido.list("creado >= ?1 and negocio = ?2 and prueba = false", inicioPrevio, solo);
         Map<LocalDate, Long> pedidosPorDia = new HashMap<>();
         long pedidosPrevios = 0;
         long total = 0;

@@ -73,8 +73,8 @@ public class Producto extends PanacheEntityBase {
     @Column(nullable = false)
     public boolean disponible;
 
-    public static List<Producto> disponibles() {
-        return list(BASE + "where p.disponible = true and n.visible = true" + ORDEN);
+    public static List<Producto> disponibles(boolean probador) {
+        return list(BASE + "where p.disponible = true and n.estado in ?1" + ORDEN, Negocio.estadosVisibles(probador));
     }
 
     public static List<Producto> disponiblesDelNegocio(String slugNegocio) {

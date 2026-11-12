@@ -21,6 +21,22 @@ public class SesionCliente {
 
     private Cliente cliente;
 
+    /**
+     * Si quien pide es un cliente probador (puede ver los negocios en pruebas). Sin sesión,
+     * o con una sesión que no es de cliente, es false; nunca lanza error.
+     */
+    public boolean esProbador() {
+        String sujeto = jwt == null ? null : jwt.getSubject();
+        if (sujeto == null || !sujeto.startsWith(PREFIJO)) {
+            return false;
+        }
+        try {
+            return cliente().probador;
+        } catch (RuntimeException e) {
+            return false;
+        }
+    }
+
     public Cliente cliente() {
         if (cliente == null) {
             String sujeto = jwt.getSubject();

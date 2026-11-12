@@ -18,7 +18,10 @@ public record NegocioAdminDto(
         String direccion,
         String horario,
         boolean soloMayoresEdad,
+        /** true solo si es público (se conserva para compatibilidad). */
         boolean visible,
+        /** PUBLICO, PRUEBAS u OCULTO. */
+        String estado,
         boolean visibleApp,
         Integer topeAdelanto,
         int orden,
@@ -28,6 +31,6 @@ public record NegocioAdminDto(
     public static NegocioAdminDto de(Negocio n, long productosActivos, String encargado) {
         return new NegocioAdminDto(n.id, n.slug, n.nombre, n.eslogan, n.descripcion, n.tipo,
                 n.colorPrimario, n.portadaUrl, n.whatsapp, n.telefono, n.direccion, n.horario,
-                n.soloMayoresEdad, n.visible, n.visibleApp, n.topeAdelanto, n.orden, productosActivos, encargado);
+                n.soloMayoresEdad, n.publico(), n.estado, n.visibleApp, n.topeAdelanto, n.orden, productosActivos, encargado);
     }
 }

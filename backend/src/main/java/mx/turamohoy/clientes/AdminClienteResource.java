@@ -32,7 +32,28 @@ public class AdminClienteResource {
     mx.turamohoy.admin.SesionActual sesion;
 
     public record ClienteAdminDto(Long id, String nombre, String telefono, String correo, String direccion,
-                                  boolean activo, Instant creado, Instant ultimoAcceso, long pedidos) {
+                                  boolean activo, Instant creado, Instant ultimoAcceso, long pedidos, boolean probador) {
+    }
+
+    public record Probador(boolean probador) {
+    }
+
+    /** Marca o desmarca a un cliente como probador (ve los negocios en pruebas). */
+    @PUT
+    @Path("/{id}/probador")
+    @Transactional
+    public ClienteAdminDto cambiarProbador(@PathParam("id") Long id, @NotNull Probador p) {
+        Cliente c = Cliente.findById(id);
+        if (c == null) {
+            throw Errores.de(Status.NOT_FOUND, "No existe ese cliente.");
+        }
+        if (c.probador != p.probador()) {
+            mx.turamohoy.historial.Bitacora.anotar(sesion.usuario(), null, mx.turamohoy.historial.Bitacora.CLIENTE, c.id,
+                    (p.probador() ? "Marcó como probador a " : "Quitó la marca de probador a ") + c.nombre, c.telefono);
+        }
+        c.probador = p.probador();
+        return new ClienteAdminDto(c.id, c.nombre, c.telefono, c.correo, c.direccion, c.activo, c.creado,
+                c.ultimoAcceso, Pedido.count("cliente", c), c.probador);
     }
 
     public record Activo(boolean activo) {
@@ -76,7 +97,7 @@ public class AdminClienteResource {
                         .setParameter("c", clientes).getResultList().stream()
                         .collect(Collectors.toMap(f -> (Long) f[0], f -> (Long) f[1]));
         return clientes.stream().map(c -> new ClienteAdminDto(c.id, c.nombre, c.telefono, c.correo, c.direccion,
-                c.activo, c.creado, c.ultimoAcceso, pedidos.getOrDefault(c.id, 0L))).toList();
+                c.activo, c.creado, c.ultimoAcceso, pedidos.getOrDefault(c.id, 0L), c.probador)).toList();
     }
 
     @PUT
@@ -93,6 +114,6 @@ public class AdminClienteResource {
         }
         c.activo = a.activo();
         return new ClienteAdminDto(c.id, c.nombre, c.telefono, c.correo, c.direccion, c.activo, c.creado,
-                c.ultimoAcceso, Pedido.count("cliente", c));
+                c.ultimoAcceso, Pedido.count("cliente", c), c.probador);
     }
 }

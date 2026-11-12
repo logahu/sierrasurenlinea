@@ -15,17 +15,21 @@ import java.util.List;
 @Produces(MediaType.APPLICATION_JSON)
 public class ProductoResource {
 
+    @jakarta.inject.Inject
+    mx.turamohoy.clientes.SesionCliente sesionCliente;
+
+
     /** Todos los productos disponibles de todos los negocios. */
     @GET
     public List<ProductoDto> listar() {
-        return Producto.disponibles().stream().map(ProductoDto::de).toList();
+        return Producto.disponibles(sesionCliente.esProbador()).stream().map(ProductoDto::de).toList();
     }
 
     @GET
     @Path("/{id}")
     public ProductoDto obtener(@PathParam("id") Long id) {
         Producto p = Producto.buscarCompleto(id);
-        if (p == null || !p.disponible || !p.categoria.negocio.visible) {
+        if (p == null || !p.disponible || !p.categoria.negocio.visiblePara(sesionCliente.esProbador())) {
             throw new NotFoundException("Producto no encontrado: " + id);
         }
         return ProductoDto.de(p);

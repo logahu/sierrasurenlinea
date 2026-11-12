@@ -32,6 +32,10 @@ public class Cliente extends PanacheEntityBase {
     @Column(length = 300)
     public String direccion;
 
+    /** Puede ver los negocios en pruebas; sus pedidos se marcan como prueba. */
+    @Column(nullable = false)
+    public boolean probador;
+
     /** Ubicación habitual marcada en el mapa (opcional). */
     @Column(precision = 9, scale = 6)
     public java.math.BigDecimal lat;

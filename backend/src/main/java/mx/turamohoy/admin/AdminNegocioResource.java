@@ -57,7 +57,10 @@ public class AdminNegocioResource {
             @Size(max = 200) String direccion,
             @Size(max = 120) String horario,
             @Pattern(regexp = "#[0-9a-fA-F]{6}", message = "El color va en formato #rrggbb.") String colorPrimario,
+            /** Compatibilidad: true = PUBLICO, false = OCULTO. Mejor usar {@code estado}. */
             Boolean visible,
+            /** PUBLICO, PRUEBAS u OCULTO. */
+            String estado,
             @Min(value = 0, message = "El tope no puede ser negativo.")
             @Max(value = 100000, message = "El tope es demasiado alto.") Integer topeAdelanto,
             /** Foto de portada subida con /fotos o una de ejemplo; vacío = no cambia. */
@@ -89,7 +92,7 @@ public class AdminNegocioResource {
                 telefono = n.telefono, direccion = n.direccion, horario = n.horario, portadaAntes = n.portadaUrl,
                 color = n.colorPrimario;
         Integer tope = n.topeAdelanto;
-        boolean visible = n.visible;
+        String estado = n.estado;
         n.eslogan = limpio(e.eslogan());
         n.descripcion = limpio(e.descripcion());
         n.whatsapp = Telefonos.whatsapp(e.whatsapp());
@@ -108,15 +111,17 @@ public class AdminNegocioResource {
             if (e.colorPrimario() != null) {
                 n.colorPrimario = e.colorPrimario().toLowerCase();
             }
-            if (e.visible() != null) {
-                n.visible = e.visible();
+            if (e.estado() != null && !e.estado().isBlank()) {
+                n.estado = estadoValido(e.estado());
+            } else if (e.visible() != null) {
+                n.estado = e.visible() ? Negocio.PUBLICO : Negocio.OCULTO;
             }
         }
         c.campo("Nombre", nombre, n.nombre).campo("Eslogan", eslogan, n.eslogan).largo("Descripción", descripcion, n.descripcion)
                 .campo("WhatsApp", whatsapp, n.whatsapp).campo("Teléfono", telefono, n.telefono)
                 .campo("Dirección", direccion, n.direccion).campo("Horario", horario, n.horario)
                 .largo("Portada", portadaAntes, n.portadaUrl).campo("Color", color, n.colorPrimario)
-                .campo("Tope de adelanto", tope, n.topeAdelanto).campo("Visible", visible, n.visible);
+                .campo("Tope de adelanto", tope, n.topeAdelanto).campo("Visibilidad", nombreEstado(estado), nombreEstado(n.estado));
         if (c.hay()) {
             Bitacora.anotar(sesion.usuario(), n, Bitacora.NEGOCIO, n.id, "Editó los datos de " + n.nombre, c.toString());
         }
@@ -141,19 +146,48 @@ public class AdminNegocioResource {
         return aDto(n);
     }
 
-    /** Mostrar u ocultar un negocio en el sitio con un toque. Solo el dueño. */
+    /** Compatibilidad: true = público, false = oculto. Mejor usar /estado. */
     @PUT
     @Path("/{slug}/visible")
     @RolesAllowed(Rol.DUENO)
     @Transactional
     public NegocioAdminDto cambiarVisible(@PathParam("slug") String slug, @NotNull Visibilidad v) {
+        return cambiarEstado(slug, new Estado(v.visible() ? Negocio.PUBLICO : Negocio.OCULTO));
+    }
+
+    public record Estado(@NotBlank String estado) {
+    }
+
+    /** Público, en pruebas (solo probadores) u oculto. Solo el administrador. */
+    @PUT
+    @Path("/{slug}/estado")
+    @RolesAllowed(Rol.DUENO)
+    @Transactional
+    public NegocioAdminDto cambiarEstado(@PathParam("slug") String slug, @NotNull Estado e) {
         Negocio n = sesion.negocioEditable(slug);
-        if (n.visible != v.visible()) {
+        String nuevo = estadoValido(e.estado());
+        if (!nuevo.equals(n.estado)) {
             Bitacora.anotar(sesion.usuario(), n, Bitacora.NEGOCIO, n.id,
-                    (v.visible() ? "Mostró " : "Ocultó ") + n.nombre + " en el sitio", null);
+                    "Cambió la visibilidad de " + n.nombre + ": " + nombreEstado(n.estado) + " → " + nombreEstado(nuevo), null);
         }
-        n.visible = v.visible();
+        n.estado = nuevo;
         return aDto(n);
+    }
+
+    private static String estadoValido(String estado) {
+        String e = estado == null ? "" : estado.trim().toUpperCase();
+        if (!Negocio.ESTADOS.contains(e)) {
+            throw Errores.de(Status.BAD_REQUEST, "La visibilidad debe ser pública, en pruebas u oculta.");
+        }
+        return e;
+    }
+
+    static String nombreEstado(String estado) {
+        return switch (estado) {
+            case Negocio.PUBLICO -> "público";
+            case Negocio.PRUEBAS -> "en pruebas";
+            default -> "oculto";
+        };
     }
 
     private static NegocioAdminDto aDto(Negocio n) {

@@ -29,10 +29,15 @@ import java.util.Map;
 @Produces(MediaType.APPLICATION_JSON)
 public class NegocioResource {
 
+    /** Para saber si quien pide es un probador (ve también los negocios en pruebas). */
+    @jakarta.inject.Inject
+    mx.turamohoy.clientes.SesionCliente sesionCliente;
+
     /** Negocios de la portada, en orden. */
     @GET
     public List<NegocioDto> listar() {
-        return Negocio.<Negocio>list("visible", Sort.by("orden"), true).stream()
+        return Negocio.<Negocio>list("estado in ?1", Sort.by("orden"), Negocio.estadosVisibles(sesionCliente.esProbador()))
+                .stream()
                 .map(NegocioDto::resumen)
                 .toList();
     }
@@ -63,8 +68,8 @@ public class NegocioResource {
         return productos.stream().map(ProductoDto::de).toList();
     }
 
-    private static Negocio buscar(String slug) {
-        return Negocio.visiblePorSlug(slug)
+    private Negocio buscar(String slug) {
+        return Negocio.visiblePorSlug(slug, sesionCliente.esProbador())
                 .orElseThrow(() -> new NotFoundException("Negocio no encontrado: " + slug));
     }
 
@@ -72,7 +77,7 @@ public class NegocioResource {
     @GET
     @Path("/{slug}/restaurantes")
     public List<RestauranteDto> restaurantes(@PathParam("slug") String slug) {
-        Negocio negocio = Negocio.visiblePorSlug(slug)
+        Negocio negocio = Negocio.visiblePorSlug(slug, sesionCliente.esProbador())
                 .orElseThrow(() -> new NotFoundException("No existe el negocio " + slug));
         List<Restaurante> lugares = Restaurante.visiblesDe(negocio);
         Map<Long, List<Platillo>> menu = Platillo.deRestaurantes(lugares, true).stream()

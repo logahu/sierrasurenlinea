@@ -25,6 +25,8 @@ public record NegocioDto(
         boolean soloMayoresEdad,
         /** Si se muestra dentro de la app de Google Play. */
         boolean visibleApp,
+        /** PUBLICO o PRUEBAS (los probadores ven también los negocios en pruebas). */
+        String estado,
         Integer topeAdelanto,
         /** COMPRA, RENTA o CITA; null en servicios. */
         String modoPedido,
@@ -39,6 +41,6 @@ public record NegocioDto(
     public static NegocioDto de(Negocio n, List<CategoriaDto> categorias, List<TipoEncargoDto> tiposEncargo) {
         return new NegocioDto(n.id, n.slug, n.nombre, n.eslogan, n.descripcion, n.tipo,
                 n.colorPrimario, n.portadaUrl, n.whatsapp, n.telefono, n.direccion, n.horario,
-                n.soloMayoresEdad, n.visibleApp, n.topeAdelanto, n.modoPedido(), categorias, tiposEncargo);
+                n.soloMayoresEdad, n.visibleApp, n.estado, n.topeAdelanto, n.modoPedido(), categorias, tiposEncargo);
     }
 }

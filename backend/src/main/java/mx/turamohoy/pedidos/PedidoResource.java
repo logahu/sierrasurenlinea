@@ -103,7 +103,7 @@ public class PedidoResource {
     }
 
     /** Quién pide: los datos de la cuenta, salvo que mande otro nombre o teléfono. */
-    private record Solicitante(Long clienteId, String nombre, String telefono) {
+    private record Solicitante(Long clienteId, String nombre, String telefono, boolean probador) {
     }
 
     private Solicitante solicitante(String nombre, String telefono) {
@@ -115,7 +115,8 @@ public class PedidoResource {
         if (tel == null) {
             throw Errores.de(Status.BAD_REQUEST, "El teléfono debe tener 10 dígitos.");
         }
-        return new Solicitante(cliente.id, nombre == null || nombre.isBlank() ? cliente.nombre : nombre.trim(), tel);
+        return new Solicitante(cliente.id, nombre == null || nombre.isBlank() ? cliente.nombre : nombre.trim(), tel,
+                cliente.probador);
     }
 
     /** Encargos de Encarguitos (mandados, viajes y comida). */
@@ -131,7 +132,7 @@ public class PedidoResource {
         String tel = s.telefono();
         Long clienteId = s.clienteId();
         PedidoRegistrado r = QuarkusTransaction.requiringNew().call(() -> {
-            Negocio n = Negocio.visiblePorSlug(req.negocio())
+            Negocio n = Negocio.visiblePorSlug(req.negocio(), s.probador())
                     .filter(x -> x.tipo == TipoNegocio.SERVICIO)
                     .orElseThrow(() -> Errores.de(Status.BAD_REQUEST, "Ese negocio no recibe pedidos en línea."));
             Pedido p = new Pedido();
@@ -140,6 +141,7 @@ public class PedidoResource {
             p.modo = req.modo();
             p.clienteNombre = nombre;
             p.cliente = Cliente.findById(clienteId);
+            p.prueba = s.probador();
             p.clienteTelefono = tel;
             p.entregar = req.entregar().trim();
             p.zona = req.zona() == null || req.zona().isBlank() ? null : req.zona().trim();
@@ -171,7 +173,7 @@ public class PedidoResource {
         Solicitante s = solicitante(req.nombre(), req.telefono());
         Ubicacion punto = Ubicacion.de(req.lat(), req.lng());
         PedidoRegistrado r = QuarkusTransaction.requiringNew().call(() -> {
-            Negocio n = Negocio.visiblePorSlug(req.negocio())
+            Negocio n = Negocio.visiblePorSlug(req.negocio(), s.probador())
                     .filter(x -> x.modoPedido() != null)
                     .orElseThrow(() -> Errores.de(Status.BAD_REQUEST, "Ese negocio no recibe pedidos con carrito."));
             String modo = n.modoPedido();
@@ -223,6 +225,7 @@ public class PedidoResource {
             p.modo = modo;
             p.tipo = tipo(modo, lineas);
             p.cliente = Cliente.findById(s.clienteId());
+            p.prueba = s.probador();
             p.clienteNombre = s.nombre();
             p.clienteTelefono = s.telefono();
             p.entrega = entrega;
