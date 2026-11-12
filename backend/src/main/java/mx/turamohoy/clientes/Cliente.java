@@ -36,6 +36,10 @@ public class Cliente extends PanacheEntityBase {
     @Column(nullable = false)
     public boolean probador;
 
+    /** Cuenta creada con «Crear usuarios de prueba». */
+    @Column(name = "de_prueba", nullable = false)
+    public boolean dePrueba;
+
     /** Ubicación habitual marcada en el mapa (opcional). */
     @Column(precision = 9, scale = 6)
     public java.math.BigDecimal lat;

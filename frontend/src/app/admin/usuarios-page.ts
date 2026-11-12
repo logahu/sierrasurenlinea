@@ -9,6 +9,7 @@ import { ClienteAdmin, Rol, Usuario } from './admin.model';
 import { AdminApi } from './admin.api';
 import { mensajeDeError } from './autorizacion';
 import { SesionService } from './sesion';
+import { UsuariosPrueba } from './usuarios-prueba';
 
 const MINIMO = 10;
 const MAX_ADMINISTRADORES = 2;
@@ -25,7 +26,7 @@ export function nombreDelRol(rol: Rol): string {
  */
 @Component({
   selector: 'app-usuarios-page',
-  imports: [ReactiveFormsModule, RouterLink, DatePipe],
+  imports: [ReactiveFormsModule, RouterLink, DatePipe, UsuariosPrueba],
   template: `
     <header class="panel-titulo">
       <h1>Usuarios</h1>
@@ -221,6 +222,8 @@ export function nombreDelRol(rol: Rol): string {
           }
         </fieldset>
       </form>
+
+      <app-usuarios-prueba (cambio)="usuarios.reload(); clientes.reload()" />
     }
   `,
   styles: `

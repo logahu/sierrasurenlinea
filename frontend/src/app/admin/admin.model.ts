@@ -72,6 +72,16 @@ export interface FotosNegocio {
 }
 
 /** Cliente registrado en el sitio, visto desde el panel. */
+/** Fila de «Crear usuarios de prueba». La contraseña solo llega una vez. */
+export interface CuentaDePrueba {
+  tipo: 'Cliente' | 'Encargado' | 'Repartidor';
+  nombre: string;
+  telefono: string | null;
+  contrasena: string | null;
+  negocio: string | null;
+  estado: string;
+}
+
 export interface ClienteAdmin {
   id: number;
   nombre: string;

@@ -255,3 +255,13 @@ configuradas. Las fotos que se reemplazan se quedan en el bucket (no estorban).
   contraseña nueva en Usuarios. Si no hay otro: en Render agrega `ADMIN_REINICIAR=true`, `ADMIN_CORREO` (tu correo
   del panel) y `ADMIN_CONTRASENA` (la nueva, mínimo 10 caracteres), espera a que reinicie, entra y **borra
   las tres variables**. Después cambia la contraseña en Mi cuenta.
+
+## Usuarios de prueba
+
+En **Panel → Usuarios → Equipo**, al final, la tarjeta **🧪 Usuarios de prueba**:
+
+- **Crear usuarios de prueba**: 10 clientes probadores (teléfonos 5550000001–010), un encargado para cada
+  negocio sin encargado (5550002 + id del negocio) y 8 repartidores generales (5550000101–108). Todos con
+  «🧪 PRUEBA» en el nombre. Las contraseñas se muestran **una sola vez** (Copiar todo / Descargar CSV);
+  si se pierden, se vuelve a pulsar y las cuentas de prueba reciben otra contraseña. Nunca toca cuentas reales.
+- **Quitar acceso a los usuarios de prueba**: baja lógica de todas (columna `de_prueba`, migración V22).

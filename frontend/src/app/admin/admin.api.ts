@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Platillo, Restaurante, TipoEncargo } from '../catalogo/catalogo.model';
 import {
-  CategoriaAdmin, CategoriaEdicion, ClienteAdmin, FotosNegocio, PaginaHistorial, Tablero, NegocioAdmin, NegocioEdicion, ProductoAdmin, ProductoEdicion, Usuario,
+  CategoriaAdmin, CategoriaEdicion, ClienteAdmin, CuentaDePrueba, FotosNegocio, PaginaHistorial, Tablero, NegocioAdmin, NegocioEdicion, ProductoAdmin, ProductoEdicion, Usuario,
 } from './admin.model';
 
 /** Endpoints del panel (/api/admin/...). El token lo agrega autorizacionInterceptor. */
@@ -59,6 +59,14 @@ export class AdminApi {
 
   borrarFoto(slug: string, id: number): Observable<void> {
     return this.http.delete<void>(`${this.base}/negocios/${encodeURIComponent(slug)}/fotos/${id}`);
+  }
+
+  crearUsuariosDePrueba(): Observable<CuentaDePrueba[]> {
+    return this.http.post<CuentaDePrueba[]>(`${this.base}/pruebas/usuarios`, {});
+  }
+
+  bajaUsuariosDePrueba(): Observable<{ usuarios: number; clientes: number }> {
+    return this.http.post<{ usuarios: number; clientes: number }>(`${this.base}/pruebas/baja`, {});
   }
 
   clientes(q = ''): Observable<ClienteAdmin[]> {

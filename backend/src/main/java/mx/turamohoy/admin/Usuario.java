@@ -63,6 +63,10 @@ public class Usuario extends PanacheEntityBase {
     @Column(nullable = false)
     public Instant creado = Instant.now();
 
+    /** Cuenta creada con «Crear usuarios de prueba». */
+    @Column(name = "de_prueba", nullable = false)
+    public boolean dePrueba;
+
     public boolean esDueno() {
         return Rol.DUENO.equals(rol);
     }
