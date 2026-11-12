@@ -13,6 +13,11 @@ export interface Usuario {
   negocioNombre: string | null;
   activo: boolean;
   bloqueado: boolean;
+  /** Creada con «Crear usuarios de prueba». */
+  dePrueba?: boolean;
+  creado?: string;
+  /** Pedidos entregados (repartidores). */
+  entregas?: number;
 }
 
 /** Tablero de visitas y pedidos. */
@@ -94,6 +99,15 @@ export interface ClienteAdmin {
   pedidos: number;
   /** Ve los negocios en pruebas; sus pedidos se marcan como prueba. */
   probador: boolean;
+  dePrueba?: boolean;
+}
+
+export interface PaginaClientes {
+  clientes: ClienteAdmin[];
+  total: number;
+  pagina: number;
+  porPagina: number;
+  conteos: { todos: number; probadores: number; dePrueba: number; sinAcceso: number };
 }
 
 export interface Sesion {

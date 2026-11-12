@@ -68,6 +68,13 @@ class UsuariosDePruebaTest {
             assertTrue(filas.stream().anyMatch(f -> "Encargado".equals(f.get("tipo"))
                     && String.valueOf(f.get("nombre")).startsWith("🧪 PRUEBA Encargado ")));
 
+            // La lista del equipo los marca como de prueba.
+            given().auth().oauth2(token).when().get("/api/admin/usuarios")
+                    .then().body("find { it.telefono == '5550000101' }.dePrueba", org.hamcrest.Matchers.equalTo(true))
+                    .body("find { it.telefono == '5550000101' }.entregas", org.hamcrest.Matchers.equalTo(0));
+            given().auth().oauth2(token).when().get("/api/admin/clientes?grupo=prueba&q=5550000001")
+                    .then().body("clientes[0].dePrueba", org.hamcrest.Matchers.equalTo(true));
+
             // Pulsar otra vez no duplica: renueva la contraseña.
             List<Map<String, Object>> otraVez = crear(token);
             assertEquals(filas.size(), otraVez.size());

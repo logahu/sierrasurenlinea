@@ -58,14 +58,14 @@ class ClienteTest {
         String token = Clientes.registrar("Baja Lógica", tel, "clave-cliente-1");
         String dueno = Sesiones.dueno();
         int id = given().auth().oauth2(dueno).when().get("/api/admin/clientes?q=" + tel)
-                .then().statusCode(200).body("telefono", hasItem(tel)).extract().path("[0].id");
+                .then().statusCode(200).body("clientes.telefono", hasItem(tel)).extract().path("clientes[0].id");
         given().auth().oauth2(dueno).contentType(ContentType.JSON).body(Map.of("activo", false))
                 .when().put("/api/admin/clientes/" + id + "/activo").then().statusCode(200).body("activo", equalTo(false));
         // Ya no entra, y su sesión deja de servir; el registro se conserva.
         given().auth().oauth2(token).when().get("/api/clientes/yo").then().statusCode(401);
         given().contentType(ContentType.JSON).body(Map.of("telefono", tel, "contrasena", "clave-cliente-1"))
                 .when().post("/api/clientes/entrar").then().statusCode(401);
-        given().auth().oauth2(dueno).when().get("/api/admin/clientes?q=" + tel).then().body("[0].activo", equalTo(false));
+        given().auth().oauth2(dueno).when().get("/api/admin/clientes?q=" + tel).then().body("clientes[0].activo", equalTo(false));
         // Contraseña nueva puesta por el administrador (y se devuelve el acceso).
         given().auth().oauth2(dueno).contentType(ContentType.JSON).body(Map.of("activo", true))
                 .when().put("/api/admin/clientes/" + id + "/activo").then().statusCode(200);
@@ -92,5 +92,30 @@ class ClienteTest {
         given().auth().oauth2(token).contentType(ContentType.JSON).body(s).when().delete("/api/clientes/push")
                 .then().statusCode(204);
         given().contentType(ContentType.JSON).body(s).when().post("/api/clientes/push").then().statusCode(401);
+    }
+
+    @Test
+    void elAdministradorFiltraYPaginaClientes() {
+        String dueno = Sesiones.dueno();
+        String sufijo = Clientes.telefonoNuevo().substring(4);
+        String tel = Clientes.telefonoNuevo();
+        Clientes.registrar("Zacarías Filtro " + sufijo, tel, "clave-cliente-1");
+
+        // Por nombre, por parte del teléfono y sin coincidencias.
+        given().auth().oauth2(dueno).when().get("/api/admin/clientes?q=zacarías filtro " + sufijo)
+                .then().statusCode(200).body("total", equalTo(1)).body("clientes[0].telefono", equalTo(tel))
+                .body("porPagina", equalTo(25)).body("conteos.todos", equalTo(1));
+        given().auth().oauth2(dueno).when().get("/api/admin/clientes?q=" + tel.substring(3))
+                .then().body("clientes.telefono", hasItem(tel));
+
+        // Grupos y pedidos.
+        given().auth().oauth2(dueno).when().get("/api/admin/clientes?q=" + tel + "&grupo=probadores")
+                .then().body("total", equalTo(0));
+        given().auth().oauth2(dueno).when().get("/api/admin/clientes?q=" + tel + "&pedidos=sin&orden=visita")
+                .then().body("total", equalTo(1));
+        given().auth().oauth2(dueno).when().get("/api/admin/clientes?q=" + tel + "&pedidos=con&orden=pedidos")
+                .then().body("total", equalTo(0));
+        given().auth().oauth2(dueno).when().get("/api/admin/clientes?orden=nombre&pagina=0")
+                .then().statusCode(200).body("pagina", equalTo(0));
     }
 }

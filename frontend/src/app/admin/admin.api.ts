@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Platillo, Restaurante, TipoEncargo } from '../catalogo/catalogo.model';
 import {
-  CategoriaAdmin, CategoriaEdicion, ClienteAdmin, CuentaDePrueba, FotosNegocio, PaginaHistorial, Tablero, NegocioAdmin, NegocioEdicion, ProductoAdmin, ProductoEdicion, Usuario,
+  CategoriaAdmin, CategoriaEdicion, ClienteAdmin, CuentaDePrueba, FotosNegocio, PaginaClientes, PaginaHistorial, Tablero, NegocioAdmin, NegocioEdicion, ProductoAdmin, ProductoEdicion, Usuario,
 } from './admin.model';
 
 /** Endpoints del panel (/api/admin/...). El token lo agrega autorizacionInterceptor. */
@@ -69,8 +69,10 @@ export class AdminApi {
     return this.http.post<{ usuarios: number; clientes: number }>(`${this.base}/pruebas/baja`, {});
   }
 
-  clientes(q = ''): Observable<ClienteAdmin[]> {
-    return this.http.get<ClienteAdmin[]>(`${this.base}/clientes`, { params: q ? { q } : {} });
+  clientes(f: { q?: string; grupo?: string; pedidos?: string; orden?: string; pagina?: number } = {}): Observable<PaginaClientes> {
+    const params: Record<string, string> = {};
+    for (const [k, v] of Object.entries(f)) if (v !== undefined && v !== '' && v !== null) params[k] = String(v);
+    return this.http.get<PaginaClientes>(`${this.base}/clientes`, { params });
   }
 
   reiniciarContrasenaCliente(id: number, nueva: string): Observable<void> {

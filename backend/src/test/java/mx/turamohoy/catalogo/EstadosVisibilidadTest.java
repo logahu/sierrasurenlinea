@@ -31,7 +31,7 @@ class EstadosVisibilidadTest {
     private static String probador(String dueno) {
         String tel = Clientes.telefonoNuevo();
         String token = Clientes.registrar("Probadora", tel, "clave-cliente-1");
-        int id = como(dueno).when().get("/api/admin/clientes?q=" + tel).then().extract().path("[0].id");
+        int id = como(dueno).when().get("/api/admin/clientes?q=" + tel).then().extract().path("clientes[0].id");
         como(dueno).body(Map.of("probador", true)).when().put("/api/admin/clientes/" + id + "/probador")
                 .then().statusCode(200).body("probador", equalTo(true));
         return token;

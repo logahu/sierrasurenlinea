@@ -67,7 +67,13 @@ public class AdminUsuarioResource {
     @GET
     public List<UsuarioDto> listar() {
         sesion.usuario();
-        return Usuario.<Usuario>listAll(Sort.by("rol").and("nombre")).stream().map(UsuarioDto::de).toList();
+        java.util.Map<Long, Long> entregas = mx.turamohoy.pedidos.Pedido.getEntityManager()
+                .createQuery("select p.repartidor.id, count(p) from Pedido p where p.repartidor is not null"
+                        + " and p.estado = :e group by p.repartidor.id", Object[].class)
+                .setParameter("e", mx.turamohoy.pedidos.Pedido.ENTREGADO).getResultList().stream()
+                .collect(java.util.stream.Collectors.toMap(f -> (Long) f[0], f -> (Long) f[1]));
+        return Usuario.<Usuario>listAll(Sort.by("rol").and("nombre")).stream()
+                .map(u -> UsuarioDto.de(u, entregas.getOrDefault(u.id, 0L))).toList();
     }
 
     @POST

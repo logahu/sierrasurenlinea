@@ -12,13 +12,25 @@ public record UsuarioDto(
         String negocioSlug,
         String negocioNombre,
         boolean activo,
-        boolean bloqueado) {
+        boolean bloqueado,
+        /** Creada con «Crear usuarios de prueba». */
+        boolean dePrueba,
+        Instant creado,
+        /** Pedidos entregados (solo repartidores; 0 para los demás). */
+        long entregas) {
 
     public static UsuarioDto de(Usuario u) {
+        return de(u, 0);
+    }
+
+    public static UsuarioDto de(Usuario u, long entregas) {
         return new UsuarioDto(u.id, u.correo, u.telefono, u.nombre, u.rol,
                 u.negocio == null ? null : u.negocio.slug,
                 u.negocio == null ? null : u.negocio.nombre,
                 u.activo,
-                u.bloqueadoHasta != null && u.bloqueadoHasta.isAfter(Instant.now()));
+                u.bloqueadoHasta != null && u.bloqueadoHasta.isAfter(Instant.now()),
+                u.dePrueba,
+                u.creado,
+                entregas);
     }
 }
