@@ -2,7 +2,6 @@ package mx.turamohoy.admin;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
-import mx.turamohoy.catalogo.model.Negocio;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -31,7 +30,8 @@ class UsuariosDePruebaTest {
     @Test
     void creaClientesEncargadosYRepartidoresQueSePuedenDarDeBaja() {
         String token = Sesiones.dueno();
-        long negocios = io.quarkus.narayana.jta.QuarkusTransaction.requiringNew().call(Negocio::count);
+        int negocios = given().auth().oauth2(token).when().get("/api/admin/negocios")
+                .then().statusCode(200).extract().jsonPath().getList("$").size();
         try {
             List<Map<String, Object>> filas = crear(token);
             assertEquals(10 + negocios + 8, filas.size());
