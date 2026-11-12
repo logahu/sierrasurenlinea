@@ -32,6 +32,14 @@ class UsuariosDePruebaTest {
         String token = Sesiones.dueno();
         int negocios = given().auth().oauth2(token).when().get("/api/admin/negocios")
                 .then().statusCode(200).extract().jsonPath().getList("$").size();
+        // Un encargado real: su negocio no debe recibir encargado de prueba.
+        String slug = given().auth().oauth2(token).when().get("/api/admin/negocios")
+                .then().extract().jsonPath().getString("[0].slug");
+        Integer real = given().auth().oauth2(token).contentType(ContentType.JSON)
+                .body(Map.of("nombre", "Encargado Real", "telefono", mx.turamohoy.clientes.Clientes.telefonoNuevo(),
+                        "contrasena", "clave-segura-9", "negocioSlug", slug, "rol", "ENCARGADO"))
+                .when().post("/api/admin/usuarios")
+                .then().extract().path("id");
         try {
             List<Map<String, Object>> filas = crear(token);
             assertEquals(10 + negocios + 8, filas.size());
@@ -72,6 +80,11 @@ class UsuariosDePruebaTest {
                     .then().statusCode(200).extract().as(Map.class);
             assertEquals(10, ((Number) baja.get("clientes")).intValue());
             assertTrue(((Number) baja.get("usuarios")).intValue() >= 8);
+            if (real != null) {
+                given().auth().oauth2(token).contentType(ContentType.JSON)
+                        .body(Map.of("nombre", "Encargado Real", "activo", false))
+                        .when().put("/api/admin/usuarios/" + real).then().statusCode(200);
+            }
         }
 
         // Ya sin acceso.
