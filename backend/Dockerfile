@@ -1,3 +1,4 @@
+# Render solo redespliega cuando el último commit toca backend/: si un cambio del servidor llega junto con uno del sitio, conviene un commit (o «Manual Deploy») aparte.
 # --- Etapa 1: compilar con Maven -------------------------------------------
 FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
