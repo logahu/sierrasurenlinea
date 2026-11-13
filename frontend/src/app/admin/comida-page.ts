@@ -24,11 +24,12 @@ const platilloNuevo = (): Partial<Platillo> => ({ nombre: '', descripcion: '', p
     .grupo-admin { border: 1px solid var(--linea); border-radius: .5rem; padding: .5rem .6rem; display: grid; gap: .4rem; margin: 0; }
     .grupo-cabeza, .opcion-admin { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
     .grupo-cabeza input:first-child { flex: 1 1 12rem; font-weight: 600; }
-    .grupo-cabeza select { width: auto; }
-    .maximo { width: 5rem; }
+    .grupo-cabeza select { width: auto; flex: 0 0 auto; }
+    .grupo-cabeza .maximo { width: 5.5rem; flex: 0 0 5.5rem; }
+    .grupo-admin .enlace { background: none; border: 0; padding: .2rem 0; font: inherit; font-size: .9rem; color: var(--follaje); text-decoration: underline; cursor: pointer; justify-self: start; }
+    .grupo-admin .enlace.quitar { color: #c92a2a; }
     .opcion-admin input:first-child { flex: 1 1 10rem; }
-    .opcion-admin .extra { width: 6rem; }
-    .quitar { color: #c92a2a; }
+    .opcion-admin .extra { width: 6rem; flex: 0 0 6rem; }
     .opcion-admin.inactivo input { text-decoration: line-through; color: var(--tinta-suave); }
   `,
   template: `
