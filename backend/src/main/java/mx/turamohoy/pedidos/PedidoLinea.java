@@ -49,6 +49,20 @@ public class PedidoLinea extends PanacheEntityBase {
     @Column(nullable = false)
     public int orden;
 
+    /** Comida a domicilio: el platillo, para quién es, lo que eligió y su nota. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "platillo_id")
+    public mx.turamohoy.catalogo.model.Platillo platillo;
+
+    @Column(length = 60)
+    public String persona;
+
+    @Column(length = 400)
+    public String detalle;
+
+    @Column(length = 200)
+    public String nota;
+
     public BigDecimal subtotal() {
         return precioUnitario.multiply(BigDecimal.valueOf(cantidad));
     }

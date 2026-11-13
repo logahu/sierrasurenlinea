@@ -23,6 +23,9 @@ import mx.turamohoy.clientes.Cliente;
 import mx.turamohoy.colonias.Colonia;
 import mx.turamohoy.clientes.SesionCliente;
 import mx.turamohoy.catalogo.model.Negocio;
+import mx.turamohoy.catalogo.model.OpcionesPlatillo;
+import mx.turamohoy.catalogo.model.Platillo;
+import mx.turamohoy.catalogo.model.Restaurante;
 import mx.turamohoy.catalogo.model.TipoEncargo;
 import mx.turamohoy.catalogo.model.TipoNegocio;
 
@@ -78,7 +81,29 @@ public class PedidoResource {
             @NotBlank @Size(max = 4000) String mensaje,
             /** Punto de entrega marcado en el mapa (opcional). */
             Double lat,
-            Double lng) {
+            Double lng,
+            /** Comida a domicilio: lugar y órdenes por persona (el total lo calcula el servidor). */
+            @Valid ComidaPedida comida) {
+    }
+
+    /** Un platillo pedido: cuántos, con qué opciones y una nota. */
+    public record RenglonComida(
+            @NotNull Long platilloId,
+            @Min(1) @Max(20) int cantidad,
+            @Size(max = 20) List<OpcionesPlatillo.Elegida> opciones,
+            @Size(max = 200) String nota) {
+    }
+
+    /** La orden de una persona (quien pide o alguien más). */
+    public record OrdenPersona(
+            @Size(max = 60) String persona,
+            @NotEmpty @Size(max = 30) List<@Valid @NotNull RenglonComida> renglones) {
+    }
+
+    public record ComidaPedida(
+            @NotNull Long restauranteId,
+            @NotEmpty(message = "Agrega al menos un platillo.") @Size(max = 10, message = "Máximo 10 personas por pedido.")
+            List<@Valid @NotNull OrdenPersona> ordenes) {
     }
 
     public record PedidoRegistrado(Long id, String folio, BigDecimal total) {
@@ -157,11 +182,21 @@ public class PedidoResource {
                 p.lng = punto.lng();
             }
             p.totalEstimado = req.total();
+            List<PedidoLinea> lineas = List.of();
+            if (TipoEncargo.COMIDA.equals(req.modo()) && req.comida() != null) {
+                lineas = lineasDeComida(n, req.comida(), nombre);
+                BigDecimal comida = lineas.stream().map(PedidoLinea::subtotal).reduce(BigDecimal.ZERO, BigDecimal::add);
+                p.totalEstimado = comida.add(tarifa(n, p.zona));
+            }
             p.mensaje = req.mensaje().trim();
             p.creado = Instant.now();
             p.actualizado = p.creado;
             p.persistAndFlush();
             p.folio = Pedido.folioDe(n, p.id);
+            for (PedidoLinea l : lineas) {
+                l.pedido = p;
+                l.persist();
+            }
             Bitacora.anotar(p.cliente, n, Bitacora.PEDIDO, p.id, "Hizo el pedido " + p.folio + " · " + p.tipo, null);
             return new PedidoRegistrado(p.id, p.folio, p.totalEstimado);
         });
@@ -270,6 +305,62 @@ public class PedidoResource {
             notificador.coloniaSolicitada(r.id());
         });
         return Response.status(Status.CREATED).entity(r).build();
+    }
+
+    /**
+     * Renglones de comida con los precios del menú (no los del navegador). Cada renglón lleva
+     * para quién es; si no se dice, es para quien pide.
+     */
+    static List<PedidoLinea> lineasDeComida(Negocio n, ComidaPedida c, String quienPide) {
+        Restaurante r = Restaurante.findById(c.restauranteId());
+        if (r == null || !r.negocio.id.equals(n.id) || !r.visible) {
+            throw Errores.de(Status.BAD_REQUEST, "Ese lugar de comida ya no está disponible.");
+        }
+        List<PedidoLinea> lineas = new ArrayList<>();
+        java.util.Set<String> personas = new java.util.HashSet<>();
+        for (OrdenPersona o : c.ordenes()) {
+            String persona = limpio(o.persona());
+            persona = persona == null ? quienPide : persona;
+            if (!personas.add(persona.toLowerCase())) {
+                throw Errores.de(Status.BAD_REQUEST, "Hay dos órdenes para «" + persona + "».");
+            }
+            for (RenglonComida rc : o.renglones()) {
+                Platillo pl = Platillo.findById(rc.platilloId());
+                if (pl == null || !pl.restaurante.id.equals(r.id) || !pl.disponible) {
+                    throw Errores.de(Status.CONFLICT, "Uno de los platillos ya no está disponible. Revisa tu pedido.");
+                }
+                OpcionesPlatillo.Cuenta cuenta;
+                try {
+                    cuenta = OpcionesPlatillo.cuenta(pl, rc.opciones());
+                } catch (IllegalArgumentException e) {
+                    throw Errores.de(Status.CONFLICT, e.getMessage());
+                }
+                PedidoLinea l = new PedidoLinea();
+                l.platillo = pl;
+                l.nombre = pl.nombre.length() > 120 ? pl.nombre.substring(0, 120) : pl.nombre;
+                l.cantidad = rc.cantidad();
+                l.precioUnitario = cuenta.precioUnitario();
+                l.persona = persona.length() > 60 ? persona.substring(0, 60) : persona;
+                l.detalle = cuenta.detalle();
+                l.nota = limpio(rc.nota());
+                l.orden = lineas.size();
+                lineas.add(l);
+            }
+        }
+        if (lineas.size() > 60) {
+            throw Errores.de(Status.BAD_REQUEST, "Son demasiados platillos para un solo pedido.");
+        }
+        return lineas;
+    }
+
+    /** Precio de la tarifa de envío por su nombre (0 si no se encuentra o es un cargo extra). */
+    static BigDecimal tarifa(Negocio n, String zona) {
+        if (zona == null) {
+            return BigDecimal.ZERO;
+        }
+        return Producto.<Producto>list("categoria.negocio = ?1 and nombre = ?2", n, zona).stream()
+                .filter(t -> t.unidadPrecio == null || !t.unidadPrecio.startsWith("extra"))
+                .map(t -> t.precio).findFirst().orElse(BigDecimal.ZERO);
     }
 
     /**

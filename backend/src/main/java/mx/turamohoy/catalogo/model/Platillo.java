@@ -46,6 +46,10 @@ public class Platillo extends PanacheEntityBase {
     @Column(nullable = false)
     public boolean disponible = true;
 
+    /** Grupos de opciones en JSON (ver {@link OpcionesPlatillo}); null = sin opciones. */
+    @Column(length = 8000)
+    public String opciones;
+
     public static List<Platillo> deRestaurantes(Collection<Restaurante> restaurantes, boolean soloDisponibles) {
         if (restaurantes.isEmpty()) {
             return List.of();
