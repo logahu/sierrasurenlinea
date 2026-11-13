@@ -78,6 +78,29 @@ public class Notificador {
         }
     }
 
+    /** Si el cliente escribió una colonia que no está en el catálogo, avisa a los administradores. */
+    public void coloniaSolicitada(Long pedidoId) {
+        try {
+            record Datos(String titulo, String cuerpo, List<Destino> destinos) {
+            }
+            Datos d = QuarkusTransaction.requiringNew().call(() -> {
+                Pedido p = Pedido.findById(pedidoId);
+                if (p == null || !p.coloniaOtra) {
+                    return null;
+                }
+                List<Destino> destinos = PushSuscripcion.<PushSuscripcion>list("usuario.activo = true and usuario.rol = 'DUENO'")
+                        .stream().map(s -> new Destino(s.endpoint, s.p256dh, s.auth)).toList();
+                return new Datos((p.prueba ? "🧪 PRUEBA · " : "") + "📍 Colonia nueva: " + p.colonia,
+                        "La pidió " + p.clienteNombre + " en " + p.folio + ". ¿La agregas al catálogo?", destinos);
+            });
+            if (d != null) {
+                enviar(d.titulo(), d.cuerpo(), "colonia-" + pedidoId, "/admin/colonias", d.destinos());
+            }
+        } catch (RuntimeException e) {
+            LOG.warnf(e, "No se pudo avisar de la colonia del pedido %d", pedidoId);
+        }
+    }
+
     /** Cuando el cambio de estado ya se guardó, avisa al cliente sin hacer esperar al panel. */
     void alCambiarEstado(@Observes(during = TransactionPhase.AFTER_SUCCESS) EstadoCambiado e) {
         CompletableFuture.runAsync(() -> estadoParaCliente(e.pedidoId()));

@@ -62,14 +62,15 @@ public class AdminPedidoResource {
                             BigDecimal totalEstimado, String mensaje, String estado, Long repartidorId,
                             String repartidorNombre, Instant creado, Instant actualizado,
                             String entrega, String cuando, String notas, List<LineaDto> lineas,
-                            BigDecimal lat, BigDecimal lng, boolean prueba) {
+                            BigDecimal lat, BigDecimal lng, boolean prueba, String colonia, boolean coloniaOtra) {
         static PedidoDto de(Pedido p, List<PedidoLinea> lineas) {
             return new PedidoDto(p.id, p.folio, p.negocio.slug, p.negocio.nombre, p.tipo, p.modo, p.clienteNombre,
                     p.clienteTelefono, p.entregar, p.zona, p.totalEstimado, p.mensaje, p.estado,
                     p.repartidor == null ? null : p.repartidor.id,
                     p.repartidor == null ? null : p.repartidor.nombre, p.creado, p.actualizado,
                     p.entrega == null ? Pedido.DOMICILIO : p.entrega, p.cuando, p.notas,
-                    lineas.stream().map(LineaDto::de).toList(), p.lat, p.lng, p.prueba);
+                    lineas.stream().map(LineaDto::de).toList(), p.lat, p.lng, p.prueba, p.colonia,
+                    p.coloniaOtra);
         }
 
         static PedidoDto de(Pedido p) {

@@ -34,6 +34,7 @@ public class Bitacora extends PanacheEntityBase {
     public static final String FOTO = "FOTO";
     public static final String ENCARGO = "ENCARGO";
     public static final String COMIDA = "COMIDA";
+    public static final String COLONIA = "COLONIA";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

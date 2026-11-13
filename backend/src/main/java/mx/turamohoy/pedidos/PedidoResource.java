@@ -20,6 +20,7 @@ import jakarta.ws.rs.core.Response.Status;
 import jakarta.annotation.security.RolesAllowed;
 import mx.turamohoy.admin.Errores;
 import mx.turamohoy.clientes.Cliente;
+import mx.turamohoy.colonias.Colonia;
 import mx.turamohoy.clientes.SesionCliente;
 import mx.turamohoy.catalogo.model.Negocio;
 import mx.turamohoy.catalogo.model.TipoEncargo;
@@ -70,6 +71,9 @@ public class PedidoResource {
             String telefono,
             @NotBlank(message = "Falta a dónde lo llevamos.") @Size(max = 300) String entregar,
             @Size(max = 80) String zona,
+            /** Colonia elegida o escrita en «Otra». */
+            @Size(max = 100) String colonia,
+            boolean coloniaOtra,
             @DecimalMin("0") BigDecimal total,
             @NotBlank @Size(max = 4000) String mensaje,
             /** Punto de entrega marcado en el mapa (opcional). */
@@ -93,6 +97,8 @@ public class PedidoResource {
             @Size(max = 300) String entregar,
             @Size(max = 120) String cuando,
             @Size(max = 500) String notas,
+            @Size(max = 100) String colonia,
+            boolean coloniaOtra,
             boolean mayorDeEdad,
             @Size(max = 80) String nombre,
             String telefono,
@@ -145,6 +151,7 @@ public class PedidoResource {
             p.clienteTelefono = tel;
             p.entregar = req.entregar().trim();
             p.zona = req.zona() == null || req.zona().isBlank() ? null : req.zona().trim();
+            colonia(p, req.colonia(), req.coloniaOtra());
             if (punto != null) {
                 p.lat = punto.lat();
                 p.lng = punto.lng();
@@ -158,7 +165,10 @@ public class PedidoResource {
             Bitacora.anotar(p.cliente, n, Bitacora.PEDIDO, p.id, "Hizo el pedido " + p.folio + " · " + p.tipo, null);
             return new PedidoRegistrado(p.id, p.folio, p.totalEstimado);
         });
-        CompletableFuture.runAsync(() -> notificador.pedidoNuevo(r.id()));
+        CompletableFuture.runAsync(() -> {
+            notificador.pedidoNuevo(r.id());
+            notificador.coloniaSolicitada(r.id());
+        });
         return Response.status(Status.CREATED).entity(r).build();
     }
 
@@ -233,6 +243,9 @@ public class PedidoResource {
                     : ModoPedido.CITA.equals(modo) ? "Visita al negocio" : "Recoge en el negocio";
             p.cuando = cuando != null ? cuando : "Lo antes posible";
             p.notas = limpio(req.notas());
+            if (Pedido.DOMICILIO.equals(entrega)) {
+                colonia(p, req.colonia(), req.coloniaOtra());
+            }
             // El punto en el mapa solo tiene sentido si se lleva a domicilio.
             if (punto != null && Pedido.DOMICILIO.equals(entrega)) {
                 p.lat = punto.lat();
@@ -252,8 +265,42 @@ public class PedidoResource {
                     "Total aprox.: " + mx.turamohoy.historial.Cambios.texto(total));
             return new PedidoRegistrado(p.id, p.folio, total);
         });
-        CompletableFuture.runAsync(() -> notificador.pedidoNuevo(r.id()));
+        CompletableFuture.runAsync(() -> {
+            notificador.pedidoNuevo(r.id());
+            notificador.coloniaSolicitada(r.id());
+        });
         return Response.status(Status.CREATED).entity(r).build();
+    }
+
+    /**
+     * Guarda la colonia en el pedido. Si el cliente la escribió en «Otra» y no está en el catálogo,
+     * queda como solicitud para que el administrador la revise (sin repetir: se suma a la que ya exista).
+     */
+    static void colonia(Pedido p, String colonia, boolean otra) {
+        String nombre = limpio(colonia);
+        if (nombre == null) {
+            return;
+        }
+        nombre = nombre.replaceAll("\\s+", " ");
+        p.colonia = nombre.length() > 100 ? nombre.substring(0, 100) : nombre;
+        if (!otra) {
+            return;
+        }
+        java.util.Optional<Colonia> existente = Colonia.porNombre(p.colonia);
+        if (existente.isPresent() && Colonia.ACTIVA.equals(existente.get().estado)) {
+            p.colonia = existente.get().nombre;   // ya estaba en la lista con otra escritura
+            return;
+        }
+        p.coloniaOtra = true;
+        Colonia c = existente.orElseGet(() -> {
+            Colonia nueva = new Colonia();
+            nueva.nombre = p.colonia;
+            nueva.estado = Colonia.SOLICITADA;
+            nueva.origen = "CLIENTE";
+            nueva.persist();
+            return nueva;
+        });
+        c.solicitudes++;
     }
 
     /** Lo que se ve en el panel y en la notificación: "Pedido · 3 productos", "Cita · Pickup 2012". */

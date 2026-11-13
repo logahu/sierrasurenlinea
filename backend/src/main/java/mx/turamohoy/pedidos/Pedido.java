@@ -67,6 +67,14 @@ public class Pedido extends PanacheEntityBase {
     @Column(length = 80)
     public String zona;
 
+    /** Colonia, barrio o comunidad de entrega (texto: se conserva aunque cambie el catálogo). */
+    @Column(length = 100)
+    public String colonia;
+
+    /** El cliente eligió «Otra» y la escribió él (se pidió agregarla al catálogo). */
+    @Column(name = "colonia_otra", nullable = false)
+    public boolean coloniaOtra;
+
     @Column(name = "total_estimado", precision = 10, scale = 2)
     public BigDecimal totalEstimado;
 
