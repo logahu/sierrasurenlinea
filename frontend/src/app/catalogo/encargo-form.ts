@@ -9,6 +9,8 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { firstValueFrom, of } from 'rxjs';
 import { CatalogoService } from './catalogo.service';
+import { ControlColonia, OTRA } from '../colonias/elegir-colonia';
+import { SeleccionColonia, clave } from '../colonias/colonias';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Negocio, Platillo, Producto, Restaurante } from './catalogo.model';
@@ -49,14 +51,26 @@ export class EncargoForm {
   private readonly valores = toSignal(this.form.valueChanges, { initialValue: this.form.getRawValue() });
   /** Punto de entrega en el mapa (se llena con la ubicación habitual de la cuenta). */
   protected readonly puntoEntrega = signal<Punto | null>(null);
+  /** Colonia o comunidad (combo con «Otra»). */
+  protected readonly col = new ControlColonia();
+  protected readonly otra = OTRA;
   protected readonly datos = computed(
-    () => ({ ...ENCARGO_VACIO, ...this.valores(), puntoEntrega: this.puntoEntrega() }) as DatosEncargo,
+    () =>
+      ({
+        ...ENCARGO_VACIO, ...this.valores(), puntoEntrega: this.puntoEntrega(),
+        colonia: this.col.seleccion()?.nombre ?? null, coloniaOtra: this.col.esOtra(),
+      }) as DatosEncargo,
   );
 
   protected readonly opcion = computed(() => opcionDe(this.tipos(), this.datos().tipo));
   protected readonly viaje = computed(() => esViaje(this.opcion()));
   protected readonly textos = computed(() => etiquetas(this.opcion()));
   protected readonly zonas = computed(() => zonasPara(this.tarifas(), this.opcion()));
+  /** Tarifa que le toca a la colonia elegida (el administrador la asigna); si no hay, el cliente elige zona. */
+  protected readonly tarifaColonia = computed(() => {
+    const z = clave(this.col.seleccion()?.zona);
+    return z ? this.zonas().find((t) => clave(t.nombre) === z) : undefined;
+  });
   /** Hay viajes si alguna opción visible es de viaje. */
   protected readonly hayViajes = computed(() => this.tipos().some(esViaje));
   protected readonly zonasMandado = computed(() =>
@@ -100,7 +114,10 @@ export class EncargoForm {
     this.cantidades.update((c) => ({ ...c, [p.id]: Math.max(0, Math.min(20, (c[p.id] ?? 0) + paso)) }));
   }
 
-  protected readonly faltan = computed(() => camposFaltantes(this.datos(), this.opcion(), this.pedidoComida()));
+  protected readonly faltan = computed(() => {
+    const f = camposFaltantes(this.datos(), this.opcion(), this.pedidoComida());
+    return this.col.falta() ? [this.viaje() ? 'la colonia de destino' : 'tu colonia', ...f] : f;
+  });
   /** Solo se muestran los errores después del primer intento de enviar. */
   protected readonly intentado = signal(false);
   protected readonly ubicando = signal(false);
@@ -129,6 +146,7 @@ export class EncargoForm {
     if (borrador) {
       this.form.patchValue(borrador.datos);
       if (borrador.lugarId !== null) this.lugarId.set(borrador.lugarId);
+      if (borrador.colonia) this.col.seleccion.set(borrador.colonia);
       this.cantidades.set(borrador.cantidades);
     }
     // Con sesión, los datos de la cuenta se llenan solos (sin pisar lo que ya escribió).
@@ -162,6 +180,22 @@ export class EncargoForm {
       }
     });
   }
+
+  /** Con la tarifa de la colonia, la zona se elige sola; si cambia a una sin tarifa, se vuelve a pedir. */
+  private readonly zonaAutomatica = effect(() => {
+    const t = this.tarifaColonia();
+    untracked(() => {
+      const control = this.form.controls.zona;
+      if (t) {
+        if (control.value !== String(t.id)) control.setValue(String(t.id));
+        this.zonaPuesta = String(t.id);
+      } else if (this.zonaPuesta && control.value === this.zonaPuesta) {
+        control.setValue('');
+        this.zonaPuesta = '';
+      }
+    });
+  });
+  private zonaPuesta = '';
 
   protected usarUbicacion(): void {
     this.errorUbicacion.set(null);
@@ -197,7 +231,9 @@ export class EncargoForm {
    */
   protected async enviar(): Promise<void> {
     if (!this.cliente.activa()) {
-      guardarBorrador({ datos: this.form.getRawValue(), lugarId: this.lugarId(), cantidades: this.cantidades() });
+      guardarBorrador({
+        datos: this.form.getRawValue(), lugarId: this.lugarId(), cantidades: this.cantidades(), colonia: this.col.seleccion(),
+      });
       void this.router.navigate(['/cuenta/entrar'], { queryParams: { volver: this.aqui(), pedido: 1 } });
       return;
     }
@@ -235,6 +271,7 @@ interface Borrador {
   datos: Partial<DatosEncargo>;
   lugarId: number | null;
   cantidades: Record<number, number>;
+  colonia?: SeleccionColonia | null;
 }
 
 /** Guarda el pedido a medio llenar mientras el cliente inicia sesión (solo esta pestaña). */

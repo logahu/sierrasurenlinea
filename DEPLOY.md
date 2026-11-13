@@ -265,3 +265,14 @@ En **Panel → Usuarios → Equipo**, al final, la tarjeta **🧪 Usuarios de pr
   «🧪 PRUEBA» en el nombre. Las contraseñas se muestran **una sola vez** (Copiar todo / Descargar CSV);
   si se pierden, se vuelve a pulsar y las cuentas de prueba reciben otra contraseña. Nunca toca cuentas reales.
 - **Quitar acceso a los usuarios de prueba**: baja lógica de todas (columna `de_prueba`, migración V22).
+
+## Colonias
+
+- Migración **V23**: tabla `colonia` cargada con las 84 colonias, barrios, fraccionamientos y rancherías de
+  Miahuatlán del Catálogo Nacional de Códigos Postales (Correos de México), y `pedido.colonia` / `pedido.colonia_otra`.
+- Al pedir (Encarguitos y carrito a domicilio o renta) el cliente elige su colonia; si no está, elige «Otra» y la
+  escribe. Esa queda como **solicitud** y los administradores reciben una notificación.
+- **Panel → Colonias** (solo administradores): asignar a cada colonia su **tarifa de Encarguitos** (por nombre de la
+  tarifa, p. ej. «Centro»; así sirve para mandados y viajes si las tarifas se llaman igual), agregar, editar, eliminar y
+  aprobar o descartar las solicitudes. Con tarifa asignada, el precio del encargo se pone solo; sin tarifa, el cliente
+  elige la zona como antes.

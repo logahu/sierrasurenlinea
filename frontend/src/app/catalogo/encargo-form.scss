@@ -355,3 +355,16 @@ textarea { resize: vertical; min-height: 6.5rem; line-height: 1.5; }
   text-decoration: none;
   &.claro { background: #fff; color: #157a3d !important; border: 1px solid #157a3d; }
 }
+
+// --- Colonia ---------------------------------------------------------------------
+.colonia-otra { margin-top: .6rem; }
+.nota-colonia { display: block; margin-top: .3rem; font-size: .82rem; color: #5b6576; }
+.tarifa-colonia {
+  margin: 0;
+  padding: .6rem .75rem;
+  border: 2px dashed #cfd6de;
+  border-radius: .45rem;
+  background: #fff;
+  color: var(--tinta-libreta);
+  strong { color: var(--naranja); }
+}

@@ -143,7 +143,7 @@ form { display: grid; gap: 1rem; }
   gap: .35rem;
   font-weight: 700;
   font-size: .92rem;
-  input, textarea {
+  input, textarea, select {
     font: inherit;
     font-weight: 400;
     padding: .65rem .8rem;
@@ -154,7 +154,8 @@ form { display: grid; gap: 1rem; }
     width: 100%;
     &:focus { outline: 2px solid var(--acento); outline-offset: 1px; }
   }
-  &.con-error input, &.con-error textarea { border-color: #c92a2a; }
+  &.con-error input, &.con-error textarea, &.con-error select { border-color: #c92a2a; }
+  small { font-weight: 400; }
 }
 
 .par { display: grid; gap: .75rem; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr)); }

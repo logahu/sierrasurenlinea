@@ -55,6 +55,10 @@ export interface DatosEncargo {
   puntoEntrega?: Punto | null;
   /** Id de la tarifa (producto) de la zona. */
   zona: string;
+  /** Colonia elegida en el combo (no es parte del formulario). */
+  colonia?: string | null;
+  /** La escribió en «Otra». */
+  coloniaOtra?: boolean;
   cuando: Cuando;
   /** AAAA-MM-DD; vacío = hoy. */
   fecha: string;
@@ -200,6 +204,7 @@ export function armarMensajeEncargo(
   if (d.recoger.trim()) lineas.push(`*${etiquetaRecoger}:* ${d.recoger.trim()}`);
   if (d.ubicacion) lineas.push(`*Mi ubicación:* ${d.ubicacion}`);
   lineas.push(`*${viaje ? 'Voy a' : 'Entregar en'}:* ${d.entregar.trim()}`);
+  if (d.colonia?.trim()) lineas.push(`*Colonia:* ${d.colonia.trim()}`);
   if (d.puntoEntrega) lineas.push(`*Ubicación de entrega:* ${enlaceVer(d.puntoEntrega)}`);
   if (zona) lineas.push(`*Zona:* ${zona.nombre} (${precioConUnidad(zona)})`);
   if (esComida(opcion) && comida && zona && !zona.unidadPrecio?.startsWith('extra')) {
@@ -237,6 +242,8 @@ export function datosDelPedido(
     telefono: d.telefono.trim(),
     entregar: d.entregar.trim(),
     zona: zona?.nombre ?? null,
+    colonia: d.colonia?.trim() || null,
+    coloniaOtra: !!d.coloniaOtra,
     total,
     lat: d.puntoEntrega?.lat ?? null,
     lng: d.puntoEntrega?.lng ?? null,

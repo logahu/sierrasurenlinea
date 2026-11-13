@@ -172,15 +172,48 @@
     }
 
     <div class="par">
-      <label class="campo" [class.con-error]="falta('la zona de entrega', 'la zona de destino')">
-        <span class="etiqueta">{{ textos().zona }}</span>
-        <select formControlName="zona">
-          <option value="" disabled>Elige tu zona</option>
-          @for (z of zonas(); track z.id) {
-            <option [value]="'' + z.id">{{ z.nombre }} ({{ precio(z) }})</option>
-          }
-        </select>
-      </label>
+      <div class="campo">
+        <label class="campo" [class.con-error]="falta('tu colonia', 'la colonia de destino')">
+          <span class="etiqueta">{{ viaje() ? 'Colonia o comunidad de destino' : 'Colonia o comunidad' }}</span>
+          <select (change)="col.elegir($any($event.target).value)">
+            <option value="" disabled [selected]="!col.valor()">{{ col.cargando() ? 'Cargando…' : 'Elige tu colonia o comunidad' }}</option>
+            @for (g of col.grupos(); track g.tipo) {
+              <optgroup [label]="g.titulo">
+                @for (c of g.colonias; track c.id) { <option [value]="'' + c.id" [selected]="col.valor() === '' + c.id">{{ c.nombre }}</option> }
+              </optgroup>
+            }
+            <option [value]="otra" [selected]="col.esOtra()">➕ Otra (no está en la lista)</option>
+          </select>
+        </label>
+        @if (col.esOtra()) {
+          <label class="campo colonia-otra" [class.con-error]="falta('tu colonia', 'la colonia de destino')">
+            <span class="etiqueta">Escribe tu colonia o comunidad</span>
+            <input type="text" maxlength="100" [value]="col.seleccion()?.nombre ?? ''"
+                   (input)="col.escribir($any($event.target).value)" placeholder="Ej. Colonia Las Flores" />
+            <small class="nota-colonia">La agregaremos a la lista; tu encargo se atiende igual.</small>
+          </label>
+        }
+      </div>
+      @if (tarifaColonia(); as t) {
+        <div class="campo">
+          <span class="etiqueta">{{ textos().zona }}</span>
+          <p class="tarifa-colonia">{{ t.nombre }} · <strong>{{ precio(t) }}</strong></p>
+        </div>
+      } @else {
+        <label class="campo" [class.con-error]="falta('la zona de entrega', 'la zona de destino')">
+          <span class="etiqueta">{{ textos().zona }}</span>
+          <select formControlName="zona">
+            <option value="" disabled>Elige tu zona</option>
+            @for (z of zonas(); track z.id) {
+              <option [value]="'' + z.id">{{ z.nombre }} ({{ precio(z) }})</option>
+            }
+          </select>
+          @if (col.seleccion()) { <small class="nota-colonia">Elige la zona más cercana; te confirmamos el costo.</small> }
+        </label>
+      }
+    </div>
+
+    <div class="par">
       <fieldset class="campo cuando" [class.con-error]="falta('a qué hora lo necesitas')">
         <legend class="etiqueta">¿Para cuándo?</legend>
         <div class="fila">

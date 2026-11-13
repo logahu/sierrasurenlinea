@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Platillo, Restaurante, TipoEncargo } from '../catalogo/catalogo.model';
 import {
-  CategoriaAdmin, CategoriaEdicion, ClienteAdmin, CuentaDePrueba, FotosNegocio, PaginaClientes, PaginaHistorial, Tablero, NegocioAdmin, NegocioEdicion, ProductoAdmin, ProductoEdicion, Usuario,
+  CategoriaAdmin, CategoriaEdicion, ClienteAdmin, ColoniaAdmin, CuentaDePrueba, DatosColonia, FotosNegocio, PaginaClientes, PaginaHistorial, Tablero, NegocioAdmin, NegocioEdicion, ProductoAdmin, ProductoEdicion, Usuario,
 } from './admin.model';
 
 /** Endpoints del panel (/api/admin/...). El token lo agrega autorizacionInterceptor. */
@@ -81,6 +81,22 @@ export class AdminApi {
 
   cambiarAccesoCliente(id: number, activo: boolean): Observable<ClienteAdmin> {
     return this.http.put<ClienteAdmin>(`${this.base}/clientes/${id}/activo`, { activo });
+  }
+
+  colonias(): Observable<{ colonias: ColoniaAdmin[]; zonas: string[] }> {
+    return this.http.get<{ colonias: ColoniaAdmin[]; zonas: string[] }>(`${this.base}/colonias`);
+  }
+
+  crearColonia(d: DatosColonia): Observable<ColoniaAdmin> {
+    return this.http.post<ColoniaAdmin>(`${this.base}/colonias`, d);
+  }
+
+  editarColonia(id: number, d: DatosColonia): Observable<ColoniaAdmin> {
+    return this.http.put<ColoniaAdmin>(`${this.base}/colonias/${id}`, d);
+  }
+
+  eliminarColonia(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/colonias/${id}`);
   }
 
   usuarios(): Observable<Usuario[]> {

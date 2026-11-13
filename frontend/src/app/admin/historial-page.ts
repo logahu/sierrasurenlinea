@@ -18,10 +18,11 @@ const ENTIDADES: { valor: string; texto: string }[] = [
   { valor: 'COMIDA', texto: 'Comida' },
   { valor: 'USUARIO', texto: 'Usuarios del panel' },
   { valor: 'CLIENTE', texto: 'Clientes' },
+  { valor: 'COLONIA', texto: 'Colonias' },
 ];
 
 const ICONOS: Record<string, string> = {
-  PEDIDO: '🧾', PRODUCTO: '🏷️', CATEGORIA: '🗂️', NEGOCIO: '🏪', FOTO: '🖼️', ENCARGO: '📝', COMIDA: '🍲', USUARIO: '👤', CLIENTE: '🙋',
+  PEDIDO: '🧾', PRODUCTO: '🏷️', CATEGORIA: '🗂️', NEGOCIO: '🏪', FOTO: '🖼️', ENCARGO: '📝', COMIDA: '🍲', USUARIO: '👤', CLIENTE: '🙋', COLONIA: '📍',
 };
 
 /**

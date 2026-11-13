@@ -227,6 +227,30 @@ export interface Pedido {
   /** Punto de entrega marcado en el mapa. */
   lat: number | null;
   lng: number | null;
+  colonia?: string | null;
+  /** El cliente la escribió en «Otra» (está en Colonias → Solicitudes). */
+  coloniaOtra?: boolean;
+}
+
+export interface ColoniaAdmin {
+  id: number;
+  nombre: string;
+  tipo: string;
+  codigoPostal: string | null;
+  /** Nombre de la tarifa de Encarguitos. */
+  zona: string | null;
+  estado: 'ACTIVA' | 'SOLICITADA';
+  origen: 'SEPOMEX' | 'ADMIN' | 'CLIENTE';
+  solicitudes: number;
+  creada: string;
+  pedidos: number;
+}
+
+export interface DatosColonia {
+  nombre: string;
+  tipo: string;
+  codigoPostal: string;
+  zona: string;
 }
 
 export interface LineaPedido {

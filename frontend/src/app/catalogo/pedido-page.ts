@@ -1,3 +1,4 @@
+import { ControlColonia, OTRA } from '../colonias/elegir-colonia';
 import { HttpClient } from '@angular/common/http';
 import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
@@ -75,6 +76,9 @@ export class PedidoPage {
   /** Punto de entrega en el mapa (se llena con la ubicación habitual de la cuenta). */
   protected readonly punto = signal<Punto | null>(null);
   protected readonly mayorDeEdad = signal(false);
+  /** Colonia o comunidad (combo con «Otra»). */
+  protected readonly col = new ControlColonia();
+  protected readonly otra = OTRA;
 
   protected readonly datos = computed<DatosPedido>(() => ({
     entrega: this.modo() === 'COMPRA' ? this.entrega() : this.modo() === 'CITA' ? 'RECOGER' : 'DOMICILIO',
@@ -82,10 +86,12 @@ export class PedidoPage {
     cuando: textoCuando(this.modo() ?? 'COMPRA', this.programado(), this.fecha(), this.hora()),
     notas: this.notas(),
     punto: this.punto(),
+    colonia: this.col.seleccion()?.nombre ?? null,
   }));
-  protected readonly faltan = computed(() =>
-    faltantesPedido(this.modo() ?? 'COMPRA', this.lineas(), this.datos(), !!this.negocio.value()?.soloMayoresEdad, this.mayorDeEdad()),
-  );
+  protected readonly faltan = computed(() => {
+    const f = faltantesPedido(this.modo() ?? 'COMPRA', this.lineas(), this.datos(), !!this.negocio.value()?.soloMayoresEdad, this.mayorDeEdad());
+    return this.datos().entrega === 'DOMICILIO' && this.col.falta() ? ['la colonia', ...f] : f;
+  });
   protected readonly intentado = signal(false);
   protected readonly enviando = signal(false);
   protected readonly error = signal<string | null>(null);
@@ -152,6 +158,7 @@ export class PedidoPage {
       lineas: lineas.map((l) => ({ productoId: l.productoId, cantidad: l.cantidad })),
       entrega: datos.entrega,
       entregar: datos.entrega === 'DOMICILIO' ? datos.entregar.trim() : null,
+      ...(datos.entrega === 'DOMICILIO' ? this.col.datos() : { colonia: null, coloniaOtra: false }),
       cuando: datos.cuando,
       notas: datos.notas.trim() || null,
       mayorDeEdad: this.mayorDeEdad(),

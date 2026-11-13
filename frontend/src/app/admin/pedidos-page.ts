@@ -1,3 +1,4 @@
+import { RouterLink } from '@angular/router';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { MapaUbicacion } from '../mapa/mapa-ubicacion';
 import { enlaceComoLlegar, puntoDe } from '../mapa/ubicacion';
@@ -16,7 +17,7 @@ const CADA_MS = 15000;
  */
 @Component({
   selector: 'app-pedidos-page',
-  imports: [MapaUbicacion],
+  imports: [MapaUbicacion, RouterLink],
   template: `
     <header class="panel-titulo">
       <h1>Pedidos</h1>
@@ -64,6 +65,10 @@ const CADA_MS = 15000;
           </div>
           <p class="pedido-cliente">
             <strong>{{ p.clienteNombre }}</strong> · {{ p.entregar }}
+            @if (p.colonia) {
+              <span> · {{ p.colonia }}</span>
+              @if (p.coloniaOtra) { <a class="colonia-nueva" routerLink="/admin/colonias" title="El cliente la escribió; revísala en Colonias">📍 nueva</a> }
+            }
             @if (p.zona) { <span class="ayuda"> · {{ p.zona }}</span> }
             @if (p.totalEstimado !== null) { <span class="ayuda"> · aprox. {{ pesos(p.totalEstimado) }}</span> }
           </p>

@@ -88,6 +88,12 @@ export const ADMIN_ROUTES: Routes = [
                 loadComponent: () => import('./visibilidad-page').then((m) => m.VisibilidadPage),
               },
               {
+                path: 'colonias',
+                title: 'Colonias · Panel',
+                canActivate: [soloDueno],
+                loadComponent: () => import('./colonias-page').then((m) => m.ColoniasPage),
+              },
+              {
                 path: 'usuarios',
                 title: 'Usuarios · Panel',
                 canActivate: [soloDueno],

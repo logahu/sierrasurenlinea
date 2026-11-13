@@ -24,6 +24,8 @@ export interface DatosPedido {
   notas: string;
   /** Punto de entrega marcado en el mapa (opcional). */
   punto?: Punto | null;
+  /** Colonia o comunidad de entrega. */
+  colonia?: string | null;
 }
 
 export const MAXIMO_POR_PRODUCTO = 99;
@@ -140,10 +142,12 @@ export function armarMensajeCarrito(
   r.push('');
   if (modo === 'COMPRA') {
     r.push(d.entrega === 'RECOGER' ? '*Entrega:* Paso a recogerlo' : `*Entregar en:* ${d.entregar.trim()}`);
+    if (d.entrega !== 'RECOGER' && d.colonia?.trim()) r.push(`*Colonia:* ${d.colonia.trim()}`);
     if (d.entrega === 'DOMICILIO' && d.punto) r.push(`*Ubicación:* ${enlaceVer(d.punto)}`);
     r.push(`*Para cuándo:* ${d.cuando}`);
   } else if (modo === 'RENTA') {
     r.push(`*Fecha del evento:* ${d.cuando}`, `*Lugar del evento:* ${d.entregar.trim()}`);
+    if (d.colonia?.trim()) r.push(`*Colonia:* ${d.colonia.trim()}`);
     if (d.punto) r.push(`*Ubicación:* ${enlaceVer(d.punto)}`);
   } else {
     r.push(`*Día de la visita:* ${d.cuando}`);

@@ -114,8 +114,28 @@
               {{ m === 'RENTA' ? 'Dirección del evento' : 'Dirección de entrega' }}
               <textarea rows="2" maxlength="300" autocomplete="street-address" [value]="entregar()"
                         (input)="entregar.set(texto($event))"
-                        placeholder="Calle, número, colonia y una referencia"></textarea>
+                        placeholder="Calle, número y una referencia"></textarea>
             </label>
+            <label class="campo" [class.con-error]="falta('la colonia')">
+              Colonia o comunidad
+              <select (change)="col.elegir($any($event.target).value)">
+                <option value="" disabled [selected]="!col.valor()">{{ col.cargando() ? 'Cargando…' : 'Elige tu colonia o comunidad' }}</option>
+                @for (g of col.grupos(); track g.tipo) {
+                  <optgroup [label]="g.titulo">
+                    @for (c of g.colonias; track c.id) { <option [value]="'' + c.id" [selected]="col.valor() === '' + c.id">{{ c.nombre }}</option> }
+                  </optgroup>
+                }
+                <option [value]="otra" [selected]="col.esOtra()">➕ Otra (no está en la lista)</option>
+              </select>
+            </label>
+            @if (col.esOtra()) {
+              <label class="campo" [class.con-error]="falta('la colonia')">
+                Escribe tu colonia o comunidad
+                <input type="text" maxlength="100" [value]="col.seleccion()?.nombre ?? ''"
+                       (input)="col.escribir(texto($event))" placeholder="Ej. Colonia Las Flores" />
+                <small class="nota">La agregaremos a la lista; tu pedido se atiende igual.</small>
+              </label>
+            }
             <div class="campo-mapa">
               <span class="titulo-mapa">Marca el punto en el mapa <small>(recomendado)</small></span>
               <app-mapa-ubicacion [(punto)]="punto" />
