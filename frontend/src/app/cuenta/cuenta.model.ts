@@ -43,6 +43,52 @@ export interface MiPedido {
   creado: string;
 }
 
+export interface LineaCliente {
+  nombre: string;
+  cantidad: number;
+  subtotal: number;
+  /** Comida: para quién era, opciones elegidas y nota. */
+  persona: string | null;
+  detalle: string | null;
+  nota: string | null;
+}
+
+/** Un pedido en «Mi historial», con su detalle. */
+export interface PedidoHistorial extends MiPedido {
+  negocioSlug: string;
+  colonia: string | null;
+  actualizado: string | null;
+  lineas: LineaCliente[];
+}
+
+export type FiltroHistorial = 'todos' | 'en-curso' | 'entregados' | 'cancelados';
+
+export interface HistorialPedidos {
+  pedidos: PedidoHistorial[];
+  total: number;
+  pagina: number;
+  porPagina: number;
+  conteos: { todos: number; enCurso: number; entregados: number; cancelados: number };
+  /** Suma de lo entregado (aprox.). */
+  totalEntregado: number;
+}
+
+/** Algo que pasó en la cuenta: lo hizo el cliente (TU) o el equipo (EQUIPO, sin decir quién). */
+export interface EventoCuenta {
+  cuando: string;
+  quien: 'TU' | 'EQUIPO';
+  tipo: 'PEDIDO' | 'ESTADO' | 'CUENTA';
+  texto: string;
+  folio: string | null;
+}
+
+export interface ActividadCuenta {
+  eventos: EventoCuenta[];
+  hayMas: boolean;
+  pagina: number;
+  registro: string;
+}
+
 /** Cómo ve el cliente cada estado de su pedido. */
 export const ESTADO_PARA_CLIENTE: Record<MiPedido['estado'], string> = {
   NUEVO: 'Recibido',

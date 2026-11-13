@@ -2,7 +2,9 @@ import { HttpClient, HttpErrorResponse, HttpInterceptorFn } from '@angular/commo
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, catchError, tap, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { Cliente, MiPedido, Registro, SesionCliente } from './cuenta.model';
+import {
+  ActividadCuenta, Cliente, FiltroHistorial, HistorialPedidos, MiPedido, Registro, SesionCliente,
+} from './cuenta.model';
 
 const CLAVE = 'ssl:cliente';
 
@@ -65,6 +67,18 @@ export class ClienteSesionService {
 
   pedidos(): Observable<MiPedido[]> {
     return this.http.get<MiPedido[]>(`${this.base}/pedidos`);
+  }
+
+  /** Todos sus pedidos con filtro, de 20 en 20. */
+  historial(estado: FiltroHistorial, pagina: number): Observable<HistorialPedidos> {
+    const params: Record<string, string> = { pagina: String(pagina) };
+    if (estado !== 'todos') params['estado'] = estado;
+    return this.http.get<HistorialPedidos>(`${this.base}/historial`, { params });
+  }
+
+  /** Lo que pasó en su cuenta y en sus pedidos. */
+  actividad(pagina: number): Observable<ActividadCuenta> {
+    return this.http.get<ActividadCuenta>(`${this.base}/actividad`, { params: { pagina: String(pagina) } });
   }
 
   salir(): void {

@@ -110,6 +110,7 @@ public class ClienteResource {
             n.creado = Instant.now();
             n.ultimoAcceso = n.creado;
             n.persist();
+            mx.turamohoy.historial.Bitacora.anotar(n, null, mx.turamohoy.historial.Bitacora.CLIENTE, n.id, "Creó su cuenta", null);
             return n;
         });
         return Response.status(Status.CREATED).entity(sesionDe(c)).build();
@@ -144,6 +145,7 @@ public class ClienteResource {
             c.intentosFallidos = 0;
             c.bloqueadoHasta = null;
             c.ultimoAcceso = ahora;
+            mx.turamohoy.historial.Bitacora.anotar(c, null, mx.turamohoy.historial.Bitacora.CLIENTE, c.id, "Inició sesión", null);
             return new Intento(c, 0);
         });
         if (i.minutosBloqueo() > 0) {
@@ -174,6 +176,7 @@ public class ClienteResource {
         mx.turamohoy.pedidos.Ubicacion u = mx.turamohoy.pedidos.Ubicacion.de(e.lat(), e.lng());
         c.lat = u == null ? null : u.lat();
         c.lng = u == null ? null : u.lng();
+        mx.turamohoy.historial.Bitacora.anotar(c, null, mx.turamohoy.historial.Bitacora.CLIENTE, c.id, "Actualizó sus datos", null);
         return ClienteDto.de(c);
     }
 
@@ -188,6 +191,7 @@ public class ClienteResource {
         }
         Contrasenas.validarNueva(c.nueva());
         cl.contrasenaHash = Contrasenas.cifrar(c.nueva());
+        mx.turamohoy.historial.Bitacora.anotar(cl, null, mx.turamohoy.historial.Bitacora.CLIENTE, cl.id, "Cambió su contraseña", null);
     }
 
     /** Sus pedidos, del más reciente al más viejo. */
@@ -226,6 +230,9 @@ public class ClienteResource {
         Cliente c = sesion.cliente();
         PushCliente pc = PushCliente.<PushCliente>find("endpoint", s.endpoint()).firstResultOptional()
                 .orElseGet(PushCliente::new);
+        if (pc.id == null) {
+            mx.turamohoy.historial.Bitacora.anotar(c, null, mx.turamohoy.historial.Bitacora.CLIENTE, c.id, "Activó los avisos en un dispositivo", null);
+        }
         pc.cliente = c;
         pc.endpoint = s.endpoint();
         pc.p256dh = s.p256dh();
@@ -239,7 +246,10 @@ public class ClienteResource {
     @RolesAllowed(SesionCliente.ROL)
     @Transactional
     public void desuscribir(@Valid @NotNull AdminPedidoResource.Suscripcion s) {
-        PushCliente.delete("endpoint = ?1 and cliente = ?2", s.endpoint(), sesion.cliente());
+        Cliente c = sesion.cliente();
+        if (PushCliente.delete("endpoint = ?1 and cliente = ?2", s.endpoint(), c) > 0) {
+            mx.turamohoy.historial.Bitacora.anotar(c, null, mx.turamohoy.historial.Bitacora.CLIENTE, c.id, "Desactivó los avisos en un dispositivo", null);
+        }
     }
 
     private static SesionDto sesionDe(Cliente c) {
