@@ -18,6 +18,19 @@ const platilloNuevo = (): Partial<Platillo> => ({ nombre: '', descripcion: '', p
 @Component({
   selector: 'app-comida-page',
   imports: [FormsModule, NegocioTabs, FotoCampo],
+  styles: `
+    .opciones-admin { border: 1px dashed var(--linea); border-radius: .6rem; padding: .6rem .75rem; margin: -.2rem 0 .8rem; background: var(--superficie); display: grid; gap: .6rem; }
+    .opciones-admin .ayuda { margin: 0; }
+    .grupo-admin { border: 1px solid var(--linea); border-radius: .5rem; padding: .5rem .6rem; display: grid; gap: .4rem; margin: 0; }
+    .grupo-cabeza, .opcion-admin { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
+    .grupo-cabeza input:first-child { flex: 1 1 12rem; font-weight: 600; }
+    .grupo-cabeza select { width: auto; }
+    .maximo { width: 5rem; }
+    .opcion-admin input:first-child { flex: 1 1 10rem; }
+    .opcion-admin .extra { width: 6rem; }
+    .quitar { color: #c92a2a; }
+    .opcion-admin.inactivo input { text-decoration: line-through; color: var(--tinta-suave); }
+  `,
   template: `
     <app-negocio-tabs [slug]="slug()" [negocio]="negocio.value()" seccion="comida" />
 
@@ -67,7 +80,56 @@ const platilloNuevo = (): Partial<Platillo> => ({ nombre: '', descripcion: '', p
                          placeholder="Descripción (opcional)" aria-label="Descripción" />
                   <label class="en-linea"><input type="checkbox" name="disponible" [(ngModel)]="p.disponible" /> Disponible</label>
                   <button class="btn secundario" type="submit" [disabled]="ocupado()">Guardar</button>
+                  <button class="btn secundario" type="button" (click)="alternarOpciones(p)" [attr.aria-expanded]="opcionesDe() === p.id">
+                    ⚙️ Opciones @if (p.opciones?.length) { ({{ p.opciones?.length }}) }
+                  </button>
                 </form>
+                @if (opcionesDe() === p.id) {
+                  <div class="opciones-admin">
+                    <p class="ayuda">
+                      Para que el cliente elija, por ejemplo, <strong>Carne</strong> (elige 1) o <strong>Extras</strong> (varias,
+                      con precio). El precio extra se suma al del platillo. Si se acaba algo, desmarca «Hay».
+                    </p>
+                    @for (g of p.opciones ?? []; track $index; let gi = $index) {
+                      <fieldset class="grupo-admin">
+                        <div class="grupo-cabeza">
+                          <input [(ngModel)]="g.nombre" [ngModelOptions]="{ standalone: true }" maxlength="40"
+                                 placeholder="Nombre del grupo (ej. Carne)" aria-label="Nombre del grupo" />
+                          <select [(ngModel)]="g.multiple" [ngModelOptions]="{ standalone: true }" aria-label="Cuántas se eligen">
+                            <option [ngValue]="false">Elige 1</option>
+                            <option [ngValue]="true">Varias</option>
+                          </select>
+                          @if (g.multiple) {
+                            <input class="maximo" type="number" min="1" max="20" [(ngModel)]="g.maximo" [ngModelOptions]="{ standalone: true }"
+                                   placeholder="Máx." aria-label="Máximo que se pueden elegir (vacío = sin límite)" />
+                          }
+                          <label class="en-linea"><input type="checkbox" [(ngModel)]="g.obligatorio" [ngModelOptions]="{ standalone: true }" /> Obligatorio</label>
+                          <button type="button" class="enlace quitar" (click)="quitarGrupo(p, gi)">Quitar grupo</button>
+                        </div>
+                        @for (o of g.opciones; track $index; let oi = $index) {
+                          <div class="opcion-admin" [class.inactivo]="!o.disponible">
+                            <input [(ngModel)]="o.nombre" [ngModelOptions]="{ standalone: true }" maxlength="40" placeholder="Opción (ej. Pastor)" aria-label="Opción" />
+                            <input class="extra" type="number" min="0" step="0.5" [(ngModel)]="o.precio" [ngModelOptions]="{ standalone: true }"
+                                   aria-label="Precio extra" title="Precio extra (0 = sin costo)" />
+                            <label class="en-linea"><input type="checkbox" [(ngModel)]="o.disponible" [ngModelOptions]="{ standalone: true }" /> Hay</label>
+                            <button type="button" class="enlace quitar" (click)="g.opciones.splice(oi, 1)" [attr.aria-label]="'Quitar ' + o.nombre">✕</button>
+                          </div>
+                        }
+                        <button type="button" class="enlace" (click)="g.opciones.push({ nombre: '', precio: 0, disponible: true })">＋ Opción</button>
+                      </fieldset>
+                    }
+                    <div class="acciones-fila">
+                      <button type="button" class="btn secundario" (click)="agregarGrupo(p)">＋ Grupo de opciones</button>
+                      @if (conOpciones(r, p).length) {
+                        <select (change)="copiarDe(r, p, $any($event.target).value); $any($event.target).value = ''" aria-label="Copiar grupos de otro platillo">
+                          <option value="">⧉ Copiar grupos de…</option>
+                          @for (x of conOpciones(r, p); track x.id) { <option [value]="x.id">{{ x.nombre }}</option> }
+                        </select>
+                      }
+                      <button type="button" class="btn primario" (click)="guardarOpciones(r, p)" [disabled]="ocupado()">Guardar opciones</button>
+                    </div>
+                  </div>
+                }
               }
               <form class="platillo-admin nuevo" (ngSubmit)="agregarPlatillo(r)">
                 <input name="nombre" [(ngModel)]="nuevoPlatillo.nombre" maxlength="100" placeholder="Platillo nuevo" aria-label="Platillo nuevo" />
@@ -111,6 +173,51 @@ export class ComidaPage {
   protected readonly ocupado = signal(false);
   protected readonly aviso = signal<string | null>(null);
   protected readonly error = signal<string | null>(null);
+
+  /** Platillo con el editor de opciones abierto. */
+  protected readonly opcionesDe = signal<number | null>(null);
+
+  protected alternarOpciones(p: Platillo): void {
+    p.opciones ??= [];
+    this.opcionesDe.set(this.opcionesDe() === p.id ? null : p.id);
+  }
+
+  protected agregarGrupo(p: Platillo): void {
+    (p.opciones ??= []).push({ nombre: '', multiple: false, obligatorio: true, maximo: null, opciones: [{ nombre: '', precio: 0, disponible: true }] });
+  }
+
+  protected quitarGrupo(p: Platillo, i: number): void {
+    p.opciones?.splice(i, 1);
+  }
+
+  /** Otros platillos del lugar que ya tienen opciones. */
+  protected conOpciones(r: Restaurante, p: Platillo): Platillo[] {
+    return r.platillos.filter((x) => x.id !== p.id && x.opciones?.length);
+  }
+
+  protected copiarDe(r: Restaurante, p: Platillo, id: string): void {
+    const origen = r.platillos.find((x) => String(x.id) === id);
+    if (!origen?.opciones) return;
+    const copia = structuredClone(origen.opciones);
+    const existentes = new Set((p.opciones ?? []).map((g) => g.nombre.trim().toLowerCase()));
+    p.opciones = [...(p.opciones ?? []), ...copia.filter((g) => !existentes.has(g.nombre.trim().toLowerCase()))];
+  }
+
+  protected guardarOpciones(r: Restaurante, p: Platillo): void {
+    const grupos = p.opciones ?? [];
+    for (const g of grupos) {
+      g.opciones = g.opciones.filter((o) => o.nombre?.trim());
+      if (!g.nombre?.trim()) return this.falla('Cada grupo de opciones necesita nombre.');
+      if (!g.opciones.length) return this.falla(`«${g.nombre}» necesita al menos una opción.`);
+      if (g.opciones.some((o) => o.precio === null || o.precio === undefined || o.precio < 0)) {
+        return this.falla(`Revisa los precios extra de «${g.nombre}».`);
+      }
+      if (!g.multiple || !g.maximo) g.maximo = null;
+    }
+    this.ejecutar(this.api.guardarPlatillo(this.slug(), r.id, p), () =>
+      grupos.length ? `Opciones de ${p.nombre} guardadas.` : `${p.nombre} queda sin opciones.`,
+    );
+  }
 
   protected disponibles(r: Restaurante): number {
     return r.platillos.filter((p) => p.disponible).length;

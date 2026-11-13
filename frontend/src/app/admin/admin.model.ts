@@ -259,4 +259,8 @@ export interface LineaPedido {
   precioUnitario: number;
   unidad: string | null;
   subtotal: number;
+  /** Comida: para quién es, opciones elegidas y nota. */
+  persona?: string | null;
+  detalle?: string | null;
+  nota?: string | null;
 }

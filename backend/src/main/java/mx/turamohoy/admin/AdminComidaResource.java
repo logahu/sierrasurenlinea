@@ -26,6 +26,7 @@ import mx.turamohoy.catalogo.dto.RestauranteDto;
 import mx.turamohoy.catalogo.dto.RestauranteDto.PlatilloDto;
 import mx.turamohoy.catalogo.model.Negocio;
 import mx.turamohoy.catalogo.model.OpcionesPlatillo;
+import mx.turamohoy.catalogo.model.OpcionesPlatillo.Grupo;
 import mx.turamohoy.catalogo.model.Platillo;
 import mx.turamohoy.catalogo.model.Restaurante;
 import mx.turamohoy.catalogo.model.TipoNegocio;
@@ -74,7 +75,7 @@ public class AdminComidaResource {
             Boolean disponible,
             /** null = no cambian; lista vacía = sin opciones. */
             @Size(max = 10, message = "Máximo 10 grupos de opciones por platillo.")
-            List<@Valid @NotNull OpcionesPlatillo.Grupo> opciones) {
+            List<@Valid @NotNull Grupo> opciones) {
     }
 
     /** Todos los lugares (también ocultos) con todos sus platillos. */

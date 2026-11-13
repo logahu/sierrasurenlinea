@@ -522,3 +522,6 @@
   color: #9a3412;
   text-decoration: none;
 }
+
+.pedido-lineas .linea-persona { font-weight: 700; color: var(--follaje); margin-top: .35rem; display: block; }
+.pedido-lineas .linea-detalle { display: block; color: var(--tinta-suave); font-size: .8rem; }

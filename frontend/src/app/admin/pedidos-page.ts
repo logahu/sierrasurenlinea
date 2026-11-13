@@ -76,7 +76,17 @@ const CADA_MS = 15000;
           @if (p.lineas.length) {
             <ul class="pedido-lineas">
               @for (l of p.lineas; track $index) {
-                <li><span>{{ l.cantidad }} × {{ l.nombre }}</span> <span>{{ pesos(l.subtotal) }}</span></li>
+                @if (l.persona && l.persona !== p.lineas[$index - 1]?.persona && hayPersonas(p)) {
+                  <li class="linea-persona">Para {{ l.persona }} · {{ pesos(subtotalDe(p, l.persona)) }}</li>
+                }
+                <li>
+                  <span>
+                    {{ l.cantidad }} × {{ l.nombre }}
+                    @if (l.detalle) { <small class="linea-detalle">{{ l.detalle }}</small> }
+                    @if (l.nota) { <small class="linea-detalle">📝 {{ l.nota }}</small> }
+                  </span>
+                  <span>{{ pesos(l.subtotal) }}</span>
+                </li>
               }
             </ul>
           }
@@ -125,6 +135,15 @@ export class PedidosPage {
   protected readonly comoLlegar = enlaceComoLlegar;
   /** Pedido cuyo mapa está abierto (uno a la vez). */
   protected readonly mapaAbierto = signal<number | null>(null);
+
+  /** Más de una persona en el pedido de comida. */
+  protected hayPersonas(p: Pedido): boolean {
+    return new Set(p.lineas.map((l) => l.persona ?? '')).size > 1;
+  }
+
+  protected subtotalDe(p: Pedido, persona: string): number {
+    return p.lineas.filter((l) => l.persona === persona).reduce((s, l) => s + l.subtotal, 0);
+  }
 
   protected alternarMapa(id: number): void {
     this.mapaAbierto.set(this.mapaAbierto() === id ? null : id);
