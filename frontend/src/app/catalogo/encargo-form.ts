@@ -13,11 +13,14 @@ import { ControlColonia, OTRA } from '../colonias/elegir-colonia';
 import { SeleccionColonia, clave } from '../colonias/colonias';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { Negocio, Platillo, Producto, Restaurante } from './catalogo.model';
+import { GrupoOpciones, Negocio, Platillo, Producto, Restaurante } from './catalogo.model';
+import {
+  Elegida, alternar, estaElegida, firmaOpciones, gruposFaltantes, precioUnitario, reglaDe, textoOpciones, tieneOpciones,
+} from './comida';
 import { enlaceWhatsapp, precioConUnidad } from './contacto';
 import {
   DatosEncargo, ENCARGO_VACIO, TIPOS_ENCARGO, TOPE_ADELANTO, UNIDAD_VIAJE, armarMensajeEncargo,
-  PedidoComida, camposFaltantes, datosDelPedido, enlaceMapa, esComida, esViaje, etiquetas, opcionDe, subtotalComida, textoPagoCompra,
+  LineaComida, PedidoComida, camposFaltantes, porPersona, subtotalLinea, datosDelPedido, enlaceMapa, esComida, esViaje, etiquetas, opcionDe, subtotalComida, textoPagoCompra,
   zonasPara,
 } from './encargo';
 
@@ -90,28 +93,147 @@ export class EncargoForm {
   });
   protected readonly lugarId = signal<number | null>(null);
   protected readonly lugar = computed(() => (this.lugares.value() ?? []).find((r) => r.id === this.lugarId()));
-  /** Cantidad por platillo (id → cantidad). */
-  protected readonly cantidades = signal<Record<number, number>>({});
+  /** Renglones de comida (de todas las personas). */
+  protected readonly lineasComida = signal<LineaComida[]>([]);
+  /** Personas del pedido: '' es quien pide; las demás, con su nombre. */
+  protected readonly personas = signal<string[]>(['']);
+  /** Para quién se están agregando platillos. */
+  protected readonly personaActiva = signal('');
+  protected readonly nuevaPersona = signal<string | null>(null);
+  /** Platillo que se está armando (con opciones, cantidad y nota). */
+  protected readonly armando = signal<{ platillo: Platillo; opciones: Elegida[]; cantidad: number; nota: string } | null>(null);
+  protected readonly intentoArmar = signal(false);
+  protected readonly tieneOpciones = tieneOpciones;
+  protected readonly reglaDe = reglaDe;
+  protected readonly estaElegida = estaElegida;
+  protected readonly textoOpciones = textoOpciones;
+  protected readonly subtotalLinea = subtotalLinea;
+
   protected readonly pedidoComida = computed<PedidoComida | undefined>(() => {
     const r = this.lugar();
     if (!r) return undefined;
-    const c = this.cantidades();
-    return { restaurante: r, lineas: r.platillos.filter((p) => (c[p.id] ?? 0) > 0).map((p) => ({ platillo: p, cantidad: c[p.id] })) };
+    // Solo platillos que siguen en el menú.
+    const ids = new Set(r.platillos.map((p) => p.id));
+    return { restaurante: r, lineas: this.lineasComida().filter((l) => ids.has(l.platillo.id)) };
   });
   protected readonly subtotal = computed(() => subtotalComida(this.pedidoComida()));
   protected readonly piezas = computed(() => (this.pedidoComida()?.lineas ?? []).reduce((s, l) => s + l.cantidad, 0));
+  protected readonly ordenes = computed(() => porPersona(this.pedidoComida()?.lineas ?? []));
+  protected readonly variasPersonas = computed(() => this.personas().length > 1);
 
   protected elegirLugar(r: Restaurante): void {
-    if (this.lugarId() !== r.id) this.cantidades.set({});
+    if (this.lugarId() !== r.id) {
+      this.lineasComida.set([]);
+      this.armando.set(null);
+    }
     this.lugarId.set(r.id);
   }
 
-  protected cantidad(p: Platillo): number {
-    return this.cantidades()[p.id] ?? 0;
+  protected nombrePersona(persona: string): string {
+    return persona || 'Para ti';
   }
 
+  /** Piezas de ese platillo sin opciones para la persona activa (para el contador del menú). */
+  protected cantidad(p: Platillo): number {
+    return this.lineasComida()
+      .filter((l) => l.platillo.id === p.id && (l.persona ?? '') === this.personaActiva() && !l.opciones?.length && !l.nota)
+      .reduce((s, l) => s + l.cantidad, 0);
+  }
+
+  /** −/+ del menú para platillos sin opciones. */
   protected cambiarCantidad(p: Platillo, paso: number): void {
-    this.cantidades.update((c) => ({ ...c, [p.id]: Math.max(0, Math.min(20, (c[p.id] ?? 0) + paso)) }));
+    const persona = this.personaActiva();
+    const lista = this.lineasComida();
+    const i = lista.findIndex((l) => l.platillo.id === p.id && (l.persona ?? '') === persona && !l.opciones?.length && !l.nota);
+    if (i < 0) {
+      if (paso > 0) this.lineasComida.set([...lista, { platillo: p, cantidad: 1, opciones: [], nota: '', persona }]);
+      return;
+    }
+    this.cambiarLinea(lista[i], paso);
+  }
+
+  /** −/+ en el resumen: en 0 se quita. */
+  protected cambiarLinea(l: LineaComida, paso: number): void {
+    const cantidad = Math.max(0, Math.min(20, l.cantidad + paso));
+    this.lineasComida.update((ls) =>
+      cantidad ? ls.map((x) => (x === l ? { ...x, cantidad } : x)) : ls.filter((x) => x !== l),
+    );
+  }
+
+  protected quitarLinea(l: LineaComida): void {
+    this.lineasComida.update((ls) => ls.filter((x) => x !== l));
+  }
+
+  protected armar(p: Platillo): void {
+    this.intentoArmar.set(false);
+    this.armando.set(this.armando()?.platillo.id === p.id ? null : { platillo: p, opciones: [], cantidad: 1, nota: '' });
+  }
+
+  protected elegir(g: GrupoOpciones, opcion: string): void {
+    const a = this.armando();
+    if (a) this.armando.set({ ...a, opciones: alternar(a.opciones, g, opcion) });
+  }
+
+  protected cantidadArmando(paso: number): void {
+    const a = this.armando();
+    if (a) this.armando.set({ ...a, cantidad: Math.max(1, Math.min(20, a.cantidad + paso)) });
+  }
+
+  protected notaArmando(nota: string): void {
+    const a = this.armando();
+    if (a) this.armando.set({ ...a, nota: nota.slice(0, 200) });
+  }
+
+  protected readonly faltanArmando = computed(() => {
+    const a = this.armando();
+    return a ? gruposFaltantes(a.platillo, a.opciones) : [];
+  });
+  protected readonly precioArmando = computed(() => {
+    const a = this.armando();
+    return a ? precioUnitario(a.platillo, a.opciones) * a.cantidad : 0;
+  });
+
+  /** Agrega lo armado a la orden de la persona activa (si ya hay uno igual, suma). */
+  protected agregarArmado(): void {
+    const a = this.armando();
+    if (!a) return;
+    this.intentoArmar.set(true);
+    if (this.faltanArmando().length) return;
+    const persona = this.personaActiva();
+    const nota = a.nota.trim();
+    const firma = firmaOpciones(a.opciones);
+    const lista = this.lineasComida();
+    const igual = lista.find(
+      (l) => l.platillo.id === a.platillo.id && (l.persona ?? '') === persona && firmaOpciones(l.opciones) === firma && (l.nota ?? '') === nota,
+    );
+    this.lineasComida.set(
+      igual
+        ? lista.map((l) => (l === igual ? { ...l, cantidad: Math.min(20, l.cantidad + a.cantidad) } : l))
+        : [...lista, { platillo: a.platillo, cantidad: a.cantidad, opciones: a.opciones, nota, persona }],
+    );
+    this.armando.set(null);
+    this.intentoArmar.set(false);
+  }
+
+  protected agregarPersona(): void {
+    const nombre = (this.nuevaPersona() ?? '').trim().slice(0, 60);
+    if (!nombre) return;
+    const existe = this.personas().find((p) => p.toLowerCase() === nombre.toLowerCase());
+    if (!existe) this.personas.update((ps) => [...ps, nombre]);
+    this.personaActiva.set(existe ?? nombre);
+    this.nuevaPersona.set(null);
+  }
+
+  /** Quita a una persona y sus platillos. */
+  protected quitarPersona(persona: string): void {
+    if (!persona) return;
+    this.personas.update((ps) => ps.filter((p) => p !== persona));
+    this.lineasComida.update((ls) => ls.filter((l) => (l.persona ?? '') !== persona));
+    if (this.personaActiva() === persona) this.personaActiva.set('');
+  }
+
+  protected platillosDe(persona: string): number {
+    return this.lineasComida().filter((l) => (l.persona ?? '') === persona).reduce((s, l) => s + l.cantidad, 0);
   }
 
   protected readonly faltan = computed(() => {
@@ -146,8 +268,9 @@ export class EncargoForm {
     if (borrador) {
       this.form.patchValue(borrador.datos);
       if (borrador.lugarId !== null) this.lugarId.set(borrador.lugarId);
+      if (borrador.lineasComida) this.lineasComida.set(borrador.lineasComida);
+      if (borrador.personas?.length) this.personas.set(borrador.personas);
       if (borrador.colonia) this.col.seleccion.set(borrador.colonia);
-      this.cantidades.set(borrador.cantidades);
     }
     // Con sesión, los datos de la cuenta se llenan solos (sin pisar lo que ya escribió).
     effect(() => {
@@ -232,7 +355,8 @@ export class EncargoForm {
   protected async enviar(): Promise<void> {
     if (!this.cliente.activa()) {
       guardarBorrador({
-        datos: this.form.getRawValue(), lugarId: this.lugarId(), cantidades: this.cantidades(), colonia: this.col.seleccion(),
+        datos: this.form.getRawValue(), lugarId: this.lugarId(), lineasComida: this.lineasComida(), personas: this.personas(),
+        colonia: this.col.seleccion(),
       });
       void this.router.navigate(['/cuenta/entrar'], { queryParams: { volver: this.aqui(), pedido: 1 } });
       return;
@@ -270,7 +394,8 @@ const CLAVE_BORRADOR = 'ssl:borrador-encargo';
 interface Borrador {
   datos: Partial<DatosEncargo>;
   lugarId: number | null;
-  cantidades: Record<number, number>;
+  lineasComida?: LineaComida[];
+  personas?: string[];
   colonia?: SeleccionColonia | null;
 }
 

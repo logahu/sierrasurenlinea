@@ -330,6 +330,92 @@ textarea { resize: vertical; min-height: 6.5rem; line-height: 1.5; }
 }
 .subtotal { margin: 0; font-size: 1rem; strong { color: var(--naranja); } }
 
+// --- Órdenes por persona y opciones -----------------------------------------------
+.personas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  align-items: center;
+  .etiqueta-personas { font-weight: 700; margin-right: .2rem; }
+}
+.persona {
+  display: inline-flex;
+  align-items: center;
+  border: 2px solid #cfd6de;
+  border-radius: 999px;
+  background: #fff;
+  button { border: 0; background: none; font: inherit; cursor: pointer; padding: .3rem .75rem; color: var(--tinta-libreta); }
+  b { margin-left: .2rem; background: #e9ecef; border-radius: 999px; padding: 0 .4rem; font-size: .8rem; }
+  .quitar-persona { padding: .3rem .55rem .3rem 0; color: #8a94a3; }
+  &.elegida { border-color: var(--naranja); background: #fff4ec; button:first-child { color: var(--naranja); font-weight: 700; } b { background: var(--naranja); color: #fff; } }
+}
+.persona-nueva { border: 2px dashed #cfd6de; background: none; border-radius: 999px; padding: .3rem .75rem; font: inherit; color: var(--azul); cursor: pointer; }
+.persona-form { display: inline-flex; gap: .35rem; align-items: center; flex-wrap: wrap; input { width: 11rem; padding: .35rem .6rem; } }
+.pastilla-mini { border: 1px solid #cfd6de; background: #fff; border-radius: 999px; padding: .3rem .7rem; font: inherit; font-size: .9rem; cursor: pointer; }
+.menu li:has(.armar-orden) { grid-template-columns: 1fr auto; }
+.menu li:has(.armar-orden):has(img) { grid-template-columns: auto 1fr auto; }
+.armar {
+  border: 2px solid var(--naranja);
+  background: #fff;
+  color: var(--naranja);
+  border-radius: 999px;
+  padding: .35rem .9rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.armar-orden { grid-column: 1 / -1; display: grid; gap: .6rem; padding-top: .5rem; border-top: 1px dashed #cfd6de; margin-top: .3rem; }
+.grupo-opciones {
+  border: 1px solid #dfe3e8;
+  border-radius: .5rem;
+  padding: .5rem .7rem;
+  legend { font-weight: 700; padding: 0 .3rem; }
+  .regla { font-weight: 600; font-size: .78rem; color: #9a3412; background: #fff7ed; border-radius: 999px; padding: .05rem .5rem; margin-left: .3rem; }
+  &.falta { border-color: #c92a2a; legend { color: #c92a2a; } }
+}
+.opcion {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .3rem 0;
+  cursor: pointer;
+  input { accent-color: var(--naranja); width: 1.1rem; height: 1.1rem; margin: 0; }
+  span:first-of-type { flex: 1; }
+  .extra { color: #5b6576; font-size: .9rem; }
+  &.agotada { color: #9aa3ae; cursor: default; text-decoration: line-through; small { text-decoration: none; } }
+}
+input.nota-orden { font-size: .95rem; }
+.error-armar { margin: 0; color: #c92a2a; font-weight: 600; font-size: .9rem; }
+.agregar-orden { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
+.btn-agregar {
+  flex: 1;
+  min-width: 12rem;
+  border: 0;
+  border-radius: 999px;
+  background: var(--naranja);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  padding: .6rem 1rem;
+  cursor: pointer;
+}
+.resumen-comida {
+  display: grid;
+  gap: .5rem;
+  padding: .75rem .9rem;
+  border: 2px dashed #cfd6de;
+  border-radius: .6rem;
+  background: #fff;
+  .menu-titulo { margin: 0; }
+}
+.orden-persona {
+  h4 { margin: .3rem 0 .2rem; font-size: .95rem; color: var(--azul); }
+  ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .35rem; }
+  li { display: grid; grid-template-columns: 1fr auto auto; gap: .6rem; align-items: center; border-bottom: 1px solid #eef1f4; padding-bottom: .35rem; }
+  .renglon { display: grid; min-width: 0; small { color: #5b6478; font-size: .84rem; } }
+}
+.contador.chico button { width: 1.7rem; height: 1.7rem; font-size: 1rem; }
+
 // --- Aviso de cuenta ---------------------------------------------------------------
 .cuenta-aviso {
   margin: 0;

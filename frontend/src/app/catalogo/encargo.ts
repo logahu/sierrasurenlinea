@@ -1,6 +1,7 @@
 import { Platillo, Producto, Restaurante, TipoEncargo } from './catalogo.model';
 import { Punto, enlaceVer } from '../mapa/ubicacion';
 import { precioConUnidad } from './contacto';
+import { Elegida, precioUnitario, textoOpciones } from './comida';
 
 /**
  * Lógica de Encarguitos (mandados y viajes en moto): opciones, validación y mensaje.
@@ -94,14 +95,39 @@ export function opcionDe(tipos: readonly TipoEncargo[], id: string): TipoEncargo
 export const esViaje = (o: TipoEncargo): boolean => o.modo === 'VIAJE';
 export const esComida = (o: TipoEncargo): boolean => o.modo === 'COMIDA';
 
-/** Pedido de comida: el lugar y cuántos de cada platillo. */
+/** Un renglón de comida: cuántos de un platillo, con qué opciones, para quién y con qué nota. */
+export interface LineaComida {
+  platillo: Platillo;
+  cantidad: number;
+  opciones?: Elegida[];
+  nota?: string;
+  /** '' (o sin valor) = para quien pide. */
+  persona?: string;
+}
+
+/** Pedido de comida: el lugar y sus renglones (pueden ser de varias personas). */
 export interface PedidoComida {
   restaurante: Restaurante;
-  lineas: { platillo: Platillo; cantidad: number }[];
+  lineas: LineaComida[];
+}
+
+export function subtotalLinea(l: LineaComida): number {
+  return precioUnitario(l.platillo, l.opciones) * l.cantidad;
 }
 
 export function subtotalComida(p: PedidoComida | undefined): number {
-  return (p?.lineas ?? []).reduce((s, l) => s + l.platillo.precio * l.cantidad, 0);
+  return (p?.lineas ?? []).reduce((s, l) => s + subtotalLinea(l), 0);
+}
+
+/** Renglones agrupados por persona, en el orden en que aparecen ('' primero). */
+export function porPersona(lineas: readonly LineaComida[]): { persona: string; lineas: LineaComida[] }[] {
+  const grupos = new Map<string, LineaComida[]>();
+  grupos.set('', []);
+  for (const l of lineas) {
+    const k = (l.persona ?? '').trim();
+    grupos.set(k, [...(grupos.get(k) ?? []), l]);
+  }
+  return [...grupos.entries()].filter(([, ls]) => ls.length).map(([persona, ls]) => ({ persona, lineas: ls }));
 }
 
 const pesos = (n: number) => precioConUnidad({ precio: n, unidadPrecio: null });
@@ -189,9 +215,21 @@ export function armarMensajeEncargo(
   const viaje = esViaje(opcion);
   let lineas: string[];
   if (esComida(opcion) && comida) {
-    lineas = ['Hola Encarguitos, quiero pedir comida:', '', `*Lugar:* ${comida.restaurante.nombre}`, '*Pedido:*'];
-    for (const l of comida.lineas) {
-      lineas.push(`• ${l.cantidad} × ${l.platillo.nombre} — ${pesos(l.platillo.precio * l.cantidad)}`);
+    lineas = ['Hola Encarguitos, quiero pedir comida:', '', `*Lugar:* ${comida.restaurante.nombre}`];
+    const grupos = porPersona(comida.lineas);
+    const varias = grupos.length > 1 || (grupos[0]?.persona ?? '') !== '';
+    if (!varias) lineas.push('*Pedido:*');
+    for (const g of grupos) {
+      if (varias) {
+        const sub = g.lineas.reduce((t, l) => t + subtotalLinea(l), 0);
+        lineas.push(`*Para ${g.persona || d.nombre.trim() || 'mí'}:* (${pesos(sub)})`);
+      }
+      for (const l of g.lineas) {
+        lineas.push(`• ${l.cantidad} × ${l.platillo.nombre} — ${pesos(subtotalLinea(l))}`);
+        const opciones = textoOpciones(l.platillo, l.opciones);
+        if (opciones) lineas.push(`   ${opciones}`);
+        if (l.nota?.trim()) lineas.push(`   📝 ${l.nota.trim()}`);
+      }
     }
     lineas.push(`*Subtotal de la comida:* ${pesos(subtotalComida(comida))}`);
     if (d.detalle.trim()) lineas.push(`*Indicaciones:* ${d.detalle.trim()}`);
@@ -242,11 +280,28 @@ export function datosDelPedido(
     telefono: d.telefono.trim(),
     entregar: d.entregar.trim(),
     zona: zona?.nombre ?? null,
+    comida: esComida(opcion) && comida ? comidaParaServidor(comida) : null,
     colonia: d.colonia?.trim() || null,
     coloniaOtra: !!d.coloniaOtra,
     total,
     lat: d.puntoEntrega?.lat ?? null,
     lng: d.puntoEntrega?.lng ?? null,
     mensaje,
+  };
+}
+
+/** Las órdenes como las espera el servidor (él recalcula los precios con el menú). */
+export function comidaParaServidor(c: PedidoComida) {
+  return {
+    restauranteId: c.restaurante.id,
+    ordenes: porPersona(c.lineas).map((g) => ({
+      persona: g.persona,
+      renglones: g.lineas.map((l) => ({
+        platilloId: l.platillo.id,
+        cantidad: l.cantidad,
+        opciones: l.opciones ?? [],
+        nota: l.nota?.trim() || null,
+      })),
+    })),
   };
 }

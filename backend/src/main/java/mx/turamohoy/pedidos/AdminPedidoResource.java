@@ -51,9 +51,11 @@ public class AdminPedidoResource {
     @Inject
     Notificador notificador;
 
-    public record LineaDto(String nombre, int cantidad, BigDecimal precioUnitario, String unidad, BigDecimal subtotal) {
+    public record LineaDto(String nombre, int cantidad, BigDecimal precioUnitario, String unidad, BigDecimal subtotal,
+                           String persona, String detalle, String nota) {
         static LineaDto de(PedidoLinea l) {
-            return new LineaDto(l.nombre, l.cantidad, l.precioUnitario, l.unidad, l.subtotal());
+            return new LineaDto(l.nombre, l.cantidad, l.precioUnitario, l.unidad, l.subtotal(), l.persona, l.detalle,
+                    l.nota);
         }
     }
 

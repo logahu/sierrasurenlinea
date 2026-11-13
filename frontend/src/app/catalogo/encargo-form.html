@@ -97,30 +97,130 @@
         </div>
 
         @if (lugar(); as r) {
+          <div class="personas" role="group" aria-label="¿Para quién es?">
+            <span class="etiqueta-personas">¿Para quién es?</span>
+            @for (p of personas(); track p) {
+              <span class="persona" [class.elegida]="personaActiva() === p">
+                <button type="button" (click)="personaActiva.set(p)" [attr.aria-pressed]="personaActiva() === p">
+                  {{ nombrePersona(p) }} @if (platillosDe(p)) { <b>{{ platillosDe(p) }}</b> }
+                </button>
+                @if (p) {
+                  <button type="button" class="quitar-persona" (click)="quitarPersona(p)"
+                          [attr.aria-label]="'Quitar a ' + p + ' y sus platillos'" title="Quitar a esta persona y sus platillos">✕</button>
+                }
+              </span>
+            }
+            @if (nuevaPersona() === null) {
+              @if (personas().length < 10) {
+                <button type="button" class="persona-nueva" (click)="nuevaPersona.set('')">＋ Pedir para alguien más</button>
+              }
+            } @else {
+              <span class="persona-form">
+                <input type="text" maxlength="60" placeholder="Nombre (ej. Luis)" aria-label="Nombre de la persona"
+                       [value]="nuevaPersona()" (input)="nuevaPersona.set($any($event.target).value)"
+                       (keydown.enter)="$event.preventDefault(); agregarPersona()" />
+                <button type="button" class="pastilla-mini" (click)="agregarPersona()">Agregar</button>
+                <button type="button" class="pastilla-mini" (click)="nuevaPersona.set(null)">Cancelar</button>
+              </span>
+            }
+          </div>
+          @if (variasPersonas()) {
+            <p class="nota">Estás agregando platillos <strong>{{ personaActiva() ? 'para ' + personaActiva() : 'para ti' }}</strong>.</p>
+          }
+
           <h3 class="menu-titulo">Menú de {{ r.nombre }}</h3>
           <ul class="menu">
             @for (p of r.platillos; track p.id) {
-              <li [class.pedido]="cantidad(p) > 0">
+              <li [class.pedido]="cantidad(p) > 0 || armando()?.platillo?.id === p.id">
                 @if (p.imagenUrl) { <img [src]="p.imagenUrl" alt="" width="52" height="52" loading="lazy" /> }
                 <span class="platillo">
                   <strong>{{ p.nombre }}</strong>
                   @if (p.descripcion) { <small>{{ p.descripcion }}</small> }
-                  <span class="precio-platillo">{{ precio({ precio: p.precio, unidadPrecio: null }) }}</span>
+                  <span class="precio-platillo">{{ tieneOpciones(p) ? 'desde ' : '' }}{{ precio({ precio: p.precio, unidadPrecio: null }) }}</span>
                 </span>
-                <span class="contador">
-                  <button type="button" (click)="cambiarCantidad(p, -1)" [disabled]="!cantidad(p)"
-                          [attr.aria-label]="'Quitar un ' + p.nombre">−</button>
-                  <output [attr.aria-label]="'Cantidad de ' + p.nombre">{{ cantidad(p) }}</output>
-                  <button type="button" (click)="cambiarCantidad(p, 1)" [attr.aria-label]="'Agregar un ' + p.nombre">+</button>
-                </span>
+                @if (tieneOpciones(p)) {
+                  <button type="button" class="armar" (click)="armar(p)" [attr.aria-expanded]="armando()?.platillo?.id === p.id">
+                    {{ armando()?.platillo?.id === p.id ? 'Cerrar' : 'Elegir' }}
+                  </button>
+                } @else {
+                  <span class="contador">
+                    <button type="button" (click)="cambiarCantidad(p, -1)" [disabled]="!cantidad(p)"
+                            [attr.aria-label]="'Quitar un ' + p.nombre">−</button>
+                    <output [attr.aria-label]="'Cantidad de ' + p.nombre">{{ cantidad(p) }}</output>
+                    <button type="button" (click)="cambiarCantidad(p, 1)" [attr.aria-label]="'Agregar un ' + p.nombre">+</button>
+                  </span>
+                }
+                @if (armando(); as a) {
+                  @if (a.platillo.id === p.id) {
+                    <div class="armar-orden">
+                      @for (g of p.opciones ?? []; track g.nombre) {
+                        <fieldset class="grupo-opciones" [class.falta]="intentoArmar() && faltanArmando().includes(g.nombre)">
+                          <legend>{{ g.nombre }} <span class="regla">{{ reglaDe(g) }}</span></legend>
+                          @for (o of g.opciones; track o.nombre) {
+                            <label class="opcion" [class.agotada]="!o.disponible">
+                              <input [type]="g.multiple ? 'checkbox' : 'radio'" [name]="'g-' + p.id + '-' + g.nombre"
+                                     [checked]="estaElegida(a.opciones, g, o.nombre)" [disabled]="!o.disponible"
+                                     (click)="$event.preventDefault(); elegir(g, o.nombre)" />
+                              <span>{{ o.nombre }}@if (!o.disponible) { <small> · agotado</small> }</span>
+                              @if (o.precio > 0) { <span class="extra">+{{ precio({ precio: o.precio, unidadPrecio: null }) }}</span> }
+                            </label>
+                          }
+                        </fieldset>
+                      }
+                      <input type="text" class="nota-orden" maxlength="200" placeholder="Nota (opcional): sin cebolla, salsa aparte…"
+                             aria-label="Nota para este platillo" [value]="a.nota" (input)="notaArmando($any($event.target).value)" />
+                      @if (intentoArmar() && faltanArmando().length) {
+                        <p class="error-armar" role="alert">Elige {{ faltanArmando().join(' y ') }}.</p>
+                      }
+                      <div class="agregar-orden">
+                        <span class="contador">
+                          <button type="button" (click)="cantidadArmando(-1)" [disabled]="a.cantidad <= 1" aria-label="Uno menos">−</button>
+                          <output aria-label="Cantidad">{{ a.cantidad }}</output>
+                          <button type="button" (click)="cantidadArmando(1)" aria-label="Uno más">+</button>
+                        </span>
+                        <button type="button" class="btn-agregar" (click)="agregarArmado()">
+                          Agregar {{ variasPersonas() ? (personaActiva() ? 'para ' + personaActiva() : 'para ti') : '' }} ·
+                          {{ precio({ precio: precioArmando(), unidadPrecio: null }) }}
+                        </button>
+                      </div>
+                    </div>
+                  }
+                }
               </li>
             }
           </ul>
+
           @if (piezas()) {
-            <p class="subtotal">
-              {{ piezas() }} {{ piezas() === 1 ? 'platillo' : 'platillos' }} · Subtotal
-              <strong>{{ precio({ precio: subtotal(), unidadPrecio: null }) }}</strong> + envío
-            </p>
+            <div class="resumen-comida">
+              <h3 class="menu-titulo">Tu pedido</h3>
+              @for (o of ordenes(); track o.persona) {
+                <div class="orden-persona">
+                  @if (variasPersonas() || o.persona) {
+                    <h4>{{ o.persona ? 'Para ' + o.persona : 'Para ti' }}</h4>
+                  }
+                  <ul>
+                    @for (l of o.lineas; track $index) {
+                      <li>
+                        <span class="renglon">
+                          <strong>{{ l.cantidad }} × {{ l.platillo.nombre }}</strong>
+                          @if (textoOpciones(l.platillo, l.opciones); as t) { <small>{{ t }}</small> }
+                          @if (l.nota) { <small>📝 {{ l.nota }}</small> }
+                        </span>
+                        <span class="precio-platillo">{{ precio({ precio: subtotalLinea(l), unidadPrecio: null }) }}</span>
+                        <span class="contador chico">
+                          <button type="button" (click)="cambiarLinea(l, -1)" [attr.aria-label]="'Quitar uno de ' + l.platillo.nombre">−</button>
+                          <button type="button" (click)="cambiarLinea(l, 1)" [attr.aria-label]="'Agregar uno de ' + l.platillo.nombre">+</button>
+                        </span>
+                      </li>
+                    }
+                  </ul>
+                </div>
+              }
+              <p class="subtotal">
+                {{ piezas() }} {{ piezas() === 1 ? 'platillo' : 'platillos' }} · Subtotal
+                <strong>{{ precio({ precio: subtotal(), unidadPrecio: null }) }}</strong> + envío
+              </p>
+            </div>
           }
         }
       </fieldset>

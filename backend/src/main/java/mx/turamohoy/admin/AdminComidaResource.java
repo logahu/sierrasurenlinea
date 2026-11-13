@@ -25,6 +25,8 @@ import jakarta.ws.rs.core.Response.Status;
 import mx.turamohoy.catalogo.dto.RestauranteDto;
 import mx.turamohoy.catalogo.dto.RestauranteDto.PlatilloDto;
 import mx.turamohoy.catalogo.model.Negocio;
+import mx.turamohoy.catalogo.model.OpcionesPlatillo;
+import mx.turamohoy.catalogo.model.OpcionesPlatillo.Grupo;
 import mx.turamohoy.catalogo.model.Platillo;
 import mx.turamohoy.catalogo.model.Restaurante;
 import mx.turamohoy.catalogo.model.TipoNegocio;
@@ -70,7 +72,10 @@ public class AdminComidaResource {
             @Digits(integer = 5, fraction = 2, message = "El precio lleva como máximo dos decimales.") BigDecimal precio,
             String imagenUrl,
             @Min(0) @Max(999) Integer orden,
-            Boolean disponible) {
+            Boolean disponible,
+            /** null = no cambian; lista vacía = sin opciones. */
+            @Size(max = 10, message = "Máximo 10 grupos de opciones por platillo.")
+            List<@Valid @NotNull Grupo> opciones) {
     }
 
     /** Todos los lugares (también ocultos) con todos sus platillos. */
@@ -179,6 +184,13 @@ public class AdminComidaResource {
         }
         if (e.disponible() != null) {
             p.disponible = e.disponible();
+        }
+        if (e.opciones() != null) {
+            String problema = OpcionesPlatillo.problema(e.opciones());
+            if (problema != null) {
+                throw Errores.de(Status.BAD_REQUEST, problema);
+            }
+            p.opciones = OpcionesPlatillo.escribir(OpcionesPlatillo.normalizar(e.opciones()));
         }
     }
 }

@@ -276,3 +276,15 @@ En **Panel → Usuarios → Equipo**, al final, la tarjeta **🧪 Usuarios de pr
   tarifa, p. ej. «Centro»; así sirve para mandados y viajes si las tarifas se llaman igual), agregar, editar, eliminar y
   aprobar o descartar las solicitudes. Con tarifa asignada, el precio del encargo se pone solo; sin tarifa, el cliente
   elige la zona como antes.
+
+## Comida a domicilio por persona
+
+- Migración **V24**: `platillo.opciones` (grupos de opciones en JSON) y en `pedido_linea` los campos `platillo_id`,
+  `persona`, `detalle` (opciones elegidas) y `nota`.
+- **Panel → Negocios → Encarguitos → Comida → ⚙️ Opciones** en cada platillo: grupos «Elige 1» o «Varias» (con máximo),
+  obligatorios u opcionales, con precio extra por opción y casilla «Hay» para lo agotado. «Copiar grupos de…» reutiliza
+  los de otro platillo del mismo lugar.
+- El cliente elige **para quién** es cada platillo («Para ti», «＋ Pedir para alguien más»), arma cada uno con sus
+  opciones y nota, y el pedido llega al panel y a WhatsApp separado por persona.
+- El servidor revisa las opciones y **calcula el total con los precios del menú** (más la tarifa de la zona); el total
+  que manda el navegador no se usa para comida.

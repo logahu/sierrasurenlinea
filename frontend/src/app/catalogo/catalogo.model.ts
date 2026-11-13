@@ -101,4 +101,22 @@ export interface Platillo {
   imagenUrl: string | null;
   orden: number;
   disponible: boolean;
+  /** Grupos de opciones («Carne: elige 1», «Extras»…). Vacío = se pide tal cual. */
+  opciones?: GrupoOpciones[];
+}
+
+export interface OpcionPlatillo {
+  nombre: string;
+  /** Lo que se suma al precio del platillo. */
+  precio: number;
+  disponible: boolean;
+}
+
+export interface GrupoOpciones {
+  nombre: string;
+  /** false = elige una; true = puede elegir varias (hasta «maximo», si hay). */
+  multiple: boolean;
+  obligatorio: boolean;
+  maximo: number | null;
+  opciones: OpcionPlatillo[];
 }
