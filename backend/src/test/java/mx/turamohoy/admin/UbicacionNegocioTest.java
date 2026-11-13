@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static io.restassured.RestAssured.given;
-import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.nullValue;
 
@@ -42,11 +41,12 @@ class UbicacionNegocioTest {
             m.put("lng", -96.5944);
             como(dueno).body(m).when().put("/api/admin/negocios/" + SLUG).then().statusCode(200)
                     .body("atencionEnLocal", equalTo(true)).body("colonia", equalTo("Centro"));
-            given().when().get("/api/negocios/" + SLUG).then().statusCode(200)
+            Number lat = given().when().get("/api/negocios/" + SLUG).then().statusCode(200)
                     .body("atencionEnLocal", equalTo(true))
                     .body("direccion", equalTo("Av. Juárez 25"))
                     .body("referencias", equalTo("Frente al parque"))
-                    .body("lat", closeTo(16.3301f, 0.0001f));
+                    .extract().path("lat");
+            org.junit.jupiter.api.Assertions.assertEquals(16.3301, lat.doubleValue(), 0.000001);
 
             // Pin fuera de México: no.
             m.put("lat", 40.0);
