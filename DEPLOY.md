@@ -297,3 +297,13 @@ En **Panel → Usuarios → Equipo**, al final, la tarjeta **🧪 Usuarios de pr
 - Desde ahora se anotan en la bitácora: crear cuenta, iniciar sesión, actualizar datos, cambiar contraseña y
   activar/desactivar avisos (también se ven en Panel → Historial).
 - Servicios: `GET /api/clientes/historial?estado=&pagina=` y `GET /api/clientes/actividad?pagina=`.
+
+## Ubicación de los negocios
+
+- Migración **V25**: en `negocio`, `atencion_en_local`, `colonia`, `referencias`, `lat` y `lng` (todo opcional). Los
+  negocios que ya tenían dirección quedan «con local»; los demás, «solo en línea».
+- **Panel → Negocio → Datos → Ubicación y atención**: «Tiene local» (dirección, colonia, referencias y pin en el mapa) o
+  «Solo en línea».
+- En el sitio: franja bajo el nombre del negocio («📍 dirección · horario · Ver ubicación ↓» o «💻 Atención solo en
+  línea») y tarjeta **Datos del negocio** con mapa (se carga al llegar a ella), «Cómo llegar», WhatsApp y Llamar; o la
+  leyenda de atención solo en línea. Si el negocio es solo en línea, el sitio no recibe su dirección ni su ubicación.

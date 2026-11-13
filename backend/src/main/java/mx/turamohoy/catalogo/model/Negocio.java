@@ -59,6 +59,24 @@ public class Negocio extends PanacheEntityBase {
     @Column(length = 120)
     public String horario;
 
+    /** true = tiene local para visitas; false = «Atención solo en línea». */
+    @Column(name = "atencion_en_local", nullable = false)
+    public boolean atencionEnLocal;
+
+    @Column(length = 100)
+    public String colonia;
+
+    /** «Frente al parque…». */
+    @Column(length = 200)
+    public String referencias;
+
+    /** Pin del mapa (opcional). */
+    @Column(precision = 9, scale = 6)
+    public java.math.BigDecimal lat;
+
+    @Column(precision = 9, scale = 6)
+    public java.math.BigDecimal lng;
+
     /** Si es true, el sitio muestra el aviso de venta solo a mayores de 18 años. */
     @Column(name = "solo_mayores_edad", nullable = false)
     public boolean soloMayoresEdad;

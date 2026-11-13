@@ -56,6 +56,13 @@ public class AdminNegocioResource {
             @Size(max = 30) String telefono,
             @Size(max = 200) String direccion,
             @Size(max = 120) String horario,
+            /** null = no cambia. */
+            Boolean atencionEnLocal,
+            @Size(max = 100) String colonia,
+            @Size(max = 200) String referencias,
+            /** Pin del mapa; los dos vacíos lo quitan. */
+            Double lat,
+            Double lng,
             @Pattern(regexp = "#[0-9a-fA-F]{6}", message = "El color va en formato #rrggbb.") String colorPrimario,
             /** Compatibilidad: true = PUBLICO, false = OCULTO. Mejor usar {@code estado}. */
             Boolean visible,
@@ -99,6 +106,17 @@ public class AdminNegocioResource {
         n.telefono = limpio(e.telefono());
         n.direccion = limpio(e.direccion());
         n.horario = limpio(e.horario());
+        boolean local = n.atencionEnLocal;
+        String colonia = n.colonia, referencias = n.referencias;
+        java.math.BigDecimal lat = n.lat, lng = n.lng;
+        if (e.atencionEnLocal() != null) {
+            n.atencionEnLocal = e.atencionEnLocal();
+        }
+        n.colonia = limpio(e.colonia());
+        n.referencias = limpio(e.referencias());
+        mx.turamohoy.pedidos.Ubicacion u = mx.turamohoy.pedidos.Ubicacion.de(e.lat(), e.lng());
+        n.lat = u == null ? null : u.lat();
+        n.lng = u == null ? null : u.lng();
         String portada = imagenes.validar(n, e.portadaUrl());
         if (portada != null) {
             n.portadaUrl = portada;
@@ -120,6 +138,9 @@ public class AdminNegocioResource {
         c.campo("Nombre", nombre, n.nombre).campo("Eslogan", eslogan, n.eslogan).largo("Descripción", descripcion, n.descripcion)
                 .campo("WhatsApp", whatsapp, n.whatsapp).campo("Teléfono", telefono, n.telefono)
                 .campo("Dirección", direccion, n.direccion).campo("Horario", horario, n.horario)
+                .campo("Atención", local ? "Con local" : "Solo en línea", n.atencionEnLocal ? "Con local" : "Solo en línea")
+                .campo("Colonia", colonia, n.colonia).campo("Referencias", referencias, n.referencias)
+                .campo("Mapa", lat == null ? null : lat + ", " + lng, n.lat == null ? null : n.lat + ", " + n.lng)
                 .largo("Portada", portadaAntes, n.portadaUrl).campo("Color", color, n.colorPrimario)
                 .campo("Tope de adelanto", tope, n.topeAdelanto).campo("Visibilidad", nombreEstado(estado), nombreEstado(n.estado));
         if (c.hay()) {

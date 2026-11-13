@@ -17,6 +17,12 @@ public record NegocioAdminDto(
         String telefono,
         String direccion,
         String horario,
+        /** Ubicación: si tiene local, colonia, referencias y pin (cuando es solo en línea, van vacíos en lo público). */
+        boolean atencionEnLocal,
+        String colonia,
+        String referencias,
+        java.math.BigDecimal lat,
+        java.math.BigDecimal lng,
         boolean soloMayoresEdad,
         /** true solo si es público (se conserva para compatibilidad). */
         boolean visible,
@@ -31,6 +37,7 @@ public record NegocioAdminDto(
     public static NegocioAdminDto de(Negocio n, long productosActivos, String encargado) {
         return new NegocioAdminDto(n.id, n.slug, n.nombre, n.eslogan, n.descripcion, n.tipo,
                 n.colorPrimario, n.portadaUrl, n.whatsapp, n.telefono, n.direccion, n.horario,
+                n.atencionEnLocal, n.colonia, n.referencias, n.lat, n.lng,
                 n.soloMayoresEdad, n.publico(), n.estado, n.visibleApp, n.topeAdelanto, n.orden, productosActivos, encargado);
     }
 }

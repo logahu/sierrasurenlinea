@@ -22,6 +22,12 @@ public record NegocioDto(
         String telefono,
         String direccion,
         String horario,
+        /** Ubicación: si tiene local, colonia, referencias y pin (cuando es solo en línea, van vacíos en lo público). */
+        boolean atencionEnLocal,
+        String colonia,
+        String referencias,
+        java.math.BigDecimal lat,
+        java.math.BigDecimal lng,
         boolean soloMayoresEdad,
         /** Si se muestra dentro de la app de Google Play. */
         boolean visibleApp,
@@ -40,7 +46,9 @@ public record NegocioDto(
 
     public static NegocioDto de(Negocio n, List<CategoriaDto> categorias, List<TipoEncargoDto> tiposEncargo) {
         return new NegocioDto(n.id, n.slug, n.nombre, n.eslogan, n.descripcion, n.tipo,
-                n.colorPrimario, n.portadaUrl, n.whatsapp, n.telefono, n.direccion, n.horario,
+                n.colorPrimario, n.portadaUrl, n.whatsapp, n.telefono, n.atencionEnLocal ? n.direccion : null, n.horario,
+                n.atencionEnLocal, n.atencionEnLocal ? n.colonia : null, n.atencionEnLocal ? n.referencias : null,
+                n.atencionEnLocal ? n.lat : null, n.atencionEnLocal ? n.lng : null,
                 n.soloMayoresEdad, n.visibleApp, n.estado, n.topeAdelanto, n.modoPedido(), categorias, tiposEncargo);
     }
 }

@@ -11,6 +11,7 @@ import { BarraCarrito } from './barra-carrito';
 import { CarritoService, TEXTOS_PEDIDO, modoDe } from './carrito';
 import { Producto } from './catalogo.model';
 import { precioConUnidad } from './contacto';
+import { direccionCorta, horarioCorto } from './ubicacion-negocio';
 
 /** Catálogo de un negocio: /turamohoy, /inflables?categoria=brincolines, etc. */
 @Component({
@@ -25,6 +26,15 @@ import { precioConUnidad } from './contacto';
   },
 })
 export class CatalogoPage {
+  protected readonly direccionCorta = direccionCorta;
+  protected readonly horarioCorto = horarioCorto;
+
+  /** «Ver ubicación ↓»: baja a «Datos del negocio» sin cambiar la dirección de la página. */
+  protected irADatos(e: Event): void {
+    e.preventDefault();
+    document.getElementById('datos-negocio')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   private readonly api = inject(CatalogoService);
   private readonly title = inject(Title);
 
