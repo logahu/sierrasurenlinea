@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
-import { catchError, of } from 'rxjs';
+import { catchError, of, retry } from 'rxjs';
 import { environment } from '../../environments/environment';
 
 /** Colonia, barrio o comunidad del catálogo (las que el administrador dejó activas). */
@@ -66,6 +66,11 @@ export function nombreParaPedido(c: Colonia, todas: readonly Colonia[]): string 
 export class ColoniasService {
   private readonly http = inject(HttpClient);
   readonly lista = rxResource({
-    stream: () => this.http.get<Colonia[]>(`${environment.apiUrl}/colonias`).pipe(catchError(() => of([] as Colonia[]))),
+    // Si el servidor estaba dormido, el primer intento puede fallar: se reintenta antes de rendirse.
+    stream: () =>
+      this.http.get<Colonia[]>(`${environment.apiUrl}/colonias`).pipe(
+        retry({ count: 4, delay: 4000 }),
+        catchError(() => of([] as Colonia[])),
+      ),
   });
 }

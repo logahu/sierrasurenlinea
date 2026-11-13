@@ -186,7 +186,7 @@ function elegir<T extends string>(valor: string | undefined, permitidos: readonl
                   } @else {
                     <option value="" disabled>Elige…</option>
                   }
-                  @for (n of (rolNuevo() === 'ENCARGADO' ? libres() : negocios.value() ?? []); track n.slug) {
+                  @for (n of (rolNuevo() === 'ENCARGADO' ? libres() : listaNegocios()); track n.slug) {
                     <option [value]="n.slug">{{ n.nombre }}</option>
                   }
                 </select>
@@ -235,7 +235,7 @@ function elegir<T extends string>(valor: string | undefined, permitidos: readonl
           <select aria-label="Negocio" [value]="fe().negocio" (change)="filtrar({ negocio: $any($event.target).value })">
             <option value="">Negocio: todos</option>
             <option value="_general">Sin negocio (generales)</option>
-            @for (n of negocios.value() ?? []; track n.slug) { <option [value]="n.slug">{{ n.nombre }}</option> }
+            @for (n of listaNegocios(); track n.slug) { <option [value]="n.slug">{{ n.nombre }}</option> }
           </select>
           <select aria-label="Estado" [value]="fe().estado" (change)="filtrar({ estado: $any($event.target).value })">
             <option value="activos">Activos</option>
@@ -260,7 +260,7 @@ function elegir<T extends string>(valor: string | undefined, permitidos: readonl
         </div>
       </section>
       <p class="resultado" role="status">
-        {{ usuarios.isLoading() && !usuarios.hasValue() ? 'Cargando…' : equipo().lista.length + ' de ' + (usuarios.value()?.length ?? 0) + ' personas' }}
+        {{ usuarios.isLoading() && !usuarios.hasValue() ? 'Cargando…' : equipo().lista.length + ' de ' + listaUsuarios().length + ' personas' }}
         @if (fe().q) { · búsqueda «{{ fe().q }}» }
       </p>
 
@@ -452,7 +452,10 @@ export class UsuariosPage {
 
   protected readonly usuarios = rxResource({ stream: () => this.api.usuarios() });
   protected readonly negocios = rxResource({ stream: () => this.api.negocios() });
-  protected readonly equipo = computed(() => filtrarEquipo(this.usuarios.value() ?? [], this.fe()));
+  /** value() lanza un error si la carga falló. */
+  protected readonly listaUsuarios = computed(() => (this.usuarios.hasValue() ? this.usuarios.value() : []));
+  protected readonly listaNegocios = computed(() => (this.negocios.hasValue() ? this.negocios.value() : []));
+  protected readonly equipo = computed(() => filtrarEquipo(this.listaUsuarios(), this.fe()));
   protected readonly hayFiltrosEquipo = computed(() => {
     const f = this.fe();
     return Object.keys(EQUIPO_POR_OMISION).some((k) => f[k as keyof FiltrosEquipo] !== EQUIPO_POR_OMISION[k as keyof FiltrosEquipo]);
@@ -465,17 +468,17 @@ export class UsuariosPage {
     stream: ({ params }) => this.api.clientes(params),
   });
   protected readonly listaClientes = linkedSignal<PaginaClientes | undefined, ClienteAdmin[]>({
-    source: () => this.clientesPagina.value(),
+    source: () => (this.clientesPagina.hasValue() ? this.clientesPagina.value() : undefined),
     computation: (p, previo) => (p ? juntarPaginas(previo?.value ?? [], p.clientes, p.pagina) : (previo?.value ?? [])),
   });
-  protected readonly totalClientes = computed(() => this.clientesPagina.value()?.total ?? 0);
+  protected readonly totalClientes = computed(() => (this.clientesPagina.hasValue() ? this.clientesPagina.value()?.total ?? 0 : 0));
   protected readonly hayFiltrosClientes = computed(() => {
     const f = this.fc();
     return !!(f.q || f.grupo || f.pedidos || f.orden !== 'recientes');
   });
 
   protected conteoGrupo(g: FiltrosClientes['grupo']): number {
-    const c = this.clientesPagina.value()?.conteos;
+    const c = this.clientesPagina.hasValue() ? this.clientesPagina.value()?.conteos : undefined;
     if (!c) return 0;
     return g === 'probadores' ? c.probadores : g === 'prueba' ? c.dePrueba : g === 'sin-acceso' ? c.sinAcceso : c.todos - c.dePrueba;
   }
@@ -520,12 +523,12 @@ export class UsuariosPage {
   /** Negocios sin encargado activo: los únicos a los que se puede asignar uno nuevo. */
   protected readonly libres = computed(() => {
     const ocupados = new Set(
-      (this.usuarios.value() ?? []).filter((u) => u.rol === 'ENCARGADO' && u.activo).map((u) => u.negocioSlug),
+      this.listaUsuarios().filter((u) => u.rol === 'ENCARGADO' && u.activo).map((u) => u.negocioSlug),
     );
-    return (this.negocios.value() ?? []).filter((n) => !ocupados.has(n.slug));
+    return this.listaNegocios().filter((n) => !ocupados.has(n.slug));
   });
   protected readonly hayCupoAdmin = computed(
-    () => (this.usuarios.value() ?? []).filter((u) => u.rol === 'DUENO' && u.activo).length < MAX_ADMINISTRADORES,
+    () => this.listaUsuarios().filter((u) => u.rol === 'DUENO' && u.activo).length < MAX_ADMINISTRADORES,
   );
 
   protected readonly form = inject(FormBuilder).nonNullable.group({

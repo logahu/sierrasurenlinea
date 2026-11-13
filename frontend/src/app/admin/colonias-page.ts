@@ -167,11 +167,16 @@ export function filtrarColonias(lista: ColoniaAdmin[], q: string, tipo: string, 
             </td></tr>
           }
         } @empty {
-          <tr><td colspan="6" class="ayuda vacio">{{ datos.isLoading() ? 'Cargando…' : 'Ninguna coincide con los filtros.' }}</td></tr>
+          <tr><td colspan="6" class="ayuda vacio">{{ datos.isLoading() ? 'Cargando… (si el servidor estaba dormido, tarda hasta un minuto)' : datos.error() ? 'No se pudieron cargar.' : 'Ninguna coincide con los filtros.' }}</td></tr>
         }
       </tbody>
     </table>
-    @if (datos.error()) { <p class="error" role="alert">No se pudieron cargar las colonias. <button class="btn secundario" (click)="datos.reload()">Reintentar</button></p> }
+    @if (datos.error(); as e) {
+      <p class="error" role="alert">
+        No se pudieron cargar las colonias ({{ mensaje(e) }}).
+        <button type="button" class="btn secundario" (click)="datos.reload()">Reintentar</button>
+      </p>
+    }
   `,
   styles: `
     .solicitudes { border: 1px solid #fdba74; background: #fff7ed; border-radius: .75rem; padding: .75rem 1rem; margin-bottom: 1.25rem; }
@@ -226,8 +231,10 @@ export class ColoniasPage {
   protected readonly sinTarifaValor = SIN_TARIFA;
 
   protected readonly datos = rxResource({ stream: () => this.api.colonias() });
-  private readonly todas = computed(() => this.datos.value()?.colonias ?? []);
-  protected readonly zonas = computed(() => this.datos.value()?.zonas ?? []);
+  /** value() lanza un error si la carga falló: se lee solo cuando hay datos. */
+  private readonly cargado = computed(() => (this.datos.hasValue() ? this.datos.value() : undefined));
+  private readonly todas = computed(() => this.cargado()?.colonias ?? []);
+  protected readonly zonas = computed(() => this.cargado()?.zonas ?? []);
   protected readonly solicitudes = computed(() =>
     this.todas().filter((c) => c.estado === 'SOLICITADA').sort((a, b) => b.solicitudes - a.solicitudes),
   );
@@ -256,6 +263,10 @@ export class ColoniasPage {
   protected readonly aviso = signal<string | null>(null);
   protected readonly error = signal<string | null>(null);
   protected readonly esSolicitud = computed(() => this.solicitudes().some((c) => c.id === this.fila()));
+
+  protected mensaje(e: unknown): string {
+    return mensajeDeError((e as { cause?: unknown })?.cause ?? e);
+  }
 
   protected abrir(id: number): void {
     this.confirmando.set(null);

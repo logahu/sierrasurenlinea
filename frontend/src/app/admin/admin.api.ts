@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, retry, throwError, timer } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Platillo, Restaurante, TipoEncargo } from '../catalogo/catalogo.model';
 import {
@@ -84,7 +84,10 @@ export class AdminApi {
   }
 
   colonias(): Observable<{ colonias: ColoniaAdmin[]; zonas: string[] }> {
-    return this.http.get<{ colonias: ColoniaAdmin[]; zonas: string[] }>(`${this.base}/colonias`);
+    // Reintenta mientras el servidor despierta (no reintenta si falta permiso).
+    return this.http.get<{ colonias: ColoniaAdmin[]; zonas: string[] }>(`${this.base}/colonias`).pipe(
+      retry({ count: 3, delay: (e: { status?: number }) => (e?.status === 401 || e?.status === 403 ? throwError(() => e) : timer(4000)) }),
+    );
   }
 
   crearColonia(d: DatosColonia): Observable<ColoniaAdmin> {
