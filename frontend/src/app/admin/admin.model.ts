@@ -130,6 +130,11 @@ export interface NegocioAdmin {
   telefono: string | null;
   direccion: string | null;
   horario: string | null;
+  atencionEnLocal?: boolean;
+  colonia?: string | null;
+  referencias?: string | null;
+  lat?: number | null;
+  lng?: number | null;
   soloMayoresEdad: boolean;
   /** true solo si es público (compatibilidad). */
   visible: boolean;
@@ -147,7 +152,7 @@ export interface NegocioAdmin {
 /** Lo que se manda al guardar un negocio. */
 export type NegocioEdicion = Pick<
   NegocioAdmin,
-  'nombre' | 'eslogan' | 'descripcion' | 'whatsapp' | 'telefono' | 'direccion' | 'horario' | 'colorPrimario' | 'topeAdelanto' | 'portadaUrl'
+  'nombre' | 'eslogan' | 'descripcion' | 'whatsapp' | 'telefono' | 'direccion' | 'horario' | 'atencionEnLocal' | 'colonia' | 'referencias' | 'lat' | 'lng' | 'colorPrimario' | 'topeAdelanto' | 'portadaUrl'
 >;
 
 export interface CategoriaAdmin {

@@ -9,6 +9,9 @@ import { NegocioAdmin, NegocioEdicion } from './admin.model';
 import { AdminApi } from './admin.api';
 import { mensajeDeError } from './autorizacion';
 import { SesionService } from './sesion';
+import { MapaUbicacion } from '../mapa/mapa-ubicacion';
+import { Punto, puntoDe } from '../mapa/ubicacion';
+import { ColoniasService, agrupar } from '../colonias/colonias';
 
 /** Muestra el número como se ve en México: 55 4048 5363 (sin el 52). */
 export function whatsappLegible(numero: string): string {
@@ -29,7 +32,15 @@ export function whatsappValido(texto: string): boolean {
 
 @Component({
   selector: 'app-editar-negocio',
-  imports: [ReactiveFormsModule, NegocioTabs, FotoCampo, RouterLink],
+  imports: [ReactiveFormsModule, NegocioTabs, FotoCampo, RouterLink, MapaUbicacion],
+  styles: `
+    .atencion { display: flex; border: 1px solid var(--linea); border-radius: 999px; overflow: hidden; margin-bottom: .4rem; }
+    .atencion button { flex: 1; border: 0; background: var(--superficie); color: var(--tinta); font: inherit; font-weight: 600; padding: .55rem .5rem; cursor: pointer; }
+    .atencion button.elegida { background: var(--follaje); color: #fff; }
+    .campo-mapa { display: grid; gap: .3rem; font-weight: 600; font-size: .9rem; }
+    .campo-mapa small { font-weight: 400; color: var(--tinta-suave); }
+    .nota-atencion { margin: .2rem 0 0; color: var(--tinta-suave); font-size: .92rem; }
+  `,
   template: `
     <app-negocio-tabs [slug]="slug()" [negocio]="negocio.value()" seccion="datos" />
 
@@ -50,13 +61,51 @@ export function whatsappValido(texto: string): boolean {
             <input formControlName="telefono" inputmode="tel" autocomplete="off" />
           </label>
           <label>
-            <span>Dirección <span class="opcional">(opcional)</span></span>
-            <input formControlName="direccion" maxlength="200" />
-          </label>
-          <label>
             <span>Horario <span class="opcional">(opcional)</span></span>
             <input formControlName="horario" maxlength="120" placeholder="Lun a sáb, 9:00 a 19:00" />
           </label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Ubicación y atención</legend>
+          <div class="atencion" role="radiogroup" aria-label="¿Cómo atiende?">
+            <button type="button" role="radio" [attr.aria-checked]="form.controls.atencionEnLocal.value"
+                    [class.elegida]="form.controls.atencionEnLocal.value" (click)="elegirAtencion(true)">🏪 Tiene local</button>
+            <button type="button" role="radio" [attr.aria-checked]="!form.controls.atencionEnLocal.value"
+                    [class.elegida]="!form.controls.atencionEnLocal.value" (click)="elegirAtencion(false)">💻 Solo en línea</button>
+          </div>
+          @if (form.controls.atencionEnLocal.value) {
+            <label>
+              <span>Dirección <span class="opcional">(opcional)</span></span>
+              <input formControlName="direccion" maxlength="200" placeholder="Av. Juárez 25, interior 3" />
+            </label>
+            <label>
+              <span>Colonia o barrio <span class="opcional">(opcional)</span></span>
+              <select formControlName="colonia">
+                <option value="">Sin colonia</option>
+                @for (g of grupos(); track g.tipo) {
+                  <optgroup [label]="g.titulo">
+                    @for (c of g.colonias; track c.id) { <option [value]="c.nombre">{{ c.nombre }}</option> }
+                  </optgroup>
+                }
+                @if (coloniaFuera(); as c) { <option [value]="c">{{ c }}</option> }
+              </select>
+            </label>
+            <label>
+              <span>Referencias <span class="opcional">(opcional)</span></span>
+              <input formControlName="referencias" maxlength="200" placeholder="Frente al parque, junto a la farmacia" />
+            </label>
+            <div class="campo-mapa">
+              <span>Ubicación en el mapa <span class="opcional">(opcional)</span></span>
+              <app-mapa-ubicacion [punto]="punto()" (puntoChange)="cambiarPunto($event)" para="negocio" />
+              <small>Con el pin, los clientes ven el mapa y el botón «Cómo llegar» lleva justo ahí.</small>
+            </div>
+          } @else {
+            <p class="nota-atencion">
+              En la página del negocio se verá <strong>«Atención solo en línea»</strong>: los clientes piden por el sitio o por
+              WhatsApp. La dirección y el mapa no se muestran (si ya los tenías, se guardan por si cambias de opción).
+            </p>
+          }
         </fieldset>
 
         @if (n.tipo === 'SERVICIO') {
@@ -145,6 +194,9 @@ export class EditarNegocio {
     telefono: [''],
     direccion: [''],
     horario: [''],
+    atencionEnLocal: [false],
+    colonia: [''],
+    referencias: [''],
     colorPrimario: ['#000000'],
     topeAdelanto: [null as number | null],
   });
@@ -168,8 +220,33 @@ export class EditarNegocio {
     this.guardado.set(false);
   }
 
+  /** Pin del negocio (fuera del formulario). */
+  protected readonly punto = signal<Punto | null>(null);
+  private readonly colonias = inject(ColoniasService);
+  protected readonly grupos = computed(() => agrupar(this.colonias.lista.hasValue() ? (this.colonias.lista.value() ?? []) : []));
+  /** Si la colonia guardada ya no está en el catálogo, se ofrece igual para no perderla. */
+  protected readonly coloniaFuera = computed(() => {
+    const n = this.negocio.hasValue() ? this.negocio.value() : undefined;
+    const c = n?.colonia;
+    return c && !this.grupos().some((g) => g.colonias.some((x) => x.nombre === c)) ? c : null;
+  });
+
+  protected elegirAtencion(local: boolean): void {
+    if (this.form.controls.atencionEnLocal.value === local) return;
+    this.form.controls.atencionEnLocal.setValue(local);
+    this.form.markAsDirty();
+    this.guardado.set(false);
+  }
+
+  protected cambiarPunto(p: Punto | null): void {
+    this.punto.set(p);
+    this.form.markAsDirty();
+    this.guardado.set(false);
+  }
+
   private cargar(n: NegocioAdmin): void {
     this.portada.set(null);
+    this.punto.set(puntoDe(n.lat, n.lng));
     this.form.reset({
       nombre: n.nombre,
       eslogan: n.eslogan ?? '',
@@ -178,6 +255,9 @@ export class EditarNegocio {
       telefono: n.telefono ?? '',
       direccion: n.direccion ?? '',
       horario: n.horario ?? '',
+      atencionEnLocal: !!n.atencionEnLocal,
+      colonia: n.colonia ?? '',
+      referencias: n.referencias ?? '',
       colorPrimario: n.colorPrimario,
       topeAdelanto: n.topeAdelanto,
     });
@@ -195,7 +275,15 @@ export class EditarNegocio {
     }
     this.error.set(null);
     this.guardando.set(true);
-    const datos: NegocioEdicion = { ...v, portadaUrl: this.portada() ?? n.portadaUrl };
+    const p = this.punto();
+    const datos: NegocioEdicion = {
+      ...v,
+      colonia: v.colonia || null,
+      referencias: v.referencias.trim() || null,
+      lat: p?.lat ?? null,
+      lng: p?.lng ?? null,
+      portadaUrl: this.portada() ?? n.portadaUrl,
+    };
     this.api
       .guardarNegocio(n.slug, datos)
       .pipe(finalize(() => this.guardando.set(false)))

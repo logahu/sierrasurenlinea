@@ -25,6 +25,12 @@ export interface Negocio {
   telefono: string | null;
   direccion: string | null;
   horario: string | null;
+  /** true = tiene local para visitas; false = «Atención solo en línea» (sin dirección ni mapa). */
+  atencionEnLocal?: boolean;
+  colonia?: string | null;
+  referencias?: string | null;
+  lat?: number | null;
+  lng?: number | null;
   soloMayoresEdad: boolean;
   /** Si se muestra dentro de la app de Google Play (en la web siempre). */
   visibleApp?: boolean;

@@ -31,10 +31,10 @@ const PIN = `<svg xmlns="http://www.w3.org/2000/svg" width="34" height="46" view
           }
         </div>
       }
-      <div #lienzo class="mapa-lienzo" role="application" [attr.aria-label]="soloLectura() ? 'Mapa con el punto de entrega' : 'Mapa: toca para marcar el punto de entrega'"></div>
+      <div #lienzo class="mapa-lienzo" role="application" [attr.aria-label]="soloLectura() ? 'Mapa con ' + (para() === 'negocio' ? 'la ubicación del negocio' : 'el punto de entrega') : 'Mapa: toca para marcar ' + (para() === 'negocio' ? 'dónde está el negocio' : 'el punto de entrega')"></div>
       @if (!soloLectura()) {
         <p class="mapa-ayuda" [class.mapa-error]="!!error()">
-          {{ error() ?? (punto() ? 'Arrastra el pin si hace falta para dejarlo justo en la entrada.' : 'Toca el mapa en el lugar de entrega, o usa tu ubicación.') }}
+          {{ error() ?? (punto() ? 'Arrastra el pin si hace falta para dejarlo justo en la entrada.' : para() === 'negocio' ? 'Toca el mapa donde está el negocio, o usa tu ubicación si estás ahí.' : 'Toca el mapa en el lugar de entrega, o usa tu ubicación.') }}
         </p>
       }
       @if (fallo()) {
@@ -47,6 +47,8 @@ export class MapaUbicacion {
   /** Punto marcado (dos sentidos). */
   readonly punto = model<Punto | null>(null);
   readonly soloLectura = input(false);
+  /** Para los textos: el punto de entrega de un pedido o dónde está un negocio. */
+  readonly para = input<'entrega' | 'negocio'>('entrega');
 
   private readonly lienzo = viewChild.required<ElementRef<HTMLDivElement>>('lienzo');
   protected readonly buscando = signal(false);

@@ -234,6 +234,23 @@ h1, h2, h3 { font-family: var(--t-fuente-titulo); font-weight: var(--t-peso-titu
 :host([data-tema='encarguitos']) { @include encarguitos.catalogo; }
 :host([data-tema='autos']) { @include autos.catalogo; }
 
+.franja-ubicacion {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem .9rem;
+  align-items: center;
+  margin: .75rem 0 0;
+  padding: .5rem .8rem;
+  border-radius: .75rem;
+  background: color-mix(in srgb, var(--t-superficie, #fff) 82%, transparent);
+  color: var(--t-tinta, var(--tinta));
+  font-size: .9rem;
+  span:first-child { font-weight: 600; }
+  a { margin-left: auto; color: var(--t-acento-texto); font-weight: 600; white-space: nowrap; text-underline-offset: .2em; }
+  &.en-linea { background: #eef4fb; color: #1c3d63; a { color: #1864ab; } }
+}
+
 .como-pedir {
   position: relative;
   display: inline-block;
