@@ -14,6 +14,12 @@ export const CUENTA_ROUTES: Routes = [
     loadComponent: () => import('./mi-cuenta-page').then((m) => m.MiCuentaPage),
   },
   {
+    path: 'historial',
+    title: 'Mi historial · Sierra Sur en Línea',
+    canActivate: [conCuenta],
+    loadComponent: () => import('./historial-page').then((m) => m.HistorialPage),
+  },
+  {
     path: 'entrar',
     title: 'Iniciar sesión · Sierra Sur en Línea',
     loadComponent: () => import('./entrar-cliente-page').then((m) => m.EntrarClientePage),

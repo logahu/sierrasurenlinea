@@ -1,6 +1,6 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { VerContrasena } from '../compartido/ver-contrasena';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -30,6 +30,7 @@ import { MINIMO_CONTRASENA, estadoParaCliente } from './cuenta.model';
     .estado { font-size: .8rem; font-weight: 700; padding: .15rem .6rem; border-radius: 999px; background: var(--fondo-alt); align-self: start; }
     .estado.ENTREGADO { color: var(--follaje); }
     .estado.CANCELADO { color: #c92a2a; }
+    .ver-historial { margin: .8rem 0 0; font-size: .92rem; a { font-weight: 600; } span { color: var(--tinta-suave); } }
     details { margin-top: 1.5rem; }
     summary { cursor: pointer; font-weight: 600; }
     details form { margin-top: .9rem; }
@@ -51,7 +52,7 @@ import { MINIMO_CONTRASENA, estadoParaCliente } from './cuenta.model';
           <p class="error">No pudimos cargar tus pedidos. Intenta de nuevo en un momento.</p>
         } @else {
           <ul class="pedidos" aria-live="polite">
-            @for (p of pedidos.value() ?? []; track p.id) {
+            @for (p of recientes(); track p.id) {
               <li class="pedido">
                 <strong>{{ p.negocioNombre }} · {{ p.tipo }}</strong>
                 <span class="estado" [class]="p.estado">{{ estado(p) }}</span>
@@ -66,6 +67,10 @@ import { MINIMO_CONTRASENA, estadoParaCliente } from './cuenta.model';
             }
           </ul>
         }
+        <p class="ver-historial">
+          <a routerLink="/cuenta/historial">📋 Ver mi historial completo</a>
+          <span>· pedidos entregados, cancelados y actividad de tu cuenta</span>
+        </p>
 
         <h2>Mis datos</h2>
         <form [formGroup]="datos" (ngSubmit)="guardar()" novalidate>
@@ -130,6 +135,12 @@ export class MiCuentaPage {
   protected readonly minimo = MINIMO_CONTRASENA;
 
   protected readonly pedidos = rxResource({ stream: () => this.sesion.pedidos() });
+  /** Aquí solo los en curso y los últimos; el resto está en «Mi historial». */
+  protected readonly recientes = computed(() => {
+    const todos = this.pedidos.hasValue() ? (this.pedidos.value() ?? []) : [];
+    const enCurso = todos.filter((p) => ['NUEVO', 'ACEPTADO', 'EN_CAMINO'].includes(p.estado));
+    return enCurso.length >= 5 ? enCurso : [...enCurso, ...todos.filter((p) => !enCurso.includes(p)).slice(0, 5 - enCurso.length)];
+  });
 
   private readonly fb = inject(FormBuilder).nonNullable;
   protected readonly datos = this.fb.group({
@@ -149,7 +160,7 @@ export class MiCuentaPage {
   constructor() {
     // Mientras haya pedidos en curso, el estado se actualiza solo cada 30 segundos.
     const reloj = setInterval(() => {
-      const enCurso = (this.pedidos.value() ?? []).some((p) => ['NUEVO', 'ACEPTADO', 'EN_CAMINO'].includes(p.estado));
+      const enCurso = (this.pedidos.hasValue() ? (this.pedidos.value() ?? []) : []).some((p) => ['NUEVO', 'ACEPTADO', 'EN_CAMINO'].includes(p.estado));
       if (enCurso && document.visibilityState === 'visible') this.pedidos.reload();
     }, 30_000);
     inject(DestroyRef).onDestroy(() => clearInterval(reloj));

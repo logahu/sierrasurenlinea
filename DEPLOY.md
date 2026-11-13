@@ -288,3 +288,12 @@ En **Panel → Usuarios → Equipo**, al final, la tarjeta **🧪 Usuarios de pr
   opciones y nota, y el pedido llega al panel y a WhatsApp separado por persona.
 - El servidor revisa las opciones y **calcula el total con los precios del menú** (más la tarifa de la zona); el total
   que manda el navegador no se usa para comida.
+
+## Mi historial (clientes)
+
+- **Mi cuenta → Ver mi historial completo** (`/cuenta/historial`): todos los pedidos con filtros (En curso, Entregados,
+  Cancelados), detalle de cada uno (también por persona en comida) y «Volver a pedir»; y la pestaña **Actividad**, con lo que
+  hizo el cliente y lo que el equipo hizo en sus pedidos o su cuenta (sin decir quién del equipo).
+- Desde ahora se anotan en la bitácora: crear cuenta, iniciar sesión, actualizar datos, cambiar contraseña y
+  activar/desactivar avisos (también se ven en Panel → Historial).
+- Servicios: `GET /api/clientes/historial?estado=&pagina=` y `GET /api/clientes/actividad?pagina=`.
