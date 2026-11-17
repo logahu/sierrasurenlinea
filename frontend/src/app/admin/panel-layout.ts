@@ -17,13 +17,20 @@ import { SesionService } from './sesion';
     <div class="panel">
       @if (sesion.usuario(); as u) {
         <nav class="panel-nav" aria-label="Panel">
-          <a routerLink="/admin/pedidos" routerLinkActive="activo">
+@if (sesion.esEmpleado()) {
+            <a routerLink="/admin/agenda" routerLinkActive="activo">Mi agenda</a>
+          } @else {
+                    <a routerLink="/admin/pedidos" routerLinkActive="activo">
             Pedidos @if (pedidos.nuevos()) { <span class="marca-nuevos">{{ pedidos.nuevos() }}</span> }
           </a>
-          @if (!sesion.esRepartidor()) {
+          }
+          @if (!sesion.esRepartidor() && !sesion.esEmpleado()) {
+            <a routerLink="/admin/agenda" routerLinkActive="activo">Agenda</a>
+          }
+          @if (!sesion.esRepartidor() && !sesion.esEmpleado()) {
             <a routerLink="/admin" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }">Negocios</a>
           }
-          @if (!sesion.esRepartidor()) {
+          @if (!sesion.esRepartidor() && !sesion.esEmpleado()) {
             <a routerLink="/admin/tablero" routerLinkActive="activo">Tablero</a>
             <a routerLink="/admin/historial" routerLinkActive="activo">Historial</a>
           }

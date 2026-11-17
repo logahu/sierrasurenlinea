@@ -1,6 +1,7 @@
 import { ControlColonia, OTRA } from '../colonias/elegir-colonia';
+import { CitaElegida, ElegirHorario } from './elegir-horario';
 import { HttpClient } from '@angular/common/http';
-import { Component, computed, effect, inject, input, signal, untracked } from '@angular/core';
+import { Component, computed, effect, inject, input, signal, untracked, viewChild } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
 import { Router, RouterLink } from '@angular/router';
@@ -16,7 +17,7 @@ import { soloEnWeb } from '../modo-app';
 import { CatalogoService } from './catalogo.service';
 import { ModoPedido } from './catalogo.model';
 import {
-  CarritoService, DatosPedido, Entrega, LineaCarrito, TEXTOS_PEDIDO, armarMensajeCarrito, faltantesPedido, modoDe,
+  CarritoService, DatosPedido, Entrega, LineaCarrito, TEXTOS_PEDIDO, armarMensajeCarrito, textosDe, faltantesPedido, modoDe,
   piezasDe, textoCuando, textoPiezas, totalDe,
 } from './carrito';
 import { enlaceWhatsapp, precioConUnidad } from './contacto';
@@ -24,6 +25,8 @@ import { enlaceWhatsapp, precioConUnidad } from './contacto';
 interface Enviado {
   folio: string | null;
   modo: ModoPedido;
+  /** Texto de la cita apartada (agenda). */
+  cita?: string | null;
 }
 
 /**
@@ -33,7 +36,7 @@ interface Enviado {
  */
 @Component({
   selector: 'app-pedido-page',
-  imports: [RouterLink, BotonAvisos, MapaUbicacion],
+  imports: [RouterLink, BotonAvisos, MapaUbicacion, ElegirHorario],
   templateUrl: './pedido-page.html',
   styleUrl: './pedido-page.scss',
   host: {
@@ -54,13 +57,13 @@ export class PedidoPage {
   protected readonly negocio = rxResource({ params: () => this.slug(), stream: ({ params }) => this.api.negocio(params) });
   protected readonly soloWeb = computed(() => soloEnWeb(this.negocio.value()));
   protected readonly modo = computed(() => modoDe(this.negocio.value()));
-  protected readonly textos = computed(() => TEXTOS_PEDIDO[this.modo() ?? 'COMPRA']);
+  protected readonly textos = computed(() => textosDe(this.negocio.value()) ?? TEXTOS_PEDIDO.COMPRA);
 
   protected readonly lineas = this.carrito.de(() => this.slug());
   protected readonly total = computed(() => totalDe(this.lineas()));
   protected readonly cuantos = computed(() => {
     const m = this.modo() ?? 'COMPRA';
-    return textoPiezas(m, m === 'CITA' ? this.lineas().length : piezasDe(this.lineas()));
+    return textoPiezas(this.textos(), m === 'CITA' ? this.lineas().length : piezasDe(this.lineas()));
   });
   protected readonly precio = precioConUnidad;
   protected readonly pesos = (n: number) => precioConUnidad({ precio: n, unidadPrecio: null });
@@ -80,16 +83,24 @@ export class PedidoPage {
   protected readonly col = new ControlColonia();
   protected readonly otra = OTRA;
 
+  /** Citas con horarios libres: se elige con quién, día y hora. */
+  protected readonly conAgenda = computed(() => this.modo() === 'CITA' && !!this.negocio.value()?.agendaActiva);
+  protected readonly cita = signal<CitaElegida | null>(null);
+  private readonly horario = viewChild(ElegirHorario);
+
   protected readonly datos = computed<DatosPedido>(() => ({
     entrega: this.modo() === 'COMPRA' ? this.entrega() : this.modo() === 'CITA' ? 'RECOGER' : 'DOMICILIO',
     entregar: this.entregar(),
-    cuando: textoCuando(this.modo() ?? 'COMPRA', this.programado(), this.fecha(), this.hora()),
+    cuando: this.conAgenda()
+      ? (this.cita()?.texto ?? '')
+      : textoCuando(this.modo() ?? 'COMPRA', this.programado(), this.fecha(), this.hora()),
     notas: this.notas(),
     punto: this.punto(),
     colonia: this.col.seleccion()?.nombre ?? null,
   }));
   protected readonly faltan = computed(() => {
-    const f = faltantesPedido(this.modo() ?? 'COMPRA', this.lineas(), this.datos(), !!this.negocio.value()?.soloMayoresEdad, this.mayorDeEdad());
+    let f = faltantesPedido(this.modo() ?? 'COMPRA', this.lineas(), this.datos(), !!this.negocio.value()?.soloMayoresEdad, this.mayorDeEdad(), this.textos());
+    if (this.conAgenda()) f = [...f.filter((x) => x !== 'el día de tu visita'), ...(this.cita() ? [] : ['el horario de tu cita'])];
     return this.datos().entrega === 'DOMICILIO' && this.col.falta() ? ['la colonia', ...f] : f;
   });
   protected readonly intentado = signal(false);
@@ -101,7 +112,7 @@ export class PedidoPage {
     const titulo = inject(Title);
     effect(() => {
       const n = this.negocio.value();
-      titulo.setTitle(n ? `${TEXTOS_PEDIDO[modoDe(n) ?? 'COMPRA'].titulo} · ${n.nombre}` : 'Sierra Sur en Línea');
+      titulo.setTitle(n ? `${(textosDe(n) ?? TEXTOS_PEDIDO.COMPRA).titulo} · ${n.nombre}` : 'Sierra Sur en Línea');
     });
     // La dirección de la cuenta se llena sola (sin pisar lo que ya escribió).
     effect(() => {
@@ -164,32 +175,44 @@ export class PedidoPage {
       mayorDeEdad: this.mayorDeEdad(),
       lat: datos.entrega === 'DOMICILIO' ? (datos.punto?.lat ?? null) : null,
       lng: datos.entrega === 'DOMICILIO' ? (datos.punto?.lng ?? null) : null,
-      mensaje: armarMensajeCarrito(n, modo, lineas, datos, quien),
+      mensaje: armarMensajeCarrito(n, modo, lineas, datos, quien, undefined, this.conAgenda()),
+      cita: this.conAgenda() && this.cita()
+        ? { fecha: this.cita()!.fecha, hora: this.cita()!.hora, empleadoId: this.cita()!.empleadoId }
+        : null,
     };
 
     // La ventana se abre ya (con el clic) para que el navegador no la bloquee.
     const ventana = window.open('', '_blank');
     this.enviando.set(true);
-    const registro = firstValueFrom(this.http.post<{ folio: string }>(`${environment.apiUrl}/pedidos/carrito`, cuerpo));
+    const registro = firstValueFrom(
+      this.http.post<{ folio: string; cuando: string | null }>(`${environment.apiUrl}/pedidos/carrito`, cuerpo),
+    );
     let rechazo: unknown = null;
+    let apartado: string | null = null;
     const folio = await Promise.race([
-      registro.then((r) => r.folio).catch((e: unknown) => {
+      registro.then((r) => {
+        apartado = r.cuando;
+        return r.folio;
+      }).catch((e: unknown) => {
         rechazo = e;
         return undefined;
       }),
-      new Promise<undefined>((ok) => setTimeout(() => ok(undefined), 6000)),
+      // Con agenda se espera la respuesta: el horario se aparta en el servidor.
+      ...(this.conAgenda() ? [] : [new Promise<undefined>((ok) => setTimeout(() => ok(undefined), 6000))]),
     ]);
     this.enviando.set(false);
 
-    // Si el sistema lo rechazó (p. ej. un producto ya no está), no se manda nada.
+    // Si el sistema lo rechazó (p. ej. un producto ya no está u otro ganó el horario), no se manda nada.
     if (rechazo) {
       ventana?.close();
       this.error.set(mensajeDeError(rechazo));
+      if (this.conAgenda()) this.horario()?.recargar();
       return;
     }
-    const url = enlaceWhatsapp(n.whatsapp, armarMensajeCarrito(n, modo, lineas, datos, quien, folio));
+    const final = apartado ? { ...datos, cuando: apartado } : datos;
+    const url = enlaceWhatsapp(n.whatsapp, armarMensajeCarrito(n, modo, lineas, final, quien, folio, this.conAgenda()));
     this.carrito.vaciar(n.slug);
-    this.enviado.set({ folio: folio ?? null, modo });
+    this.enviado.set({ folio: folio ?? null, modo, cita: apartado });
     this.ultimoPedido.registrar(folio, n.nombre);
     if (ventana) {
       ventana.location.href = url;

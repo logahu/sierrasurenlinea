@@ -8,6 +8,8 @@ public final class Rol {
     public static final String ENCARGADO = "ENCARGADO";
     /** Atiende los pedidos de su negocio desde el celular (no edita el catálogo). */
     public static final String REPARTIDOR = "REPARTIDOR";
+    /** Atiende citas de su negocio (estilista, barbero…). Solo ve su agenda. Lo da de alta el encargado. */
+    public static final String EMPLEADO = "EMPLEADO";
 
     private Rol() {
     }

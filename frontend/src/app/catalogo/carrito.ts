@@ -31,10 +31,9 @@ export interface DatosPedido {
 export const MAXIMO_POR_PRODUCTO = 99;
 
 /** Textos que cambian según cómo se pide en cada negocio. */
-export const TEXTOS_PEDIDO: Record<
-  ModoPedido,
-  { agregar: string; titulo: string; ver: string; enviar: string; pieza: [string, string]; nota: string }
-> = {
+export interface TextosPedido { agregar: string; titulo: string; ver: string; enviar: string; pieza: [string, string]; nota: string }
+
+export const TEXTOS_PEDIDO: Record<ModoPedido, TextosPedido> = {
   COMPRA: {
     agregar: 'Agregar al pedido',
     titulo: 'Tu pedido',
@@ -61,6 +60,23 @@ export const TEXTOS_PEDIDO: Record<
   },
 };
 
+/** Citas con agenda en línea (salón, consultorio…): se aparta el horario al pedir. */
+export const TEXTOS_AGENDA: TextosPedido = {
+  agregar: 'Agregar a mi cita',
+  titulo: 'Tu cita',
+  ver: 'Ver mi cita',
+  enviar: 'Apartar mi cita',
+  pieza: ['servicio', 'servicios'],
+  nota: 'Tu horario queda apartado para ti. Si no puedes llegar, avísanos por WhatsApp para liberar el lugar.',
+};
+
+/** Textos para el negocio: los de su modo, o los de agenda si aparta horarios en línea. */
+export function textosDe(n: Pick<Negocio, 'tipo' | 'modoPedido' | 'agendaActiva'> | undefined | null): TextosPedido | null {
+  const m = modoDe(n);
+  if (!m) return null;
+  return m === 'CITA' && n?.agendaActiva ? TEXTOS_AGENDA : TEXTOS_PEDIDO[m];
+}
+
 export function modoDe(n: Pick<Negocio, 'tipo' | 'modoPedido'> | undefined | null): ModoPedido | null {
   if (!n || n.tipo === 'SERVICIO') return null;
   return n.modoPedido ?? (n.tipo === 'RENTA' ? 'RENTA' : 'COMPRA');
@@ -75,8 +91,8 @@ export function totalDe(lineas: LineaCarrito[]): number {
 }
 
 /** "3 productos", "1 artículo". */
-export function textoPiezas(modo: ModoPedido, n: number): string {
-  const [uno, varios] = TEXTOS_PEDIDO[modo].pieza;
+export function textoPiezas(modo: ModoPedido | TextosPedido, n: number): string {
+  const [uno, varios] = (typeof modo === 'string' ? TEXTOS_PEDIDO[modo] : modo).pieza;
   return `${n} ${n === 1 ? uno : varios}`;
 }
 
@@ -102,9 +118,10 @@ export function faltantesPedido(
   d: DatosPedido,
   soloMayores: boolean,
   mayorDeEdad: boolean,
+  textos: TextosPedido = TEXTOS_PEDIDO[modo],
 ): string[] {
   const faltan: string[] = [];
-  if (!lineas.length) faltan.push(`al menos un ${TEXTOS_PEDIDO[modo].pieza[0]}`);
+  if (!lineas.length) faltan.push(`al menos un ${textos.pieza[0]}`);
   const aDomicilio = modo === 'RENTA' || (modo === 'COMPRA' && d.entrega === 'DOMICILIO');
   if (aDomicilio && !d.entregar.trim()) faltan.push(modo === 'RENTA' ? 'la dirección del evento' : 'la dirección de entrega');
   if (modo !== 'COMPRA' && !d.cuando) faltan.push(modo === 'RENTA' ? 'la fecha del evento' : 'el día de tu visita');
@@ -123,11 +140,14 @@ export function armarMensajeCarrito(
   d: DatosPedido,
   cliente: { nombre: string; telefono: string },
   folio?: string,
+  agenda = false,
 ): string {
   const saludo = {
     COMPRA: `Hola ${negocio.nombre}, quiero hacer un pedido:`,
     RENTA: `Hola ${negocio.nombre}, quiero reservar:`,
-    CITA: `Hola ${negocio.nombre}, quiero agendar una visita para ver:`,
+    CITA: agenda
+      ? `Hola ${negocio.nombre}, aparté una cita en línea para:`
+      : `Hola ${negocio.nombre}, quiero agendar una visita para ver:`,
   }[modo];
   const r: string[] = [saludo, ''];
   if (folio) r.push(`*Folio:* ${folio}`);
@@ -150,7 +170,7 @@ export function armarMensajeCarrito(
     if (d.colonia?.trim()) r.push(`*Colonia:* ${d.colonia.trim()}`);
     if (d.punto) r.push(`*Ubicación:* ${enlaceVer(d.punto)}`);
   } else {
-    r.push(`*Día de la visita:* ${d.cuando}`);
+    r.push(agenda ? `*Mi cita:* ${d.cuando}` : `*Día de la visita:* ${d.cuando}`);
   }
   if (d.notas.trim()) r.push(`*Notas:* ${d.notas.trim()}`);
   r.push(`*Nombre:* ${cliente.nombre}`, `*Teléfono:* ${cliente.telefono}`);

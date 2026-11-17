@@ -19,7 +19,7 @@ const MAX_ADMINISTRADORES = 2;
 
 /** Texto del rol para mostrar (el valor interno del administrador sigue siendo DUENO). */
 export function nombreDelRol(rol: Rol): string {
-  return rol === 'DUENO' ? 'Administrador' : rol === 'REPARTIDOR' ? 'Repartidor' : 'Encargado';
+  return rol === 'DUENO' ? 'Administrador' : rol === 'REPARTIDOR' ? 'Repartidor' : rol === 'EMPLEADO' ? 'Empleado' : 'Encargado';
 }
 
 /** El valor de la dirección si es uno de los permitidos; si no, el de por omisión. */
@@ -169,6 +169,7 @@ function elegir<T extends string>(valor: string | undefined, permitidos: readonl
             <select formControlName="rol">
               <option value="ENCARGADO">Encargado (administra su negocio y atiende sus pedidos)</option>
               <option value="REPARTIDOR">Repartidor (recibe y entrega pedidos)</option>
+              <option value="EMPLEADO">Empleado (atiende citas; solo ve su agenda)</option>
               <option value="DUENO" [disabled]="!hayCupoAdmin()">
                 Administrador (todo el sitio){{ hayCupoAdmin() ? '' : ' — ya hay ' + maxAdmin }}
               </option>
@@ -372,6 +373,7 @@ function elegir<T extends string>(valor: string | undefined, permitidos: readonl
     .rol-DUENO { background: color-mix(in srgb, #8b5cf6 16%, var(--superficie)); }
     .rol-ENCARGADO { background: color-mix(in srgb, var(--follaje) 16%, var(--superficie)); }
     .rol-REPARTIDOR { background: color-mix(in srgb, var(--cempasuchil) 22%, var(--superficie)); }
+    .rol-EMPLEADO { background: color-mix(in srgb, #0ea5e9 16%, var(--superficie)); }
     .estado { font-size: .8rem; white-space: nowrap; color: var(--tinta-suave); }
     .estado::before { content: '● '; color: #a8a29e; }
     .estado.activo { color: var(--tinta); }
@@ -423,6 +425,7 @@ export class UsuariosPage {
     { valor: 'DUENO', texto: 'Administradores' },
     { valor: 'ENCARGADO', texto: 'Encargados' },
     { valor: 'REPARTIDOR', texto: 'Repartidores' },
+    { valor: 'EMPLEADO', texto: 'Empleados' },
   ];
   protected readonly grupos: { valor: FiltrosClientes['grupo']; texto: string }[] = [
     { valor: '', texto: 'Todos' },
@@ -437,7 +440,7 @@ export class UsuariosPage {
 
   protected readonly fe = computed<FiltrosEquipo>(() => ({
     q: this.texto(),
-    rol: elegir(this.rolFiltro(), ['DUENO', 'ENCARGADO', 'REPARTIDOR'] as const, EQUIPO_POR_OMISION.rol),
+    rol: elegir(this.rolFiltro(), ['DUENO', 'ENCARGADO', 'REPARTIDOR', 'EMPLEADO'] as const, EQUIPO_POR_OMISION.rol),
     negocio: this.negocio() ?? '',
     estado: elegir(this.estado(), ['sin-acceso', 'bloqueados', 'todos'] as const, EQUIPO_POR_OMISION.estado),
     prueba: elegir(this.prueba(), ['mostrar', 'solo'] as const, EQUIPO_POR_OMISION.prueba),

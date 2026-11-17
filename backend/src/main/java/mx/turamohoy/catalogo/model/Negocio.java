@@ -70,6 +70,17 @@ public class Negocio extends PanacheEntityBase {
     @Column(length = 200)
     public String referencias;
 
+    /** Citas con horarios libres (agenda). */
+    @Column(name = "agenda_activa", nullable = false)
+    public boolean agendaActiva;
+
+    /** {"1":["10:00","19:00"], ... "7":null}; 1 = lunes. Ver {@link mx.turamohoy.agenda.HorarioCitas}. */
+    @Column(name = "horario_citas", length = 500)
+    public String horarioCitas;
+
+    @Column(name = "minutos_cita", nullable = false)
+    public int minutosCita = 60;
+
     /** Pin del mapa (opcional). */
     @Column(precision = 9, scale = 6)
     public java.math.BigDecimal lat;

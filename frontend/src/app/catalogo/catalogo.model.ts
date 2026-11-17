@@ -27,6 +27,9 @@ export interface Negocio {
   horario: string | null;
   /** true = tiene local para visitas; false = «Atención solo en línea» (sin dirección ni mapa). */
   atencionEnLocal?: boolean;
+  /** Citas con horarios libres (ver ElegirHorario). */
+  agendaActiva?: boolean;
+  minutosCita?: number;
   colonia?: string | null;
   referencias?: string | null;
   lat?: number | null;

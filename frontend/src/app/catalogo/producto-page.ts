@@ -3,7 +3,7 @@ import { rxResource } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
 import { Router, RouterLink } from '@angular/router';
 import { BarraCarrito } from './barra-carrito';
-import { CarritoService, TEXTOS_PEDIDO, modoDe } from './carrito';
+import { CarritoService, modoDe, textosDe } from './carrito';
 import { ModoPedido, Producto } from './catalogo.model';
 import { CatalogoService } from './catalogo.service';
 import { soloEnWeb } from '../modo-app';
@@ -65,10 +65,7 @@ export class ProductoPage {
     const n = this.negocio.value();
     return p && n && n.slug === p.negocioSlug ? modoDe(n) : null;
   });
-  protected readonly textos = computed(() => {
-    const m = this.modo();
-    return m ? TEXTOS_PEDIDO[m] : null;
-  });
+  protected readonly textos = computed(() => (this.modo() ? textosDe(this.negocio.value()) : null));
   protected readonly cantidad = linkedSignal({ source: this.id, computation: () => 1 });
   protected readonly agregado = linkedSignal({ source: this.id, computation: () => false });
 

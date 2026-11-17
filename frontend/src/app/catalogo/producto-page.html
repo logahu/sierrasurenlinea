@@ -82,7 +82,7 @@
   </article>
 
   @if (negocio.value(); as n) { <app-contacto-negocio [negocio]="n" /> }
-  @if (modo(); as m) { <app-barra-carrito [slug]="p.negocioSlug" [modo]="m" /> }
+  @if (modo(); as m) { <app-barra-carrito [slug]="p.negocioSlug" [modo]="m" [agenda]="!!negocio.value()?.agendaActiva" /> }
 } @else {
   <div class="estado" aria-busy="true">Cargando…</div>
 }

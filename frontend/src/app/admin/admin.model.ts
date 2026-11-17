@@ -1,6 +1,6 @@
 import { TipoNegocio } from '../catalogo/catalogo.model';
 
-export type Rol = 'DUENO' | 'ENCARGADO' | 'REPARTIDOR';
+export type Rol = 'DUENO' | 'ENCARGADO' | 'REPARTIDOR' | 'EMPLEADO';
 
 export interface Usuario {
   id: number;
@@ -18,6 +18,55 @@ export interface Usuario {
   creado?: string;
   /** Pedidos entregados (repartidores). */
   entregas?: number;
+  /** Empleados: «Cortes, barba». */
+  especialidades?: string | null;
+  /** Aparece en la agenda de citas. */
+  atiendeCitas?: boolean;
+}
+
+/** «Mi equipo» de un negocio: sus empleados y su encargado. */
+export interface EquipoNegocio {
+  empleados: Usuario[];
+  encargado: Usuario | null;
+}
+
+export interface Profesional {
+  id: number;
+  nombre: string;
+  especialidades: string | null;
+  rol: Rol;
+}
+
+export interface CitaAgenda {
+  pedidoId: number;
+  folio: string;
+  estado: EstadoPedido;
+  /** Hora local de Miahuatlán, sin zona: 2026-11-18T11:00:00 */
+  inicio: string;
+  fin: string;
+  empleadoId: number | null;
+  empleadoNombre: string | null;
+  clienteNombre: string;
+  clienteTelefono: string;
+  servicios: string[];
+  notas: string | null;
+  prueba: boolean;
+}
+
+export interface AgendaPanel {
+  negocioSlug: string;
+  negocioNombre: string;
+  /** El empleado solo ve las suyas. */
+  soloMias: boolean;
+  profesionales: Profesional[];
+  citas: CitaAgenda[];
+}
+
+/** Horario de citas: 1 = lunes … 7 = domingo; null = cerrado. */
+export interface ConfiguracionAgenda {
+  activa: boolean;
+  minutosCita: number;
+  horario: Record<string, [string, string] | null>;
 }
 
 /** Tablero de visitas y pedidos. */
@@ -147,6 +196,9 @@ export interface NegocioAdmin {
   productosActivos: number;
   /** Nombre del encargado activo, si tiene. */
   encargado: string | null;
+  /** COMPRA, RENTA, CITA o null (Encarguitos). */
+  modoPedido?: string | null;
+  agendaActiva?: boolean;
 }
 
 /** Lo que se manda al guardar un negocio. */
@@ -235,6 +287,9 @@ export interface Pedido {
   colonia?: string | null;
   /** El cliente la escribió en «Otra» (está en Colonias → Solicitudes). */
   coloniaOtra?: boolean;
+  /** Citas con agenda: quién atiende y a qué hora. */
+  empleadoNombre?: string | null;
+  citaInicio?: string | null;
 }
 
 export interface ColoniaAdmin {

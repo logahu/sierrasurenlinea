@@ -4,7 +4,8 @@ import { Observable, retry, throwError, timer } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Platillo, Restaurante, TipoEncargo } from '../catalogo/catalogo.model';
 import {
-  CategoriaAdmin, CategoriaEdicion, ClienteAdmin, ColoniaAdmin, CuentaDePrueba, DatosColonia, FotosNegocio, PaginaClientes, PaginaHistorial, Tablero, NegocioAdmin, NegocioEdicion, ProductoAdmin, ProductoEdicion, Usuario,
+  AgendaPanel, CategoriaAdmin, CategoriaEdicion, ClienteAdmin, ColoniaAdmin, ConfiguracionAgenda, CuentaDePrueba, DatosColonia,
+  EquipoNegocio, FotosNegocio, PaginaClientes, PaginaHistorial, Tablero, NegocioAdmin, NegocioEdicion, ProductoAdmin, ProductoEdicion, Usuario,
 } from './admin.model';
 
 /** Endpoints del panel (/api/admin/...). El token lo agrega autorizacionInterceptor. */
@@ -81,6 +82,43 @@ export class AdminApi {
 
   cambiarAccesoCliente(id: number, activo: boolean): Observable<ClienteAdmin> {
     return this.http.put<ClienteAdmin>(`${this.base}/clientes/${id}/activo`, { activo });
+  }
+
+  // ---------------------------------------------------------------- equipo y agenda
+
+  equipo(slug: string): Observable<EquipoNegocio> {
+    return this.http.get<EquipoNegocio>(`${this.base}/negocios/${slug}/equipo`);
+  }
+
+  crearEmpleado(slug: string, d: { nombre: string; telefono: string; contrasena: string; especialidades: string }): Observable<Usuario> {
+    return this.http.post<Usuario>(`${this.base}/negocios/${slug}/equipo`, d);
+  }
+
+  editarEmpleado(slug: string, id: number, d: { nombre: string; telefono?: string; especialidades?: string | null; activo?: boolean }): Observable<Usuario> {
+    return this.http.put<Usuario>(`${this.base}/negocios/${slug}/equipo/${id}`, d);
+  }
+
+  contrasenaEmpleado(slug: string, id: number, nueva: string): Observable<void> {
+    return this.http.put<void>(`${this.base}/negocios/${slug}/equipo/${id}/contrasena`, { nueva });
+  }
+
+  encargadoAtiende(slug: string, atiende: boolean): Observable<Usuario> {
+    return this.http.put<Usuario>(`${this.base}/negocios/${slug}/equipo/encargado-atiende`, { atiende });
+  }
+
+  /** Citas desde una fecha (AAAA-MM-DD) durante varios días. El administrador indica el negocio. */
+  agenda(desde: string, dias: number, negocio?: string): Observable<AgendaPanel> {
+    const params: Record<string, string> = { desde, dias: String(dias) };
+    if (negocio) params['negocio'] = negocio;
+    return this.http.get<AgendaPanel>(`${this.base}/agenda`, { params });
+  }
+
+  configuracionAgenda(slug: string): Observable<ConfiguracionAgenda> {
+    return this.http.get<ConfiguracionAgenda>(`${this.base}/agenda/negocios/${slug}/configuracion`);
+  }
+
+  guardarConfiguracionAgenda(slug: string, c: ConfiguracionAgenda): Observable<ConfiguracionAgenda> {
+    return this.http.put<ConfiguracionAgenda>(`${this.base}/agenda/negocios/${slug}/configuracion`, c);
   }
 
   colonias(): Observable<{ colonias: ColoniaAdmin[]; zonas: string[] }> {

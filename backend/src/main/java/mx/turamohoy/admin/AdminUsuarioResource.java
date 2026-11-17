@@ -84,8 +84,8 @@ public class AdminUsuarioResource {
         String correo = correoLibre(req.correo(), null);
         Contrasenas.validarNueva(req.contrasena());
         String rol = req.rol() == null || req.rol().isBlank() ? Rol.ENCARGADO : req.rol();
-        if (!Rol.DUENO.equals(rol) && !Rol.ENCARGADO.equals(rol) && !Rol.REPARTIDOR.equals(rol)) {
-            throw Errores.de(Status.BAD_REQUEST, "El rol debe ser administrador, encargado o repartidor.");
+        if (!Rol.DUENO.equals(rol) && !Rol.ENCARGADO.equals(rol) && !Rol.REPARTIDOR.equals(rol) && !Rol.EMPLEADO.equals(rol)) {
+            throw Errores.de(Status.BAD_REQUEST, "El rol debe ser administrador, encargado, repartidor o empleado.");
         }
         Negocio negocio = null;
         if (Rol.DUENO.equals(rol)) {
@@ -187,6 +187,7 @@ public class AdminUsuarioResource {
         return switch (u.rol) {
             case Rol.DUENO -> "administrador";
             case Rol.REPARTIDOR -> u.negocio == null ? "repartidor de todos los negocios" : "repartidor de " + u.negocio.nombre;
+            case Rol.EMPLEADO -> "empleado de " + (u.negocio == null ? "?" : u.negocio.nombre);
             default -> "encargado de " + (u.negocio == null ? "?" : u.negocio.nombre);
         };
     }
@@ -206,7 +207,7 @@ public class AdminUsuarioResource {
     }
 
     /** Teléfono normalizado a 10 dígitos que nadie más del equipo usa. */
-    private static String telefonoLibre(String telefono, Usuario excepto) {
+    static String telefonoLibre(String telefono, Usuario excepto) {
         String t = mx.turamohoy.clientes.Cliente.normalizarTelefono(telefono);
         if (t == null) {
             throw Errores.de(Status.BAD_REQUEST, "El teléfono debe tener 10 dígitos.");

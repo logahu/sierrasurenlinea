@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 @Path("/api/admin")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@RolesAllowed({Rol.DUENO, Rol.ENCARGADO, Rol.REPARTIDOR})
+@RolesAllowed({Rol.DUENO, Rol.ENCARGADO, Rol.REPARTIDOR, Rol.EMPLEADO})
 public class AdminPedidoResource {
 
     @Inject
@@ -64,7 +64,8 @@ public class AdminPedidoResource {
                             BigDecimal totalEstimado, String mensaje, String estado, Long repartidorId,
                             String repartidorNombre, Instant creado, Instant actualizado,
                             String entrega, String cuando, String notas, List<LineaDto> lineas,
-                            BigDecimal lat, BigDecimal lng, boolean prueba, String colonia, boolean coloniaOtra) {
+                            BigDecimal lat, BigDecimal lng, boolean prueba, String colonia, boolean coloniaOtra,
+                            String empleadoNombre, java.time.LocalDateTime citaInicio) {
         static PedidoDto de(Pedido p, List<PedidoLinea> lineas) {
             return new PedidoDto(p.id, p.folio, p.negocio.slug, p.negocio.nombre, p.tipo, p.modo, p.clienteNombre,
                     p.clienteTelefono, p.entregar, p.zona, p.totalEstimado, p.mensaje, p.estado,
@@ -72,7 +73,7 @@ public class AdminPedidoResource {
                     p.repartidor == null ? null : p.repartidor.nombre, p.creado, p.actualizado,
                     p.entrega == null ? Pedido.DOMICILIO : p.entrega, p.cuando, p.notas,
                     lineas.stream().map(LineaDto::de).toList(), p.lat, p.lng, p.prueba, p.colonia,
-                    p.coloniaOtra);
+                    p.coloniaOtra, p.empleado == null ? null : p.empleado.nombre, p.citaInicio);
         }
 
         static PedidoDto de(Pedido p) {
@@ -90,6 +91,7 @@ public class AdminPedidoResource {
     @Path("/pedidos")
     public List<PedidoDto> listar(@QueryParam("activos") @DefaultValue("true") boolean activos) {
         Usuario u = sesion.usuario();
+        sinEmpleados(u);
         String estados = activos ? "p.estado in ('NUEVO', 'ACEPTADO', 'EN_CAMINO')" : "p.estado in ('ENTREGADO', 'CANCELADO')";
         String q = "select p from Pedido p join fetch p.negocio left join fetch p.repartidor where " + estados;
         List<Pedido> lista;
@@ -117,6 +119,7 @@ public class AdminPedidoResource {
     @Transactional
     public PedidoDto cambiarEstado(@PathParam("id") Long id, @Valid @NotNull CambioEstado c) {
         Usuario u = sesion.usuario();
+        sinEmpleados(u);
         Pedido p = Pedido.findById(id);
         boolean general = Rol.REPARTIDOR.equals(u.rol) && u.negocio == null && p != null && p.aDomicilio();
         if (p == null || !(u.esDueno() || general || (u.negocio != null && u.negocio.id.equals(p.negocio.id)))) {
@@ -145,9 +148,19 @@ public class AdminPedidoResource {
                 "Pedido " + p.folio + ": " + texto(p.estado) + " → " + texto(nuevo), null);
         p.estado = nuevo;
         p.actualizado = Instant.now();
+        if (Pedido.CANCELADO.equals(nuevo)) {
+            mx.turamohoy.agenda.Agenda.liberar(p); // la hora vuelve a quedar libre
+        }
         // Avisa al cliente (si activó los avisos) cuando ya se guardó el cambio.
         estadoCambiado.fire(new EstadoCambiado(p.id));
         return PedidoDto.de(p);
+    }
+
+    /** Los empleados solo ven su agenda (y reciben avisos); los pedidos los atiende el encargado. */
+    private static void sinEmpleados(Usuario u) {
+        if (Rol.EMPLEADO.equals(u.rol)) {
+            throw Errores.de(Status.FORBIDDEN, "Tus citas están en «Mi agenda».");
+        }
     }
 
     // ---------------------------------------------------------------- notificaciones
