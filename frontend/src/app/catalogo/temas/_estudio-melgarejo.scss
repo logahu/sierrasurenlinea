@@ -1,0 +1,88 @@
+// Estudio Melgarejo (salón de belleza)
+// Idea: el logo. Fondo marfil, tinta negra, serif delgada en mayúsculas espaciadas,
+// líneas finas y el verde salvia de la hoja como acento. El monograma «EM» corona el encabezado.
+
+$tinta: #1a1a1a;
+$salvia: #7d8b74;
+
+@mixin tokens {
+  --t-fondo: #faf8f4;
+  --t-superficie: #ffffff;
+  --t-tinta: #{$tinta};
+  --t-tinta-suave: #6d6a64;
+  --t-linea: #e4dfd5;
+  --t-acento-texto: #4f5c47;
+  --t-sobre-acento: #fff;
+  --t-img-fondo: #f4f1ea;
+  --t-caja: #ffffff;
+  --t-fuente-titulo: 'Cormorant Garamond', 'Bodoni Moda', Georgia, serif;
+  --t-fuente-texto: 'Jost', system-ui, sans-serif;
+  --t-peso-titulo: 400;
+  --t-radio-card: 2px;
+  --t-radio-chip: 2px;
+  --t-radio-contacto: 2px;
+  --t-borde-card: 1px solid var(--t-linea);
+  --t-sombra-card: none;
+  --acento: #{$tinta};
+}
+
+@mixin catalogo {
+  @include tokens;
+
+  .encabezado {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 2rem 0 1.75rem;
+    .volver { order: -1; align-self: flex-start; }
+    h1, .eslogan, .lead { margin-inline: auto; }
+    h1 {
+      font-size: clamp(2.2rem, 8vw, 3.6rem);
+      text-transform: uppercase;
+      letter-spacing: .18em;
+      font-weight: 400;
+      color: var(--t-tinta);
+    }
+    .eslogan { font-family: var(--t-fuente-titulo); font-style: italic; font-weight: 400; font-size: 1.25rem; color: var(--t-tinta-suave); }
+    .lead { max-width: 34rem; }
+  }
+  // El monograma del logo.
+  .adorno {
+    display: block;
+    width: 8.5rem;
+    aspect-ratio: 268 / 260;
+    margin: 0 auto .75rem;
+    background: url('/img/estudio-melgarejo-monograma.png') center / contain no-repeat;
+  }
+
+  .chips { justify-content: safe center; gap: .5rem; }
+  .chip {
+    border: 1px solid var(--t-linea);
+    background: transparent;
+    text-transform: uppercase;
+    letter-spacing: .12em;
+    font-size: .78rem;
+    &.active { background: $tinta; border-color: $tinta; color: #fff; }
+  }
+
+  .section-title { text-align: center; text-transform: uppercase; letter-spacing: .16em; font-size: 1.35rem; }
+
+  .card {
+    background: var(--t-superficie);
+    .img { aspect-ratio: 1; }
+    h3 { font-family: var(--t-fuente-titulo); font-weight: 500; font-size: 1.2rem; }
+    .precio { color: var(--t-tinta); font-weight: 500; letter-spacing: .04em; }
+  }
+  .badge { background: $salvia; color: #fff; border-radius: 2px; text-transform: uppercase; letter-spacing: .1em; font-size: .7rem; }
+}
+
+@mixin producto {
+  @include tokens;
+  .foto { border-radius: 2px; border: 1px solid var(--t-linea); }
+  .info {
+    h1 { font-size: clamp(2rem, 6vw, 2.8rem); font-weight: 400; }
+    .precio { color: var(--t-tinta); font-weight: 500; }
+  }
+  .caracteristicas { border: 1px solid var(--t-linea); }
+}

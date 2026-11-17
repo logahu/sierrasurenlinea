@@ -47,4 +47,5 @@ export function renglones(texto: string): string[] {
 /** Renglones sugeridos al dar de alta un producto, por negocio (slug). */
 export const PLANTILLAS_CARACTERISTICAS: Record<string, string[]> = {
   autos: ['Año: ', 'Kilometraje:  km', 'Transmisión: ', 'Combustible: ', 'Motor: ', 'Color: ', 'Reparaciones: '],
+  'estudio-melgarejo': ['Duración: 1 hora', 'Incluye: ', 'Incluye: '],
 };

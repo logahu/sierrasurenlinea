@@ -3,6 +3,7 @@
 @use './temas/inflables' as inflables;
 @use './temas/vinateria' as vinateria;
 @use './temas/autos' as autos;
+@use './temas/estudio-melgarejo' as estudio;
 
 // Detalle de producto. Usa los mismos tokens --t-* que el catálogo; cada negocio
 // los redefine en src/temas/.
@@ -139,6 +140,7 @@ h1 { font-family: var(--t-fuente-titulo); font-weight: var(--t-peso-titulo); }
 :host([data-tema='inflables']) { @include inflables.producto; }
 :host([data-tema='vinateria']) { @include vinateria.producto; }
 :host([data-tema='autos']) { @include autos.producto; }
+:host([data-tema='estudio-melgarejo']) { @include estudio.producto; }
 
 // Galería: miniaturas debajo de la foto principal (autos y cualquier producto con varias fotos).
 .miniaturas {
