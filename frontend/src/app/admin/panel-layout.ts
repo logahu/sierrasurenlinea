@@ -37,6 +37,7 @@ import { SesionService } from './sesion';
           @if (sesion.esDueno()) {
             <a routerLink="/admin/visibilidad" routerLinkActive="activo">En el sitio</a>
             <a routerLink="/admin/colonias" routerLinkActive="activo">Colonias</a>
+            <a routerLink="/admin/publicidad" routerLinkActive="activo">Publicidad</a>
             <a routerLink="/admin/usuarios" routerLinkActive="activo">Usuarios</a>
           }
           <a routerLink="/admin/cuenta" routerLinkActive="activo">Mi cuenta</a>

@@ -208,12 +208,14 @@ export interface NegocioAdmin {
   /** COMPRA, RENTA, CITA o null (Encarguitos). */
   modoPedido?: string | null;
   agendaActiva?: boolean;
+  /** Slug de su giro (su calle en la portada). */
+  giro?: string | null;
 }
 
 /** Lo que se manda al guardar un negocio. */
 export type NegocioEdicion = Pick<
   NegocioAdmin,
-  'nombre' | 'eslogan' | 'descripcion' | 'whatsapp' | 'telefono' | 'direccion' | 'horario' | 'atencionEnLocal' | 'colonia' | 'referencias' | 'lat' | 'lng' | 'colorPrimario' | 'topeAdelanto' | 'portadaUrl'
+  'nombre' | 'eslogan' | 'descripcion' | 'whatsapp' | 'telefono' | 'direccion' | 'horario' | 'atencionEnLocal' | 'colonia' | 'referencias' | 'lat' | 'lng' | 'colorPrimario' | 'topeAdelanto' | 'portadaUrl' | 'giro'
 >;
 
 export interface CategoriaAdmin {
@@ -333,3 +335,27 @@ export interface LineaPedido {
   detalle?: string | null;
   nota?: string | null;
 }
+
+/** Banner de publicidad como lo ve el panel (solo el dueño). */
+export interface AnuncioAdmin {
+  id: number;
+  titulo: string;
+  texto: string | null;
+  imagenUrl: string | null;
+  enlace: string | null;
+  negocioSlug: string | null;
+  negocioNombre: string | null;
+  colorFondo: string | null;
+  posicion: 'PORTADA_ARRIBA' | 'ENTRE_CALLES';
+  /** 2026-11-17; null = sin límite. */
+  inicio: string | null;
+  fin: string | null;
+  activo: boolean;
+  orden: number;
+  /** Activo y dentro de sus fechas hoy. */
+  vigente: boolean;
+  /** Veces que lo tocaron. */
+  clics: number;
+}
+
+export type AnuncioEdicion = Omit<AnuncioAdmin, 'id' | 'negocioNombre' | 'vigente' | 'clics'>;
