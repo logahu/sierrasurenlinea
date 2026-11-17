@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Sierra Sur en Línea">
+<title>Sierra Sur en Línea</title>
+<path d="M32 3C18.5 3 9 12.8 9 25.2C9 41 32 61 32 61S55 41 55 25.2C55 12.8 45.5 3 32 3Z" fill="#2F6B4F"/>
+<circle cx="32" cy="25" r="16" fill="#FBF7F2"/>
+<clipPath id="ssl-c"><circle cx="32" cy="25" r="16"/></clipPath>
+<g clip-path="url(#ssl-c)">
+<path d="M22.5 22a13 13 0 0 1 19 0" fill="none" stroke="#F5A524" stroke-width="3" stroke-linecap="round"/>
+<path d="M26.5 26a7 7 0 0 1 11 0" fill="none" stroke="#F5A524" stroke-width="3" stroke-linecap="round"/>
+<circle cx="32" cy="30" r="2.8" fill="#F5A524"/>
+<path d="M13 42L24 30L30 36L35 32L51 42Z" fill="#2F6B4F"/>
+<path d="M13 42L20 36L27 40L34 37L51 42Z" fill="#63B38A"/>
+</g>
+</svg>
