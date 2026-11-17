@@ -2,6 +2,7 @@ import { HttpClient, HttpErrorResponse, HttpInterceptorFn } from '@angular/commo
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, catchError, tap, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { subirFotoPerfil } from '../compartido/foto-perfil';
 import {
   ActividadCuenta, Cliente, FiltroHistorial, HistorialPedidos, MiPedido, Registro, SesionCliente,
 } from './cuenta.model';
@@ -49,6 +50,16 @@ export class ClienteSesionService {
 
   refrescar(): Observable<Cliente> {
     return this.http.get<Cliente>(`${this.base}/yo`).pipe(tap((c) => this.actualizar(c)));
+  }
+
+  /** Mi avatar: un dibujo, la URL de mi foto o null (iniciales). */
+  cambiarAvatar(avatar: string | null): Observable<Cliente> {
+    return this.http.put<Cliente>(`${this.base}/yo/avatar`, { avatar }).pipe(tap((c) => this.actualizar(c)));
+  }
+
+  /** Sube mi foto de perfil y devuelve su URL (falta guardarla con cambiarAvatar). */
+  subirFoto(archivo: File): Promise<string> {
+    return subirFotoPerfil(this.http, `${this.base}/yo/foto`, archivo);
   }
 
   editar(datos: {

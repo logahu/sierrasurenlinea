@@ -24,6 +24,8 @@ export interface Usuario {
   atiendeCitas?: boolean;
   /** Su negocio se pide por citas: la agenda es su página de inicio. */
   negocioConAgenda?: boolean;
+  /** «avatar:flor», URL de su foto o null (iniciales). */
+  avatar?: string | null;
 }
 
 /** «Mi equipo» de un negocio: sus empleados y su encargado. */
@@ -37,6 +39,7 @@ export interface Profesional {
   nombre: string;
   especialidades: string | null;
   rol: Rol;
+  avatar?: string | null;
 }
 
 export interface CitaAgenda {

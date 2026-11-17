@@ -17,7 +17,7 @@
       }
       @if (cliente.cliente()) {
         <a class="sesion" routerLink="/cuenta" routerLinkActive="activo" aria-label="Mi cuenta">
-          <span class="inicial" aria-hidden="true">{{ cliente.primerNombre().charAt(0) }}</span>
+          <app-avatar class="inicial" [avatar]="cliente.cliente()?.avatar" [nombre]="cliente.cliente()?.nombre" aria-hidden="true" />
           <span class="texto-sesion">Mi cuenta</span>
         </a>
       } @else {

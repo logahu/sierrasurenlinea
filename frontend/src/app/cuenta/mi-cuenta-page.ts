@@ -11,11 +11,12 @@ import { AvisosCliente } from './avisos-cliente';
 import { BotonAvisos } from './boton-avisos';
 import { MapaUbicacion } from '../mapa/mapa-ubicacion';
 import { Punto, puntoDe } from '../mapa/ubicacion';
+import { ElegirAvatar } from '../compartido/elegir-avatar';
 import { MINIMO_CONTRASENA, estadoParaCliente } from './cuenta.model';
 
 @Component({
   selector: 'app-mi-cuenta-page',
-  imports: [ReactiveFormsModule, RouterLink, DatePipe, CurrencyPipe, BotonAvisos, MapaUbicacion, VerContrasena],
+  imports: [ReactiveFormsModule, RouterLink, DatePipe, CurrencyPipe, BotonAvisos, MapaUbicacion, VerContrasena, ElegirAvatar],
   styleUrl: './cuenta.scss',
   styles: `
     .encabezado { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; flex-wrap: wrap; }
@@ -71,6 +72,12 @@ import { MINIMO_CONTRASENA, estadoParaCliente } from './cuenta.model';
           <a routerLink="/cuenta/historial">📋 Ver mi historial completo</a>
           <span>· pedidos entregados, cancelados y actividad de tu cuenta</span>
         </p>
+
+        <h2>Tu foto o avatar</h2>
+        <app-elegir-avatar class="elegir-avatar" [avatar]="c.avatar" [nombre]="c.nombre" [subir]="subirFoto"
+                           [ocupado]="guardandoAvatar()" (elegido)="cambiarAvatar($event)" />
+        @if (avisoAvatar(); as a) { <p class="exito" role="status">{{ a }}</p> }
+        @if (errorAvatar(); as e) { <p class="error" role="alert">{{ e }}</p> }
 
         <h2>Mis datos</h2>
         <form [formGroup]="datos" (ngSubmit)="guardar()" novalidate>
@@ -152,6 +159,10 @@ export class MiCuentaPage {
   protected readonly punto = signal<Punto | null>(puntoDe(this.sesion.cliente()?.lat, this.sesion.cliente()?.lng));
 
   protected readonly ocupado = signal(false);
+  protected readonly subirFoto = (archivo: File) => this.sesion.subirFoto(archivo);
+  protected readonly guardandoAvatar = signal(false);
+  protected readonly avisoAvatar = signal<string | null>(null);
+  protected readonly errorAvatar = signal<string | null>(null);
   protected readonly avisoDatos = signal<string | null>(null);
   protected readonly errorDatos = signal<string | null>(null);
   protected readonly avisoClave = signal<string | null>(null);
@@ -172,6 +183,23 @@ export class MiCuentaPage {
       },
       error: () => {
         if (!this.sesion.activa()) void this.router.navigate(['/cuenta/entrar']);
+      },
+    });
+  }
+
+  /** El avatar se guarda en cuanto se elige. */
+  protected cambiarAvatar(avatar: string | null): void {
+    this.avisoAvatar.set(null);
+    this.errorAvatar.set(null);
+    this.guardandoAvatar.set(true);
+    this.sesion.cambiarAvatar(avatar).subscribe({
+      next: () => {
+        this.guardandoAvatar.set(false);
+        this.avisoAvatar.set(avatar ? 'Listo, ya tienes nuevo avatar.' : 'Listo, se usarán tus iniciales.');
+      },
+      error: (e) => {
+        this.guardandoAvatar.set(false);
+        this.errorAvatar.set(mensajeDeError(e));
       },
     });
   }

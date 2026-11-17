@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { subirFotoPerfil } from '../compartido/foto-perfil';
 import { Sesion, Usuario } from './admin.model';
 
 const CLAVE = 'ssl:sesion';
@@ -65,6 +66,21 @@ export class SesionService {
         if (s) this.guardar({ ...s, usuario });
       }),
     );
+  }
+
+  /** Mi perfil: nombre, correo y avatar. */
+  editarPerfil(datos: { nombre: string; correo: string | null; avatar: string | null }): Observable<Usuario> {
+    return this.http.put<Usuario>(`${environment.apiUrl}/auth/yo`, datos).pipe(
+      tap((usuario) => {
+        const s = this.actual();
+        if (s) this.guardar({ ...s, usuario });
+      }),
+    );
+  }
+
+  /** Sube mi foto de perfil y devuelve su URL (falta guardarla con editarPerfil). */
+  subirFoto(archivo: File): Promise<string> {
+    return subirFotoPerfil(this.http, `${environment.apiUrl}/auth/yo/foto`, archivo);
   }
 
   cambiarContrasena(actual: string, nueva: string): Observable<void> {

@@ -531,3 +531,6 @@
 
 // En la app del celular no hay barra de direcciones: siempre hay forma de regresar al sitio.
 .volver-sitio { display: inline-block; margin-top: 1.25rem; color: var(--tinta-suave); font-size: .9rem; }
+
+// «Mi perfil» con su avatar en la barra del panel.
+.panel-perfil { display: inline-flex; align-items: center; gap: .4rem; app-avatar { width: 1.7rem; height: 1.7rem; } }

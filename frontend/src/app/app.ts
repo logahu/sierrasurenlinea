@@ -8,11 +8,12 @@ import { SesionService } from './admin/sesion';
 import { ClienteSesionService } from './cuenta/cliente-sesion';
 import { InstalarApp } from './instalar';
 import { UltimoPedido } from './cuenta/ultimo-pedido';
+import { Avatar } from './compartido/avatar';
 import { VisitasService, esRutaDelPanel, folio, rutaDeUrl } from './visitas';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Avatar],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
