@@ -20,6 +20,7 @@ import java.util.Map;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
@@ -162,5 +163,80 @@ class AgendaTest {
         horario.put("1", List.of("14:00", "09:00"));
         como(dueno).body(nuevo).when().put(base).then().statusCode(400);
         como(dueno).body(antes).when().put(base).then().statusCode(200);
+    }
+
+    @Test
+    void elEncargadoBloqueaDiasYHorasSinServicio() {
+        String dueno = Sesiones.dueno();
+        String telAna = Clientes.telefonoNuevo();
+        int ana = empleado(dueno, "Ana Bloqueos", telAna);
+        int beto = empleado(dueno, "Beto Bloqueos", Clientes.telefonoNuevo());
+        String telCliente = Clientes.telefonoNuevo();
+        String cliente = Clientes.registrar("Clienta Bloqueos", telCliente, "clave-cliente-1");
+        Object idCliente = como(dueno).when().get("/api/admin/clientes?q=" + telCliente).then().extract().path("clientes[0].id");
+        como(dueno).body(Map.of("probador", true)).when().put("/api/admin/clientes/" + idCliente + "/probador").then().statusCode(200);
+        List<Object> paquetes = como(cliente).when().get("/api/negocios/" + SLUG + "/productos").then().extract().jsonPath().getList("id");
+        String base = "/api/admin/agenda/negocios/" + SLUG + "/bloqueos";
+        List<Integer> creados = new ArrayList<>();
+        try {
+            // Martes 17 cerrado todo el día para todos: el cliente lo ve cerrado con el motivo.
+            creados.add(como(dueno).body(Map.of("fecha", "2026-11-17", "motivo", "Capacitación"))
+                    .when().post(base).then().statusCode(200).body("bloqueo.motivo", equalTo("Capacitación"))
+                    .body("afectadas", hasSize(0)).extract().path("bloqueo.id"));
+            JsonPath d = como(cliente).when().get("/api/negocios/" + SLUG + "/agenda?desde=2026-11-17&dias=1").then()
+                    .statusCode(200).extract().jsonPath();
+            assertFalse(d.getBoolean("dias[0].abierto"));
+            assertEquals("Capacitación", d.getString("dias[0].aviso"));
+            como(cliente).body(cita(paquetes.subList(0, 1), "2026-11-17", "10:00", null))
+                    .when().post("/api/pedidos/carrito").then().statusCode(409);
+
+            // Ana sin servicio hoy de 12 a 14: a esas horas solo queda Beto.
+            Map<String, Object> soloAna = new HashMap<>(Map.of("fecha", "2026-11-16", "horaInicio", "12:00", "horaFin", "14:00",
+                    "empleadoId", ana));
+            creados.add(como(dueno).body(soloAna).when().post(base).then().statusCode(200)
+                    .body("bloqueo.empleadoId", equalTo(ana)).extract().path("bloqueo.id"));
+            JsonPath hoy = como(cliente).when().get("/api/negocios/" + SLUG + "/agenda?desde=2026-11-16&dias=1").then()
+                    .extract().jsonPath();
+            assertFalse(hoy.getList("dias[0].horarios.find { it.hora == '12:00' }.libres").contains(ana));
+            assertTrue(hoy.getList("dias[0].horarios.find { it.hora == '12:00' }.libres").contains(beto));
+            assertTrue(hoy.getList("dias[0].horarios.find { it.hora == '14:00' }.libres").contains(ana));
+            // Una cita de 2 horas con Ana a las 11 pisaría el bloqueo.
+            como(cliente).body(cita(paquetes.subList(0, 2), "2026-11-16", "11:00", ana))
+                    .when().post("/api/pedidos/carrito").then().statusCode(409);
+
+            // Ya hay una cita con Beto el miércoles: primero avisa, y con confirmar se guarda y la marca.
+            como(cliente).body(cita(paquetes.subList(0, 1), "2026-11-18", "10:00", beto))
+                    .when().post("/api/pedidos/carrito").then().statusCode(201);
+            Map<String, Object> betoMiercoles = new HashMap<>(Map.of("fecha", "2026-11-18", "empleadoId", beto, "motivo", "Permiso"));
+            como(dueno).body(betoMiercoles).when().post(base).then().statusCode(200)
+                    .body("bloqueo", nullValue()).body("afectadas", hasSize(1))
+                    .body("afectadas[0].clienteNombre", equalTo("Clienta Bloqueos"));
+            betoMiercoles.put("confirmar", true);
+            creados.add(como(dueno).body(betoMiercoles).when().post(base).then().statusCode(200)
+                    .body("bloqueo.citasAfectadas", equalTo(1)).extract().path("bloqueo.id"));
+            como(dueno).when().get("/api/admin/agenda?negocio=" + SLUG + "&desde=2026-11-18").then().statusCode(200)
+                    .body("citas.find { it.empleadoId == " + beto + " }.sinServicio", equalTo(true))
+                    .body("bloqueos", hasSize(1)).body("bloqueos[0].motivo", equalTo("Permiso"));
+            como(dueno).when().get(base).then().statusCode(200).body("size()", equalTo(3));
+
+            // Ya pasó o el orden está al revés: no. El empleado no puede bloquear, pero ve los suyos.
+            como(dueno).body(Map.of("fecha", "2026-11-16", "horaInicio", "08:00", "horaFin", "09:00")).when().post(base)
+                    .then().statusCode(400);
+            como(dueno).body(Map.of("fecha", "2026-11-20", "horaInicio", "15:00", "horaFin", "11:00")).when().post(base)
+                    .then().statusCode(400);
+            String tokenAna = Sesiones.entrar(telAna, "clave-empleado-1");
+            como(tokenAna).body(Map.of("fecha", "2026-11-20")).when().post(base).then().statusCode(403);
+            como(tokenAna).when().get("/api/admin/agenda?desde=2026-11-16&dias=3").then().statusCode(200)
+                    .body("bloqueos", hasSize(2));
+
+            // Quitarlo vuelve a abrir el martes.
+            como(dueno).when().delete(base + "/" + creados.remove(0)).then().statusCode(204);
+            assertTrue(como(cliente).when().get("/api/negocios/" + SLUG + "/agenda?desde=2026-11-17&dias=1").then()
+                    .extract().jsonPath().getBoolean("dias[0].abierto"));
+        } finally {
+            for (Integer id : creados) {
+                como(dueno).when().delete(base + "/" + id);
+            }
+        }
     }
 }
