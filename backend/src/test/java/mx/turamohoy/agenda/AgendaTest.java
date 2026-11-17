@@ -18,8 +18,10 @@ import java.util.List;
 import java.util.Map;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -130,7 +132,12 @@ class AgendaTest {
         como(tokenAna).when().get("/api/admin/agenda?desde=2026-11-16").then().statusCode(200)
                 .body("soloMias", equalTo(true)).body("citas", hasSize(1))
                 .body("citas[0].pedidoId", equalTo(p1)).body("citas[0].servicios", hasSize(2))
-                .body("citas[0].inicio", startsWith("2026-11-16T10:00"));
+                .body("citas[0].inicio", startsWith("2026-11-16T10:00"))
+                // Lo que pinta el tablero: color por categoría y horas del horario.
+                .body("citas[0].categoria", notNullValue()).body("categorias", hasSize(4))
+                .body("horario.'1'", contains("10:00", "19:00")).body("minutosCita", equalTo(60));
+        // Su negocio se pide por citas: la agenda es su inicio.
+        como(tokenAna).when().get("/api/auth/yo").then().statusCode(200).body("negocioConAgenda", equalTo(true));
         como(tokenAna).when().get("/api/admin/pedidos").then().statusCode(403);
         como(tokenAna).when().get(EQUIPO).then().statusCode(403);
 

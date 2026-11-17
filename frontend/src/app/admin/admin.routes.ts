@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { conAgenda, conSesion, sinEmpleado, sinRepartidor, soloDueno } from './autorizacion';
+import { aSuInicio, conAgenda, conSesion, sinEmpleado, sinRepartidor, soloDueno } from './autorizacion';
 
 /** Panel de administración: /admin. Se carga aparte, solo cuando alguien entra. */
 export const ADMIN_ROUTES: Routes = [
@@ -16,6 +16,7 @@ export const ADMIN_ROUTES: Routes = [
         path: '',
         canActivate: [conSesion],
         children: [
+          { path: 'inicio', canActivate: [aSuInicio], children: [] },
           {
             path: 'agenda',
             title: 'Agenda · Panel',

@@ -525,3 +525,6 @@
 
 .pedido-lineas .linea-persona { font-weight: 700; color: var(--follaje); margin-top: .35rem; display: block; }
 .pedido-lineas .linea-detalle { display: block; color: var(--tinta-suave); font-size: .8rem; }
+
+// La agenda en tablero necesita más ancho que las demás pantallas del panel.
+.panel:has(app-agenda-page) { max-width: 68rem; }

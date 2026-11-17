@@ -21,6 +21,20 @@ export class SesionService {
   readonly esRepartidor = computed(() => this.usuario()?.rol === 'REPARTIDOR');
   /** Solo ve su agenda. */
   readonly esEmpleado = computed(() => this.usuario()?.rol === 'EMPLEADO');
+  /** Agenda: el administrador, los empleados y el encargado de un negocio de citas. */
+  readonly veAgenda = computed(() => {
+    const u = this.usuario();
+    if (!u || u.rol === 'REPARTIDOR') return false;
+    // Sesiones guardadas antes de que existiera el dato: se sigue mostrando.
+    return u.rol !== 'ENCARGADO' || u.negocioConAgenda !== false;
+  });
+  /** A dónde llega cada quien al entrar (y al abrir la app del panel). */
+  readonly inicio = computed(() => {
+    const u = this.usuario();
+    if (u?.rol === 'REPARTIDOR') return '/admin/pedidos';
+    if (u?.rol === 'EMPLEADO' || (u?.rol === 'ENCARGADO' && u.negocioConAgenda)) return '/admin/agenda';
+    return '/admin';
+  });
 
   /** Token vigente, o null si no hay sesión o ya venció. */
   token(): string | null {

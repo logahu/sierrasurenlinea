@@ -3,7 +3,7 @@
   "short_name": "Pedidos",
   "id": "/admin/",
   "scope": "/admin/",
-  "start_url": "/admin/pedidos",
+  "start_url": "/admin/inicio",
   "display": "standalone",
   "description": "Pedidos en tiempo real para encargados y repartidores de Sierra Sur en Línea.",
   "lang": "es-MX",
