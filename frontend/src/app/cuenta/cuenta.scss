@@ -89,3 +89,21 @@ textarea {
 }
 
 a { color: var(--follaje); font-weight: 600; }
+
+// Acceso del equipo al panel, debajo del formulario de clientes.
+.separador {
+  display: flex; align-items: center; gap: .6rem; margin: 1.6rem 0 .75rem;
+  color: var(--tinta-suave); font-size: .82rem;
+  &::before, &::after { content: ''; flex: 1; height: 1px; background: var(--linea); }
+}
+a.acceso-panel {
+  display: flex; align-items: center; gap: .8rem; padding: .75rem .9rem;
+  border: 1.5px dashed var(--linea); border-radius: .9rem; background: var(--superficie);
+  color: var(--tinta); font-weight: 400; text-decoration: none;
+  transition: border-color .15s, background .15s;
+  &:hover, &:focus-visible { border-color: var(--follaje); border-style: solid; }
+  .icono { display: grid; place-items: center; flex: none; width: 2.4rem; height: 2.4rem; border-radius: .6rem; background: var(--fondo-alt); font-size: 1.2rem; }
+  strong { display: block; font-weight: 600; }
+  small { color: var(--tinta-suave); font-size: .82rem; }
+  .flecha { margin-left: auto; color: var(--follaje); font-size: 1.4rem; font-weight: 700; }
+}

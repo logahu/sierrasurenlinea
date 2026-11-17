@@ -1,14 +1,14 @@
 import { Component, DestroyRef, inject, input, signal } from '@angular/core';
 import { VerContrasena } from '../compartido/ver-contrasena';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { mensajeDeError } from './autorizacion';
 import { SesionService } from './sesion';
 
 @Component({
   selector: 'app-entrar-page',
-  imports: [ReactiveFormsModule, VerContrasena],
+  imports: [ReactiveFormsModule, RouterLink, VerContrasena],
   template: `
     <section class="entrar">
       <h1>Panel de Sierra Sur en Línea</h1>
@@ -35,6 +35,7 @@ import { SesionService } from './sesion';
           <p class="ayuda" role="status">El servidor estaba dormido y está despertando; puede tardar hasta un minuto.</p>
         }
       </form>
+      <a class="volver-sitio" routerLink="/">‹ Volver al sitio</a>
     </section>
   `,
 })
