@@ -21,6 +21,9 @@ import { textosCatalogo } from './textos';
       }
       <a [routerLink]="base() + '/categorias'" [class.activo]="seccion() === 'categorias'">Categorías</a>
       <a [routerLink]="base() + '/datos'" [class.activo]="seccion() === 'datos'">Datos del negocio</a>
+      @if (negocio()?.tipo !== 'SERVICIO') {
+        <a [routerLink]="base() + '/equipo'" [class.activo]="seccion() === 'equipo'">{{ negocio()?.modoPedido === 'CITA' ? 'Equipo y agenda' : 'Equipo' }}</a>
+      }
       <a [routerLink]="base() + '/fotos'" [class.activo]="seccion() === 'fotos'">Fotos</a>
     </nav>
   `,
@@ -29,7 +32,7 @@ export class NegocioTabs {
   readonly slug = input.required<string>();
   readonly negocio = input<NegocioAdmin | undefined>();
   /** Pestaña marcada; la de catálogo sigue marcada al editar un producto. */
-  readonly seccion = input<'catalogo' | 'lista' | 'comida' | 'categorias' | 'datos' | 'fotos'>('catalogo');
+  readonly seccion = input<'catalogo' | 'lista' | 'comida' | 'categorias' | 'datos' | 'fotos' | 'equipo'>('catalogo');
   protected readonly base = computed(() => `/admin/negocios/${this.slug()}`);
   protected readonly textos = computed(() => textosCatalogo(this.negocio()?.tipo));
 }

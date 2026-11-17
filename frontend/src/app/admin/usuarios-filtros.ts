@@ -25,7 +25,7 @@ export function telefonoLegible(t: string | null | undefined): string {
   return t && /^\d{10}$/.test(t) ? `${t.slice(0, 3)} ${t.slice(3, 6)} ${t.slice(6)}` : (t ?? '');
 }
 
-const ORDEN_ROL: Record<Rol, number> = { DUENO: 0, ENCARGADO: 1, REPARTIDOR: 2 };
+const ORDEN_ROL: Record<Rol, number> = { DUENO: 0, ENCARGADO: 1, EMPLEADO: 2, REPARTIDOR: 3 };
 
 /** Todo menos el rol: así los botones de rol cuentan lo que hay con los demás filtros. */
 function pasaSinRol(u: Usuario, f: FiltrosEquipo): boolean {
@@ -53,7 +53,7 @@ export interface ResultadoEquipo {
 
 export function filtrarEquipo(usuarios: Usuario[], f: FiltrosEquipo): ResultadoEquipo {
   const base = usuarios.filter((u) => pasaSinRol(u, f));
-  const conteos = { todos: base.length, DUENO: 0, ENCARGADO: 0, REPARTIDOR: 0 };
+  const conteos = { todos: base.length, DUENO: 0, ENCARGADO: 0, REPARTIDOR: 0, EMPLEADO: 0 };
   for (const u of base) conteos[u.rol]++;
   const lista = base.filter((u) => f.rol === 'todos' || u.rol === f.rol);
   const nombre = (a: Usuario, b: Usuario) => a.nombre.localeCompare(b.nombre, 'es');

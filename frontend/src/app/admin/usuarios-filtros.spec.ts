@@ -18,7 +18,7 @@ describe('filtrarEquipo', () => {
   it('por omisión oculta los inactivos y los de prueba, y cuenta por rol', () => {
     const r = filtrarEquipo(equipo, EQUIPO_POR_OMISION);
     expect(r.lista.map((x) => x.id)).toEqual([1, 2, 3]);
-    expect(r.conteos).toEqual({ todos: 3, DUENO: 1, ENCARGADO: 1, REPARTIDOR: 1 });
+    expect(r.conteos).toEqual({ todos: 3, DUENO: 1, ENCARGADO: 1, REPARTIDOR: 1, EMPLEADO: 0 });
   });
 
   it('busca sin acentos por nombre, negocio o parte del teléfono', () => {

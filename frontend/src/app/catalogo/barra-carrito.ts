@@ -1,7 +1,7 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { ModoPedido } from './catalogo.model';
-import { CarritoService, TEXTOS_PEDIDO, piezasDe, textoPiezas, totalDe } from './carrito';
+import { CarritoService, TEXTOS_AGENDA, TEXTOS_PEDIDO, piezasDe, textoPiezas, totalDe } from './carrito';
 import { precioConUnidad } from './contacto';
 
 /** Barra fija abajo con el resumen del carrito del negocio y el botón para verlo. */
@@ -57,11 +57,13 @@ import { precioConUnidad } from './contacto';
 export class BarraCarrito {
   readonly slug = input.required<string>();
   readonly modo = input.required<ModoPedido>();
+  /** Aparta horario en línea (textos de cita). */
+  readonly agenda = input(false);
 
   private readonly carrito = inject(CarritoService);
   private readonly lineas = this.carrito.de(() => this.slug());
   protected readonly piezas = computed(() => piezasDe(this.lineas()));
-  protected readonly textos = computed(() => TEXTOS_PEDIDO[this.modo()]);
-  protected readonly cuantos = computed(() => textoPiezas(this.modo(), this.modo() === 'CITA' ? this.lineas().length : this.piezas()));
+  protected readonly textos = computed(() => (this.modo() === 'CITA' && this.agenda() ? TEXTOS_AGENDA : TEXTOS_PEDIDO[this.modo()]));
+  protected readonly cuantos = computed(() => textoPiezas(this.textos(), this.modo() === 'CITA' ? this.lineas().length : this.piezas()));
   protected readonly total = computed(() => precioConUnidad({ precio: totalDe(this.lineas()), unidadPrecio: null }));
 }

@@ -49,8 +49,20 @@ export const conSesion: CanActivateFn = (_route, state) => {
   return inject(Router).createUrlTree(['/admin/entrar'], { queryParams: { volver: state.url } });
 };
 
-/** El repartidor solo usa Pedidos y Mi cuenta: el resto lo manda a Pedidos. */
-export const sinRepartidor: CanActivateFn = () =>
+/** El repartidor solo usa Pedidos y Mi cuenta; el empleado, Mi agenda y Mi cuenta. */
+export const sinRepartidor: CanActivateFn = () => {
+  const sesion = inject(SesionService);
+  if (sesion.esRepartidor()) return inject(Router).createUrlTree(['/admin/pedidos']);
+  if (sesion.esEmpleado()) return inject(Router).createUrlTree(['/admin/agenda']);
+  return true;
+};
+
+/** Pedidos: no para empleados (sus citas están en Mi agenda). */
+export const sinEmpleado: CanActivateFn = () =>
+  inject(SesionService).esEmpleado() ? inject(Router).createUrlTree(['/admin/agenda']) : true;
+
+/** Agenda: no para repartidores. */
+export const conAgenda: CanActivateFn = () =>
   inject(SesionService).esRepartidor() ? inject(Router).createUrlTree(['/admin/pedidos']) : true;
 
 /** Pantallas solo del dueño. */

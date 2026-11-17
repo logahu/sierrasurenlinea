@@ -19,6 +19,8 @@ export class SesionService {
   readonly usuario = computed(() => this.actual()?.usuario ?? null);
   readonly esDueno = computed(() => this.usuario()?.rol === 'DUENO');
   readonly esRepartidor = computed(() => this.usuario()?.rol === 'REPARTIDOR');
+  /** Solo ve su agenda. */
+  readonly esEmpleado = computed(() => this.usuario()?.rol === 'EMPLEADO');
 
   /** Token vigente, o null si no hay sesión o ya venció. */
   token(): string | null {

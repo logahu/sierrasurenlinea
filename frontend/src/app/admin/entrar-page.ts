@@ -57,7 +57,7 @@ export class EntrarPage {
   protected readonly error = signal<string | null>(null);
 
   constructor() {
-    if (this.sesion.activa()) void this.router.navigateByUrl('/admin');
+    if (this.sesion.activa()) void this.router.navigateByUrl(this.sesion.esEmpleado() ? '/admin/agenda' : '/admin');
   }
 
   protected entrar(): void {
@@ -83,7 +83,7 @@ export class EntrarPage {
       .subscribe({
         next: () => {
           const destino = this.volver();
-          const inicio = this.sesion.esRepartidor() ? '/admin/pedidos' : '/admin';
+          const inicio = this.sesion.esRepartidor() ? '/admin/pedidos' : this.sesion.esEmpleado() ? '/admin/agenda' : '/admin';
           void this.router.navigateByUrl(destino?.startsWith('/admin') ? destino : inicio);
         },
         error: (e) => {

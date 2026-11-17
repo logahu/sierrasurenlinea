@@ -8,7 +8,7 @@ import { soloEnWeb } from '../modo-app';
 import { ContactoNegocio } from './contacto-negocio';
 import { EncargoForm } from './encargo-form';
 import { BarraCarrito } from './barra-carrito';
-import { CarritoService, TEXTOS_PEDIDO, modoDe } from './carrito';
+import { CarritoService, modoDe, textosDe } from './carrito';
 import { Producto } from './catalogo.model';
 import { precioConUnidad } from './contacto';
 import { direccionCorta, horarioCorto } from './ubicacion-negocio';
@@ -72,10 +72,7 @@ export class CatalogoPage {
   // --- Carrito ---------------------------------------------------------------------
   private readonly carrito = inject(CarritoService);
   protected readonly modo = computed(() => modoDe(this.negocio.value()));
-  protected readonly textos = computed(() => {
-    const m = this.modo();
-    return m ? TEXTOS_PEDIDO[m] : null;
-  });
+  protected readonly textos = computed(() => (this.modo() ? textosDe(this.negocio.value()) : null));
   /** Último producto agregado desde la tarjeta (muestra la palomita un momento). */
   protected readonly recien = signal<number | null>(null);
   private temporizador?: ReturnType<typeof setTimeout>;

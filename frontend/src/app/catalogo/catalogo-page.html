@@ -106,5 +106,5 @@
   }
 
   @if (n) { <app-contacto-negocio [negocio]="n" /> }
-  @if (n && modo(); as m) { <app-barra-carrito [slug]="n.slug" [modo]="m" /> }
+  @if (n && modo(); as m) { <app-barra-carrito [slug]="n.slug" [modo]="m" [agenda]="!!n.agendaActiva" /> }
 }

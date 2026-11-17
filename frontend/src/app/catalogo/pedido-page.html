@@ -20,6 +20,9 @@
     @if (e.folio) {
       <p class="folio">Folio <strong>{{ e.folio }}</strong></p>
     }
+    @if (e.cita) {
+      <p class="cita-apartada">Tu cita: <strong>{{ e.cita }}</strong></p>
+    }
     <p>
       Se abrió WhatsApp con tu solicitud ya escrita para enviársela a <strong>{{ n.nombre }}</strong>.
       {{ textos().nota }}
@@ -79,7 +82,7 @@
       </section>
 
       <section class="hoja" aria-labelledby="titulo-entrega">
-        <h2 id="titulo-entrega">{{ m === 'COMPRA' ? 'Entrega' : m === 'RENTA' ? 'Datos del evento' : 'Tu visita' }}</h2>
+        <h2 id="titulo-entrega">{{ m === 'COMPRA' ? 'Entrega' : m === 'RENTA' ? 'Datos del evento' : conAgenda() ? 'Tu horario' : 'Tu visita' }}</h2>
 
         @if (!cliente.cliente()) {
           <div class="aviso-cuenta" role="note">
@@ -157,7 +160,11 @@
               </label>
             </fieldset>
           }
-          @if (m !== 'COMPRA' || programado()) {
+          @if (conAgenda()) {
+            <div class="campo-agenda" [class.con-error]="falta('el horario de tu cita')">
+              <app-elegir-horario [slug]="n.slug" [servicios]="lineas().length" [(seleccion)]="cita" />
+            </div>
+          } @else if (m !== 'COMPRA' || programado()) {
             <div class="par">
               <label class="campo" [class.con-error]="falta('la fecha del evento', 'el día de tu visita', 'el día de entrega')">
                 {{ m === 'RENTA' ? 'Fecha del evento' : m === 'CITA' ? 'Día de tu visita' : 'Día' }}
@@ -174,7 +181,7 @@
           <label class="campo">
             Notas para el negocio (opcional)
             <textarea rows="2" maxlength="500" [value]="notas()" (input)="notas.set(texto($event))"
-                      [placeholder]="m === 'COMPRA' ? 'Ej. mensaje para la tarjeta, color preferido…' : m === 'RENTA' ? 'Ej. tipo de piso, si hay contacto de luz…' : 'Ej. quiero saber si acepta cambio…'"></textarea>
+                      [placeholder]="m === 'COMPRA' ? 'Ej. mensaje para la tarjeta, color preferido…' : m === 'RENTA' ? 'Ej. tipo de piso, si hay contacto de luz…' : conAgenda() ? 'Ej. traigo foto del corte que quiero…' : 'Ej. quiero saber si acepta cambio…'"></textarea>
           </label>
 
           @if (n.soloMayoresEdad) {

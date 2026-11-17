@@ -108,7 +108,8 @@ public class PedidoResource {
             List<@Valid @NotNull OrdenPersona> ordenes) {
     }
 
-    public record PedidoRegistrado(Long id, String folio, BigDecimal total) {
+    /** cuando: en citas con agenda, el horario apartado («Martes 17 de noviembre, 11:00 a 13:00 con Ana»). */
+    public record PedidoRegistrado(Long id, String folio, BigDecimal total, String cuando) {
     }
 
     public record LineaPedida(@NotNull Long productoId, @Min(1) @Max(99) int cantidad) {
@@ -206,7 +207,7 @@ public class PedidoResource {
                 l.persist();
             }
             Bitacora.anotar(p.cliente, n, Bitacora.PEDIDO, p.id, "Hizo el pedido " + p.folio + " · " + p.tipo, null);
-            return new PedidoRegistrado(p.id, p.folio, p.totalEstimado);
+            return new PedidoRegistrado(p.id, p.folio, p.totalEstimado, null);
         });
         CompletableFuture.runAsync(() -> {
             notificador.pedidoNuevo(r.id());
@@ -349,7 +350,7 @@ public class PedidoResource {
             Bitacora.anotar(p.cliente, n, Bitacora.PEDIDO, p.id, "Hizo el pedido " + p.folio + " · " + p.tipo,
                     "Total aprox.: " + mx.turamohoy.historial.Cambios.texto(total)
                             + (p.citaInicio == null ? "" : " · " + p.cuando));
-            return new PedidoRegistrado(p.id, p.folio, total);
+            return new PedidoRegistrado(p.id, p.folio, total, p.citaInicio == null ? null : p.cuando);
         });
         CompletableFuture.runAsync(() -> {
             notificador.pedidoNuevo(r.id());

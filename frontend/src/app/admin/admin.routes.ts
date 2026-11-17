@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { conSesion, sinRepartidor, soloDueno } from './autorizacion';
+import { conAgenda, conSesion, sinEmpleado, sinRepartidor, soloDueno } from './autorizacion';
 
 /** Panel de administración: /admin. Se carga aparte, solo cuando alguien entra. */
 export const ADMIN_ROUTES: Routes = [
@@ -17,8 +17,15 @@ export const ADMIN_ROUTES: Routes = [
         canActivate: [conSesion],
         children: [
           {
+            path: 'agenda',
+            title: 'Agenda · Panel',
+            canActivate: [conAgenda],
+            loadComponent: () => import('./agenda-page').then((m) => m.AgendaPage),
+          },
+          {
             path: 'pedidos',
             title: 'Pedidos · Panel',
+            canActivate: [sinEmpleado],
             loadComponent: () => import('./pedidos-page').then((m) => m.PedidosPage),
           },
           {
@@ -60,6 +67,11 @@ export const ADMIN_ROUTES: Routes = [
                 path: 'negocios/:slug/categorias',
                 title: 'Categorías · Panel',
                 loadComponent: () => import('./categorias-page').then((m) => m.CategoriasPage),
+              },
+              {
+                path: 'negocios/:slug/equipo',
+                title: 'Equipo y agenda · Panel',
+                loadComponent: () => import('./equipo-page').then((m) => m.EquipoPage),
               },
               {
                 path: 'negocios/:slug/datos',

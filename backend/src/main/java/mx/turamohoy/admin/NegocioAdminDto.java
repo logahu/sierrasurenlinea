@@ -32,12 +32,17 @@ public record NegocioAdminDto(
         Integer topeAdelanto,
         int orden,
         long productosActivos,
-        String encargado) {
+        String encargado,
+        /** COMPRA, RENTA, CITA o null (Encarguitos). */
+        String modoPedido,
+        /** Citas con horarios libres. */
+        boolean agendaActiva) {
 
     public static NegocioAdminDto de(Negocio n, long productosActivos, String encargado) {
         return new NegocioAdminDto(n.id, n.slug, n.nombre, n.eslogan, n.descripcion, n.tipo,
                 n.colorPrimario, n.portadaUrl, n.whatsapp, n.telefono, n.direccion, n.horario,
                 n.atencionEnLocal, n.colonia, n.referencias, n.lat, n.lng,
-                n.soloMayoresEdad, n.publico(), n.estado, n.visibleApp, n.topeAdelanto, n.orden, productosActivos, encargado);
+                n.soloMayoresEdad, n.publico(), n.estado, n.visibleApp, n.topeAdelanto, n.orden, productosActivos, encargado,
+                n.modoPedido(), n.agendaActiva);
     }
 }
