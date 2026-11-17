@@ -79,10 +79,11 @@ class PanelResourceTest {
     }
 
     @Test
-    void elDuenoVeLosCincoNegociosConSusProductos() {
+    void elDuenoVeTodosLosNegociosConSusProductos() {
         como(Sesiones.dueno()).when().get("/api/admin/negocios")
                 .then().statusCode(200)
-                .body("$", hasSize(6))
+                .body("$", hasSize(7))
+                .body("slug", hasItem("estudio-melgarejo"))
                 .body("slug", hasItem("encarguitos"))
                 .body("productosActivos", everyItem(greaterThan(0)));
     }

@@ -132,6 +132,10 @@ const CONSEJOS: Record<string, string[]> = {
     'Reserva con anticipación, sobre todo en fines de semana y temporada de fiestas.',
     'En "Notas" indica el tipo de piso (pasto, cemento, tierra) y si hay contacto de luz cerca.',
   ],
+  'estudio-melgarejo': [
+    'Cada paquete dura una hora. Atendemos de lunes a sábado de 10:00 a 19:00; los domingos está cerrado.',
+    'Si quieres que te atienda alguien en particular, escríbelo en "Notas".',
+  ],
   autos: [
     'Revisa las fotos y características de cada vehículo antes de agendar.',
     'Puedes agregar varios vehículos a la misma visita para verlos el mismo día.',
