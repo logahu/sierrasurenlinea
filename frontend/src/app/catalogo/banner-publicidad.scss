@@ -1,0 +1,140 @@
+// Banner de publicidad: se distingue del contenido (etiqueta «Publicidad», tarjeta con fondo
+// propio) y siempre se puede quitar. Usa los colores de la portada (--anil, --cal, --sol).
+:host { display: block; }
+
+.banner {
+  --fondo-base: var(--fondo, var(--anil-profundo, #1e2a5a));
+  position: relative;
+  display: grid;
+  border-radius: .75rem;
+  background: var(--fondo-base);
+  color: var(--sobre, #fff);
+  overflow: hidden;
+  box-shadow: 0 .35rem 0 color-mix(in srgb, var(--fondo-base) 70%, #000);
+}
+
+.etiqueta {
+  position: absolute;
+  top: .55rem;
+  left: .65rem;
+  z-index: 1;
+  padding: .12rem .5rem;
+  border-radius: .25rem;
+  background: color-mix(in srgb, var(--sobre, #fff) 92%, transparent);
+  color: var(--fondo-base);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.contenido {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  min-height: 6.5rem;
+  padding: 2.1rem 3.2rem 2rem 1rem;
+  color: inherit;
+  text-decoration: none;
+  &:focus-visible { outline: 3px solid var(--sol, #f2c94c); outline-offset: -5px; border-radius: .75rem; }
+  &:hover strong { text-decoration: underline; text-underline-offset: .15em; }
+}
+a.contenido { cursor: pointer; }
+
+img {
+  width: clamp(4.5rem, 14vw, 7rem);
+  height: auto;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: .5rem;
+  background: color-mix(in srgb, var(--sobre, #fff) 15%, transparent);
+}
+
+.textos {
+  display: grid;
+  gap: .25rem;
+  min-width: 0;
+  grid-column: 2;
+  strong { font-size: clamp(1.05rem, 2.6vw, 1.35rem); line-height: 1.2; }
+  span { font-size: .95rem; line-height: 1.4; opacity: .92; }
+}
+img + .textos { grid-column: 2; }
+.contenido > .textos:first-child { grid-column: 1 / 3; }
+
+.ir { font-size: 2rem; line-height: 1; font-weight: 700; }
+
+.cerrar {
+  position: absolute;
+  top: .35rem;
+  right: .35rem;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 1.6rem;
+  line-height: 1;
+  cursor: pointer;
+  &:hover { background: color-mix(in srgb, var(--sobre, #fff) 16%, transparent); }
+  &:focus-visible { outline: 3px solid var(--sol, #f2c94c); outline-offset: -3px; }
+}
+
+.puntos {
+  position: absolute;
+  bottom: .35rem;
+  left: 50%;
+  translate: -50% 0;
+  display: flex;
+  gap: .1rem;
+  button {
+    // Área táctil amplia con un punto pequeño dentro.
+    width: 1.6rem;
+    height: 1.6rem;
+    border: 0;
+    padding: 0;
+    background: none;
+    cursor: pointer;
+    &::before {
+      content: '';
+      display: block;
+      width: .5rem;
+      height: .5rem;
+      margin: auto;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: .45;
+    }
+    &.activo::before { opacity: 1; width: 1.1rem; border-radius: .3rem; }
+    &:focus-visible { outline: 2px solid var(--sol, #f2c94c); border-radius: .3rem; }
+  }
+  color: var(--sobre, #fff);
+}
+
+.mostrar {
+  margin: 0;
+  text-align: right;
+  button {
+    border: 0;
+    background: none;
+    padding: .55rem 0;
+    color: var(--anil-suave, inherit);
+    font: inherit;
+    font-size: .88rem;
+    text-decoration: underline;
+    text-underline-offset: .2em;
+    cursor: pointer;
+    &:hover { color: var(--anil, inherit); }
+    &:focus-visible { outline: 3px solid var(--sol, #f2c94c); outline-offset: 2px; border-radius: .2rem; }
+  }
+}
+
+@media (max-width: 520px) {
+  .contenido { grid-template-columns: auto 1fr; padding-right: 2.9rem; }
+  .ir { display: none; }
+}

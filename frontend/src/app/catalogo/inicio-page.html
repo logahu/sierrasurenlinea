@@ -7,6 +7,8 @@
     </div>
   </div>
 
+  <app-banner-publicidad class="banner-arriba" posicion="PORTADA_ARRIBA" />
+
   @if (negocios.error()) {
     <div class="estado" role="alert">
       <p>No pudimos cargar los negocios. Revisa tu conexión e inténtalo de nuevo.</p>
@@ -14,26 +16,60 @@
     </div>
   } @else if (negocios.isLoading() && !negocios.hasValue()) {
     <ul class="calle cargando" aria-busy="true" aria-label="Cargando negocios">
-      @for (i of [0, 1, 2, 3]; track i) { <li class="fachada" [class]="'f' + i"><span class="muro"></span></li> }
+      @for (i of [0, 1, 2, 3]; track i) { <li><span class="muro-cargando"></span></li> }
     </ul>
+    <div class="banqueta" aria-hidden="true"></div>
     <p class="despertando">Estamos despertando el servidor; la primera visita puede tardar hasta un minuto.</p>
   } @else {
-    <ul class="calle">
-      @for (n of negocios.value() ?? []; track n.id; let i = $index) {
-        <li class="fachada" [class]="'f' + (i % 5)" [style.--pintura]="n.colorPrimario">
-          <a class="muro" [routerLink]="['/', n.slug]">
-            <span class="rotulo">{{ n.nombre }}@if (n.estado === 'PRUEBAS') { <small class="en-pruebas">🧪 en pruebas</small> }</span>
-            <span class="ventana"><img [src]="n.portadaUrl" alt="" width="400" height="400" /></span>
-            @if (n.eslogan) { <span class="letrero">{{ n.eslogan }}</span> }
-            @if (n.tipo === 'RENTA') { <span class="aviso">Se rentan</span> }
-            @if (n.soloMayoresEdad) { <span class="aviso">Solo mayores de 18</span> }
-            @if (n.tipo === 'SERVICIO') { <span class="aviso">En moto</span> }
-          </a>
-        </li>
+    @if (calles().length > 1) {
+      <nav class="giros" aria-label="Giros">
+        <div class="chips" role="group" aria-label="Ver una calle">
+          <button type="button" class="chip" [attr.aria-pressed]="elegido() === null" (click)="elegir(null)">
+            Todos <span class="cuenta">{{ total() }}</span>
+          </button>
+          @for (c of calles(); track c.giro.slug) {
+            <button type="button" class="chip" [attr.aria-pressed]="elegido() === c.giro.slug" (click)="elegir(c.giro.slug)">
+              <app-icono-giro [icono]="c.giro.icono" />
+              {{ c.giro.nombre }} <span class="cuenta" [attr.aria-label]="c.negocios.length + (c.negocios.length === 1 ? ' negocio' : ' negocios')">{{ c.negocios.length }}</span>
+            </button>
+          }
+        </div>
+      </nav>
+    }
+
+    @for (c of visibles(); track c.giro.slug; let i = $index) {
+      @let f = fachadas(c);
+      <section class="calle-giro" [attr.aria-labelledby]="'calle-' + c.giro.slug">
+        <header class="cabeza-calle">
+          <h2 [id]="'calle-' + c.giro.slug">
+            <app-icono-giro [icono]="c.giro.icono" />
+            <span><small>Calle de</small> {{ c.giro.nombre }}</span>
+          </h2>
+          @if (f.resto) {
+            <a class="ver-todos" [routerLink]="['/giro', c.giro.slug]">Ver los {{ c.negocios.length }} ›</a>
+          }
+        </header>
+        <ul class="calle" [attr.aria-label]="'Negocios de ' + c.giro.nombre">
+          @for (n of f.visibles; track n.id; let j = $index) {
+            <li><app-fachada [negocio]="n" [variante]="i + j" /></li>
+          }
+          @if (f.resto) {
+            <li class="mas">
+              <a [routerLink]="['/giro', c.giro.slug]">
+                <strong>+{{ f.resto }}</strong>
+                <span>Ver todos</span>
+                <small>en {{ c.giro.nombre }}</small>
+              </a>
+            </li>
+          }
+        </ul>
+        <div class="banqueta" aria-hidden="true"></div>
+      </section>
+      @if (i === bannerDespuesDe()) {
+        <app-banner-publicidad class="banner-entre" posicion="ENTRE_CALLES" />
       }
-    </ul>
+    }
   }
-  <div class="banqueta" aria-hidden="true"></div>
 </section>
 
 <section class="pasos" aria-labelledby="titulo-pasos">

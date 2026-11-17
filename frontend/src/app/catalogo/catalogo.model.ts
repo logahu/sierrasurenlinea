@@ -4,6 +4,36 @@ export type EstadoNegocio = 'PUBLICO' | 'PRUEBAS' | 'OCULTO';
 /** COMPRA: domicilio o recoger · RENTA: fecha del evento · CITA: ver el producto en persona. */
 export type ModoPedido = 'COMPRA' | 'RENTA' | 'CITA';
 
+/** Giro de un negocio = una calle de la portada (Flores y regalos, Belleza…). */
+export interface GiroResumen {
+  slug: string;
+  nombre: string;
+}
+
+export interface Giro extends GiroResumen {
+  /** flor, belleza, fiesta, bebida, comida, auto, moto (el dibujo se pinta en el sitio). */
+  icono: string | null;
+  orden: number;
+  /** Negocios que puede ver quien pregunta. */
+  negocios: number;
+}
+
+/** PORTADA_ARRIBA: bajo el encabezado · ENTRE_CALLES: después de la segunda calle. */
+export type PosicionAnuncio = 'PORTADA_ARRIBA' | 'ENTRE_CALLES';
+
+/** Banner de publicidad vigente (siempre lleva la etiqueta «Publicidad»). */
+export interface Anuncio {
+  id: number;
+  titulo: string;
+  texto: string | null;
+  imagenUrl: string | null;
+  /** Ruta del sitio (/turamohoy) o URL https://; null = no lleva a ningún lado. */
+  enlace: string | null;
+  negocioSlug: string | null;
+  colorFondo: string | null;
+  posicion: PosicionAnuncio;
+}
+
 export interface Categoria {
   id: number;
   negocioSlug: string;
@@ -43,6 +73,8 @@ export interface Negocio {
   modoPedido?: ModoPedido | null;
   /** Solo servicios: cuánto adelanta el repartidor, en MXN. */
   topeAdelanto?: number | null;
+  /** Su calle en la portada. */
+  giro?: GiroResumen | null;
   /** Vacío en el listado; con datos en el detalle de un negocio. */
   categorias: Categoria[];
   /** Solo servicios (Encarguitos): tarjetas de "Tu lista del mandado". */

@@ -1,0 +1,51 @@
+@use 'portada';
+
+:host {
+  @include portada.tokens;
+  @include portada.calle-completa;
+  padding-top: clamp(1.25rem, 4vw, 2rem);
+}
+
+h1 { font-family: var(--rotulo); font-weight: 400; margin: 0; font-size: clamp(2rem, 6vw, 3.2rem); line-height: 1.05; }
+
+.volver {
+  display: inline-block;
+  margin-bottom: 1.25rem;
+  color: var(--anil);
+  font-weight: 700;
+  text-underline-offset: .2em;
+  &:focus-visible { outline: 3px solid var(--sol); outline-offset: 2px; border-radius: .2rem; }
+}
+
+.cabeza {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  app-icono-giro { flex: none; width: 3.6rem; height: 3.6rem; border-radius: 50%; background: var(--anil); color: var(--cal); font-size: 1.5rem; }
+  .sobre { margin: 0; font-size: .82rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--anil-suave); }
+  .cuantos { margin: .25rem 0 0; color: var(--anil-suave); }
+}
+
+// Todas las fachadas del giro: una cuadra que se acomoda en varias filas.
+.cuadra {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, clamp(9.5rem, 22vw, 12.5rem)), 1fr));
+  align-items: end;
+  gap: 1.25rem 0;
+  > li { height: 100%; display: flex; align-items: flex-end; }
+  > li > app-fachada { width: 100%; height: auto; }
+}
+
+.banqueta { @include portada.banqueta; }
+
+.estado {
+  padding: 2rem 0;
+  color: var(--anil-suave);
+  h1 { color: var(--anil); margin-bottom: .75rem; }
+  a { color: var(--anil); font-weight: 700; }
+  button { font: inherit; font-weight: 700; padding: .65rem 1.3rem; border-radius: .3rem; border: 0; background: var(--anil); color: var(--cal); cursor: pointer; }
+}

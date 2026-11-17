@@ -25,6 +25,12 @@ export const routes: Routes = [
     title: 'Aviso de privacidad · Sierra Sur en Línea',
     loadComponent: () => import('./cuenta/privacidad-page').then((m) => m.PrivacidadPage),
   },
+  // Todas las fachadas de un giro («Ver todos» de cada calle de la portada).
+  {
+    path: 'giro/:slug',
+    title: 'Negocios por giro · Sierra Sur en Línea',
+    loadComponent: () => import('./catalogo/giro-page').then((m) => m.GiroPage),
+  },
   // "Cosméticos" ahora es "Belleza": los enlaces viejos siguen funcionando.
   { path: 'cosmeticos', redirectTo: 'belleza', pathMatch: 'full' },
   { path: 'cosmeticos/producto/:id', redirectTo: 'belleza/producto/:id' },

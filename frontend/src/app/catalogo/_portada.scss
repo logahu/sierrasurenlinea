@@ -1,0 +1,46 @@
+// Paleta y tipografía de la portada («la calle de los rótulos»), compartida por la portada
+// y la página de cada giro. Las páginas de cada negocio tienen su propio estilo.
+@mixin tokens {
+  --cal: #fbfbf8;
+  --anil: #1e2a5a;
+  --anil-suave: #4a5585;
+  --anil-profundo: #1e2a5a;
+  --cantera: #7a9a7e;
+  --cantera-oscura: #5d7a61;
+  --sol: #f2c94c;
+  --chip: #ffffff;
+  --chip-borde: #d5d8e6;
+  --rotulo: 'Alfa Slab One', 'Rockwell', Georgia, serif;
+  --texto: 'Atkinson Hyperlegible', system-ui, sans-serif;
+
+  @media (prefers-color-scheme: dark) {
+    --cal: #141a33;
+    --anil: #eef0f8;
+    --anil-suave: #b4bad3;
+    --anil-profundo: #2b3a78;
+    --cantera: #4f6a53;
+    --cantera-oscura: #3c5240;
+    --chip: #1d2546;
+    --chip-borde: #36406a;
+  }
+}
+
+// Fondo de cal de orilla a orilla de la pantalla.
+@mixin calle-completa {
+  display: block;
+  font-family: var(--texto);
+  color: var(--anil);
+  margin-inline: calc(50% - 50vw);
+  padding-inline: max(1rem, calc(50vw - 36rem));
+  background: var(--cal);
+  margin-bottom: -6rem;
+  padding-bottom: 6rem;
+}
+
+@mixin banqueta {
+  margin-inline: calc(50% - 50vw);
+  height: 1.4rem;
+  background:
+    linear-gradient(var(--cantera-oscura) 0 .35rem, transparent .35rem),
+    repeating-linear-gradient(90deg, var(--cantera) 0 5.5rem, var(--cantera-oscura) 5.5rem calc(5.5rem + 2px));
+}

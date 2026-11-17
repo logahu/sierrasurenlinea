@@ -4,7 +4,7 @@ import { toObservable } from '@angular/core/rxjs-interop';
 import { Observable, combineLatest, distinctUntilChanged, map, shareReplay, switchMap } from 'rxjs';
 import { ClienteSesionService } from '../cuenta/cliente-sesion';
 import { visiblesAqui } from '../modo-app';
-import { Negocio, Producto, Restaurante } from './catalogo.model';
+import { Anuncio, Giro, Negocio, PosicionAnuncio, Producto, Restaurante } from './catalogo.model';
 import { environment } from '../../environments/environment';
 
 /**
@@ -31,6 +31,18 @@ export class CatalogoService {
 
   negocios(): Observable<Negocio[]> {
     return this.negocios$;
+  }
+
+  /** Giros (calles de la portada) en orden; casi no cambian: se piden una vez. */
+  private readonly giros$ = this.http.get<Giro[]>(`${this.base}/giros`).pipe(shareReplay({ bufferSize: 1, refCount: false }));
+
+  giros(): Observable<Giro[]> {
+    return this.giros$;
+  }
+
+  /** Banners de publicidad vigentes de una posición. */
+  anuncios(posicion: PosicionAnuncio): Observable<Anuncio[]> {
+    return this.http.get<Anuncio[]>(`${this.base}/anuncios`, { params: { posicion } });
   }
 
   /** Productos marcados como favoritos en todos los negocios (para la portada). */
