@@ -4,6 +4,7 @@ import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } fro
 import { SwUpdate } from '@angular/service-worker';
 import { filter, map, of, switchMap, tap } from 'rxjs';
 import { CatalogoService } from './catalogo/catalogo.service';
+import { SesionService } from './admin/sesion';
 import { ClienteSesionService } from './cuenta/cliente-sesion';
 import { InstalarApp } from './instalar';
 import { UltimoPedido } from './cuenta/ultimo-pedido';
@@ -27,6 +28,8 @@ export class App {
   protected readonly enPanel = signal(false);
   protected readonly instalar = inject(InstalarApp);
   protected readonly cliente = inject(ClienteSesionService);
+  /** Sesión del panel: muestra «Mi panel» en el encabezado. */
+  protected readonly equipo = inject(SesionService);
   protected readonly ultimoPedido = inject(UltimoPedido);
   /** En Mi cuenta ya se ven los pedidos: ahí no hace falta el aviso. */
   protected readonly enCuenta = signal(false);

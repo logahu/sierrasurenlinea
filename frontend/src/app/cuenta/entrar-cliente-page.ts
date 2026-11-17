@@ -6,6 +6,7 @@ import { finalize } from 'rxjs';
 import { mensajeDeError } from '../admin/autorizacion';
 import { ClienteSesionService } from './cliente-sesion';
 import { destinoSeguro } from './destino';
+import { SesionService } from '../admin/sesion';
 import { telefonoValido } from '../catalogo/encargo';
 
 @Component({
@@ -39,13 +40,20 @@ import { telefonoValido } from '../catalogo/encargo';
         }
         <p class="nota">¿Olvidaste tu contraseña? Escríbenos por WhatsApp a cualquiera de los negocios y te ayudamos a recuperarla.</p>
       </form>
-      <p class="nota equipo">
-        ¿Eres del equipo (administrador, encargado o repartidor)? Entra en el <a href="/admin/entrar">panel</a>.
-      </p>
       <p class="cambio">
         ¿Aún no tienes cuenta?
         <a routerLink="/cuenta/registro" [queryParams]="{ volver: volver() }">Crear cuenta</a>
       </p>
+      <!-- El equipo de los negocios entra al panel desde aquí (en la app no se puede escribir /admin). -->
+      <p class="separador" aria-hidden="true">¿Trabajas en un negocio?</p>
+      <a class="acceso-panel" [routerLink]="equipo.activa() ? equipo.inicio() : '/admin/entrar'">
+        <span class="icono" aria-hidden="true">🗂️</span>
+        <span>
+          <strong>{{ equipo.activa() ? 'Ir a mi panel' : 'Entrar al panel' }}</strong>
+          <small>{{ equipo.activa() ? 'Ya tienes la sesión abierta como ' + equipo.usuario()?.nombre : 'Dueño, encargados, empleados y repartidores' }}</small>
+        </span>
+        <span class="flecha" aria-hidden="true">›</span>
+      </a>
     </section>
   `,
 })
@@ -56,6 +64,8 @@ export class EntrarClientePage {
   readonly pedido = input<string>();
 
   private readonly sesion = inject(ClienteSesionService);
+  /** Sesión del panel (dueño, encargados, empleados, repartidores). */
+  protected readonly equipo = inject(SesionService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
 

@@ -10,7 +10,11 @@
     </a>
     @if (!enPanel()) {
       <span class="derecha">
-      <a class="ayuda" routerLink="/ayuda" routerLinkActive="activo">Ayuda</a>
+      @if (equipo.activa()) {
+        <a class="ayuda" [routerLink]="equipo.inicio()">Mi panel</a>
+      } @else {
+        <a class="ayuda" routerLink="/ayuda" routerLinkActive="activo">Ayuda</a>
+      }
       @if (cliente.cliente()) {
         <a class="sesion" routerLink="/cuenta" routerLinkActive="activo" aria-label="Mi cuenta">
           <span class="inicial" aria-hidden="true">{{ cliente.primerNombre().charAt(0) }}</span>
@@ -51,7 +55,7 @@
 
 <footer class="pie">
   <div class="contenedor fila-pie">
-    <span>© {{ anio }} Sierra Sur en Línea · Miahuatlán de Porfirio Díaz, Oax. · <a routerLink="/conocenos">Conócenos</a> · <a routerLink="/ayuda">Ayuda</a> · <a routerLink="/privacidad">Aviso de privacidad</a></span>
+    <span>© {{ anio }} Sierra Sur en Línea · Miahuatlán de Porfirio Díaz, Oax. · <a routerLink="/conocenos">Conócenos</a> · <a routerLink="/ayuda">Ayuda</a> · <a routerLink="/privacidad">Aviso de privacidad</a> · <a [routerLink]="equipo.activa() ? equipo.inicio() : '/admin/entrar'">Acceso para negocios</a></span>
     @if (instalar.disponible()) {
       <button type="button" class="instalar" (click)="instalar.instalar()">📲 Instalar la app</button>
     }

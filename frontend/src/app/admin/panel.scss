@@ -528,3 +528,6 @@
 
 // La agenda en tablero necesita más ancho que las demás pantallas del panel.
 .panel:has(app-agenda-page) { max-width: 68rem; }
+
+// En la app del celular no hay barra de direcciones: siempre hay forma de regresar al sitio.
+.volver-sitio { display: inline-block; margin-top: 1.25rem; color: var(--tinta-suave); font-size: .9rem; }
