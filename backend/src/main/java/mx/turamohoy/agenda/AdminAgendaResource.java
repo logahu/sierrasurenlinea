@@ -21,6 +21,7 @@ import mx.turamohoy.admin.Errores;
 import mx.turamohoy.admin.Rol;
 import mx.turamohoy.admin.SesionActual;
 import mx.turamohoy.admin.Usuario;
+import mx.turamohoy.catalogo.model.Categoria;
 import mx.turamohoy.catalogo.model.Negocio;
 import mx.turamohoy.historial.Bitacora;
 import mx.turamohoy.pedidos.Pedido;
@@ -53,11 +54,18 @@ public class AdminAgendaResource {
 
     public record CitaDto(Long pedidoId, String folio, String estado, LocalDateTime inicio, LocalDateTime fin,
                           Long empleadoId, String empleadoNombre, String clienteNombre, String clienteTelefono,
-                          List<String> servicios, String notas, boolean prueba) {
+                          List<String> servicios, String notas, boolean prueba,
+                          /** Categoría del primer servicio (para el color en la agenda); null si no se sabe. */
+                          String categoria) {
     }
 
     public record AgendaDto(String negocioSlug, String negocioNombre, boolean soloMias, List<Profesional> profesionales,
-                            List<CitaDto> citas) {
+                            List<CitaDto> citas,
+                            /** Categorías del negocio en su orden (fijan el color de cada una en la agenda). */
+                            List<String> categorias,
+                            /** Horario de citas: 1 = lunes … 7 = domingo; sin llave = cerrado. */
+                            Map<Integer, List<String>> horario,
+                            int minutosCita) {
     }
 
     public record Configuracion(boolean activa, int minutosCita, Map<Integer, List<String>> horario) {
@@ -89,16 +97,25 @@ public class AdminAgendaResource {
                 + " and p.citaInicio < ?3 and p.estado <> 'CANCELADO'" + (soloMias ? " and p.empleado = ?4" : "")
                 + " order by p.citaInicio";
         List<Pedido> pedidos = soloMias ? Pedido.<Pedido>find(q, n, de, a, u).list() : Pedido.<Pedido>find(q, n, de, a).list();
-        Map<Long, List<String>> servicios = pedidos.isEmpty() ? Map.of()
-                : PedidoLinea.<PedidoLinea>list("pedido in ?1 order by orden", pedidos).stream()
-                        .collect(Collectors.groupingBy(l -> l.pedido.id, Collectors.mapping(l -> l.nombre, Collectors.toList())));
-        List<CitaDto> citas = pedidos.stream().map(p -> new CitaDto(p.id, p.folio, p.estado, p.citaInicio, p.citaFin,
-                p.empleado == null ? null : p.empleado.id, p.empleado == null ? null : p.empleado.nombre,
-                p.clienteNombre, p.clienteTelefono, servicios.getOrDefault(p.id, List.of()), p.notas, p.prueba)).toList();
+        Map<Long, List<PedidoLinea>> lineas = pedidos.isEmpty() ? Map.of()
+                : PedidoLinea.<PedidoLinea>find("select l from PedidoLinea l left join fetch l.producto pr"
+                                + " left join fetch pr.categoria where l.pedido in ?1 order by l.orden", pedidos).list().stream()
+                        .collect(Collectors.groupingBy(l -> l.pedido.id));
+        List<CitaDto> citas = pedidos.stream().map(p -> {
+            List<PedidoLinea> ls = lineas.getOrDefault(p.id, List.of());
+            String categoria = ls.stream().filter(l -> l.producto != null && l.producto.categoria != null)
+                    .map(l -> l.producto.categoria.nombre).findFirst().orElse(null);
+            return new CitaDto(p.id, p.folio, p.estado, p.citaInicio, p.citaFin,
+                    p.empleado == null ? null : p.empleado.id, p.empleado == null ? null : p.empleado.nombre,
+                    p.clienteNombre, p.clienteTelefono, ls.stream().map(l -> l.nombre).toList(), p.notas, p.prueba,
+                    categoria);
+        }).toList();
         List<Profesional> profesionales = soloMias
                 ? List.of(new Profesional(u.id, u.nombre, u.especialidades, u.rol))
                 : Usuario.profesionalesDe(n).stream().map(x -> new Profesional(x.id, x.nombre, x.especialidades, x.rol)).toList();
-        return new AgendaDto(n.slug, n.nombre, soloMias, profesionales, citas);
+        List<String> categorias = Categoria.delNegocio(n).stream().map(c -> c.nombre).toList();
+        return new AgendaDto(n.slug, n.nombre, soloMias, profesionales, citas, categorias,
+                HorarioCitas.de(n.horarioCitas).comoMapa(), n.minutosCita);
     }
 
     @GET

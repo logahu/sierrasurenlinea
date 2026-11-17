@@ -61,9 +61,17 @@ export const sinRepartidor: CanActivateFn = () => {
 export const sinEmpleado: CanActivateFn = () =>
   inject(SesionService).esEmpleado() ? inject(Router).createUrlTree(['/admin/agenda']) : true;
 
-/** Agenda: no para repartidores. */
-export const conAgenda: CanActivateFn = () =>
-  inject(SesionService).esRepartidor() ? inject(Router).createUrlTree(['/admin/pedidos']) : true;
+/** Agenda: no para repartidores ni para encargados de negocios sin citas. */
+export const conAgenda: CanActivateFn = () => {
+  const sesion = inject(SesionService);
+  return sesion.veAgenda() ? true : inject(Router).createUrlTree([sesion.inicio()]);
+};
+
+/** /admin/inicio: la página de inicio de cada quien (la app del panel abre aquí). */
+export const aSuInicio: CanActivateFn = () => {
+  const sesion = inject(SesionService);
+  return inject(Router).parseUrl(sesion.inicio());
+};
 
 /** Pantallas solo del dueño. */
 export const soloDueno: CanActivateFn = () =>

@@ -1,5 +1,7 @@
 package mx.turamohoy.admin;
 
+import mx.turamohoy.catalogo.model.ModoPedido;
+
 import java.time.Instant;
 
 /** Datos de un usuario que ve el panel (nunca incluye la contraseña). */
@@ -21,7 +23,9 @@ public record UsuarioDto(
         /** Empleados: «Cortes, barba». */
         String especialidades,
         /** Aparece en la agenda de citas. */
-        boolean atiendeCitas) {
+        boolean atiendeCitas,
+        /** Su negocio se pide por citas: la agenda es su página de inicio en el panel. */
+        boolean negocioConAgenda) {
 
     public static UsuarioDto de(Usuario u) {
         return de(u, 0);
@@ -37,6 +41,7 @@ public record UsuarioDto(
                 u.creado,
                 entregas,
                 u.especialidades,
-                u.atiendeEnAgenda());
+                u.atiendeEnAgenda(),
+                u.negocio != null && ModoPedido.CITA.equals(u.negocio.modoPedido()));
     }
 }

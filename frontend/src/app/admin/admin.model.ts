@@ -22,6 +22,8 @@ export interface Usuario {
   especialidades?: string | null;
   /** Aparece en la agenda de citas. */
   atiendeCitas?: boolean;
+  /** Su negocio se pide por citas: la agenda es su página de inicio. */
+  negocioConAgenda?: boolean;
 }
 
 /** «Mi equipo» de un negocio: sus empleados y su encargado. */
@@ -51,6 +53,8 @@ export interface CitaAgenda {
   servicios: string[];
   notas: string | null;
   prueba: boolean;
+  /** Categoría del primer servicio (color en la agenda). */
+  categoria?: string | null;
 }
 
 export interface AgendaPanel {
@@ -60,6 +64,11 @@ export interface AgendaPanel {
   soloMias: boolean;
   profesionales: Profesional[];
   citas: CitaAgenda[];
+  /** Categorías del negocio en orden (fijan el color de cada una). */
+  categorias?: string[];
+  /** 1 = lunes … 7 = domingo; null = cerrado. */
+  horario?: Record<string, [string, string] | null>;
+  minutosCita?: number;
 }
 
 /** Horario de citas: 1 = lunes … 7 = domingo; null = cerrado. */

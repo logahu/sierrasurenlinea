@@ -24,7 +24,7 @@ import { SesionService } from './sesion';
             Pedidos @if (pedidos.nuevos()) { <span class="marca-nuevos">{{ pedidos.nuevos() }}</span> }
           </a>
           }
-          @if (!sesion.esRepartidor() && !sesion.esEmpleado()) {
+          @if (sesion.veAgenda() && !sesion.esEmpleado()) {
             <a routerLink="/admin/agenda" routerLinkActive="activo">Agenda</a>
           }
           @if (!sesion.esRepartidor() && !sesion.esEmpleado()) {
