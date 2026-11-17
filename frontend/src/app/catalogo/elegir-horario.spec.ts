@@ -1,4 +1,4 @@
-import { duracion, sumarMinutos, textoCita } from './elegir-horario';
+import { duracion, iniciales, porFranja, sumarMinutos, tarjetaDia, textoCita } from './elegir-horario';
 
 describe('elegir horario', () => {
   it('suma minutos y arma el texto de la cita', () => {
@@ -12,5 +12,19 @@ describe('elegir horario', () => {
     expect(duracion(60)).toBe('1 hora');
     expect(duracion(120)).toBe('2 horas');
     expect(duracion(90)).toBe('90 minutos');
+  });
+
+  it('agrupa las horas en mañana, tarde y noche', () => {
+    const h = (hora: string) => ({ hora, libres: [1] });
+    const f = porFranja([h('10:00'), h('11:00'), h('12:00'), h('18:00'), h('19:00')]);
+    expect(f.map((x) => [x.nombre, x.horarios.length])).toEqual([['Mañana', 2], ['Tarde', 2], ['Noche', 1]]);
+    expect(porFranja([h('15:00')]).map((x) => x.nombre)).toEqual(['Tarde']);
+  });
+
+  it('tarjeta del día e iniciales', () => {
+    expect(tarjetaDia('2026-11-17', 'Hoy')).toEqual({ arriba: 'Hoy', numero: 17 });
+    expect(tarjetaDia('2026-11-19', 'Jue 19').numero).toBe(19);
+    expect(tarjetaDia('2026-11-19', 'Jue 19').arriba).toMatch(/^Jue/);
+    expect(iniciales('Ana María')).toBe('AM');
   });
 });
