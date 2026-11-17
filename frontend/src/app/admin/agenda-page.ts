@@ -2,7 +2,7 @@ import { Component, DestroyRef, computed, inject, linkedSignal, signal } from '@
 import { rxResource } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { AdminApi } from './admin.api';
-import { AgendaPanel, CitaAgenda, EstadoPedido, Profesional } from './admin.model';
+import { AgendaPanel, BloqueoAgenda, CitaAgenda, EstadoPedido, Profesional } from './admin.model';
 import { mensajeDeError } from './autorizacion';
 import { PedidosService } from './pedidos';
 import { SesionService } from './sesion';
@@ -98,6 +98,39 @@ export function huecosLibres(citas: CitaAgenda[], abre: number, cierra: number, 
   return r;
 }
 
+/** Un tramo sin servicio dentro de un día, en minutos desde la medianoche. */
+export interface FranjaSinServicio {
+  desde: number;
+  hasta: number;
+  motivo: string | null;
+  /** Aplica a todo el negocio (no solo a una persona). */
+  deTodos: boolean;
+}
+
+/**
+ * Tramos sin servicio de una fecha para una persona (null = solo los de todo el negocio),
+ * recortados a ese día.
+ */
+export function franjasSinServicio(bloqueos: BloqueoAgenda[] | undefined, fecha: string, persona: number | null): FranjaSinServicio[] {
+  const dia = `${fecha}T00:00:00`;
+  const sig = `${sumarDias(fecha, 1)}T00:00:00`;
+  return (bloqueos ?? [])
+    .filter((b) => (b.empleadoId === null || b.empleadoId === persona) && b.inicio < sig && b.fin > dia)
+    .map((b) => ({
+      desde: b.inicio <= dia ? 0 : minutos(b.inicio),
+      hasta: b.fin >= sig ? 24 * 60 : minutos(b.fin),
+      motivo: b.motivo,
+      deTodos: b.empleadoId === null,
+    }));
+}
+
+/** «Sin servicio · Vacaciones», «Sin servicio de 12:00 a 14:00 · Ana». */
+export function textoBloqueo(b: BloqueoAgenda, fecha?: string): string {
+  const todoElDia = (!fecha || b.inicio <= `${fecha}T00:00:00`) && (!fecha || b.fin >= `${sumarDias(fecha, 1)}T00:00:00`);
+  const horas = todoElDia ? '' : ` de ${b.inicio.slice(0, 10) === fecha || !fecha ? hora(b.inicio) : '00:00'} a ${b.fin.slice(0, 10) === fecha || !fecha ? hora(b.fin) : '24:00'}`;
+  return `Sin servicio${horas}${b.empleadoNombre ? ' · ' + b.empleadoNombre : ''}${b.motivo ? ' · ' + b.motivo : ''}`;
+}
+
 /** «Ana María» → «AM». */
 export function iniciales(nombre: string): string {
   const p = nombre.trim().split(/\s+/).filter(Boolean);
@@ -139,6 +172,8 @@ interface Columna {
   avatar: string | null;
   citas: CitaAgenda[];
   libres: number[];
+  /** Tramos sin servicio de esa persona (o de todo el negocio). */
+  franjas: FranjaSinServicio[];
 }
 
 /**
@@ -151,7 +186,11 @@ interface Columna {
   template: `
     <header class="panel-titulo">
       <h1>{{ sesion.esEmpleado() ? 'Mi agenda' : 'Agenda' }}</h1>
-      @if (datos(); as a) { <p class="ayuda">{{ a.negocioNombre }}</p> }
+      @if (datos(); as a) {
+        <p class="ayuda">{{ a.negocioNombre }}
+          @if (!a.soloMias) { · <a [routerLink]="['/admin/negocios', a.negocioSlug, 'equipo']" fragment="sin-servicio">⛔ Días y horas sin servicio</a> }
+        </p>
+      }
     </header>
 
     @if (sesion.esDueno()) {
@@ -187,6 +226,10 @@ interface Columna {
         </p>
       }
 
+      @if (porReprogramar() && !a.soloMias) {
+        <p class="aviso-reprogramar">⚠ {{ porReprogramar() === 1 ? 'Una cita quedó' : porReprogramar() + ' citas quedaron' }} en horario sin servicio.
+          Ábrela para avisar al cliente y cambiarle el horario.</p>
+      }
       @if (dias() === 1) {
         @if (leyenda().length) {
           <ul class="leyenda" aria-label="Colores">
@@ -197,6 +240,7 @@ interface Columna {
           </ul>
         }
         @if (!rango().abierto) { <p class="ayuda cerrado-hoy">Este día no hay horario de citas.</p> }
+        @if (cierreDelDia(); as motivo) { <p class="sin-servicio-dia">⛔ Sin servicio todo el día · {{ motivo }}</p> }
 
         <!-- En el celular: una persona a la vez. -->
         @if (columnas().length > 1) {
@@ -230,13 +274,18 @@ interface Columna {
           </div>
           @for (col of columnas(); track col.id) {
             <div class="columna" [class.en-celular]="col.id === enCelular()" [style.height.px]="altoTablero()">
+              @for (f of col.franjas; track f.desde) {
+                <span class="franja-bloqueo" [style.top.px]="y(f.desde)" [style.height.px]="(f.hasta - f.desde) / 60 * HORA_PX - 4">
+                  Sin servicio{{ f.motivo ? ' · ' + f.motivo : '' }}
+                </span>
+              }
               @for (t of col.libres; track t) {
                 <span class="libre" [style.top.px]="y(t)" [style.height.px]="paso() / 60 * HORA_PX - 4">Libre · {{ hhmm(t) }}</span>
               }
               @for (c of col.citas; track c.pedidoId) {
-                <button type="button" [class]="'cita c' + color(c) + ' e-' + c.estado" [class.abierta]="abierta()?.pedidoId === c.pedidoId"
+                <button type="button" [class]="'cita c' + color(c) + ' e-' + c.estado" [class.abierta]="abierta()?.pedidoId === c.pedidoId" [class.sin-servicio]="c.sinServicio"
                         [style.top.px]="y(minutos(c.inicio))" [style.height.px]="alto(c)" (click)="abrir(c)">
-                  <strong>{{ c.clienteNombre }}</strong>
+                  <strong>@if (c.sinServicio) { <span class="reprogramar" title="En horario sin servicio: reprogramar">⚠ </span> }{{ c.clienteNombre }}</strong>
                   <span class="servicios">{{ c.servicios.join(' · ') }}</span>
                   <span class="horario">{{ hora(c.inicio) }} – {{ hora(c.fin) }}</span>
                   @if (c.estado === 'NUEVO') { <span class="marca">Nueva</span> }
@@ -264,6 +313,7 @@ interface Columna {
         }
         @for (g of grupos(); track g.fecha) {
           <h2 class="dia">{{ nombreDia(g.fecha) }} <small>· {{ g.citas.length ? g.citas.length + (g.citas.length === 1 ? ' cita' : ' citas') : 'sin citas' }}</small></h2>
+          @for (b of bloqueosDelDia(g.fecha); track b.id) { <p class="bloqueo-dia">⛔ {{ textoBloqueo(b, g.fecha) }}</p> }
           <ul class="citas">
             @for (c of g.citas; track c.pedidoId) {
               <li>
@@ -274,7 +324,7 @@ interface Columna {
                     <span>{{ c.servicios.join(' · ') }}</span>
                     @if (!a.soloMias && c.empleadoNombre) { <span class="con">con {{ c.empleadoNombre }}</span> }
                   </span>
-                  <span class="estado">{{ estado(c.estado) }}</span>
+                  <span class="estado">@if (c.sinServicio) { <b class="reprogramar">⚠ Reprogramar</b> } {{ estado(c.estado) }}</span>
                 </button>
               </li>
             }
@@ -294,14 +344,44 @@ interface Columna {
         <p class="servicios">{{ c.servicios.join(' · ') }}</p>
         <p>{{ nombreDia(c.inicio.slice(0, 10)) }}, {{ hora(c.inicio) }} a {{ hora(c.fin) }}@if (c.empleadoNombre) { · con {{ c.empleadoNombre }} }</p>
         @if (c.notas) { <p class="notas">📝 {{ c.notas }}</p> }
+        @if (c.sinServicio) {
+          <p class="aviso-reprogramar">⚠ Esta cita quedó en un horario sin servicio.
+            @if (!sesion.esEmpleado()) { Avísale al cliente y cámbiala de día u hora. } @else { El encargado le avisará al cliente. }</p>
+        }
         <p class="estado-ficha" [class]="'estado-ficha e-' + c.estado">● {{ estado(c.estado) }} · Pedido {{ c.folio }}</p>
         <div class="botones">
-          <a class="btn wa" [href]="'https://wa.me/52' + c.clienteTelefono" target="_blank" rel="noopener">WhatsApp</a>
+          <a class="btn wa" [href]="c.sinServicio && !sesion.esEmpleado() ? avisoWhatsapp(c) : 'https://wa.me/52' + c.clienteTelefono" target="_blank" rel="noopener">{{ c.sinServicio && !sesion.esEmpleado() ? 'Avisar por WhatsApp' : 'WhatsApp' }}</a>
           <a class="btn secundario" [href]="'tel:' + c.clienteTelefono" [attr.aria-label]="'Llamar al ' + tel(c.clienteTelefono)">Llamar</a>
         </div>
         @if (!sesion.esEmpleado()) {
           @if (pasoDe(c); as paso) {
             <button type="button" class="btn primario siguiente" [disabled]="guardando()" (click)="avanzar(c, paso.estado)">{{ paso.texto }}</button>
+          }
+          @if (c.estado !== 'ENTREGADO') {
+            @if (!moviendo()) {
+              <button type="button" class="btn secundario" (click)="empezarAMover(c)">🗓 Cambiar horario</button>
+            } @else {
+              <div class="mover">
+                <label>Día <input type="date" [min]="hoy()" [value]="nuevaFecha()" (change)="nuevaFecha.set($any($event.target).value)" /></label>
+                <label>Hora
+                  <select (change)="nuevaHora.set($any($event.target).value)">
+                    @for (h of horasParaMover(); track h) { <option [value]="h" [selected]="h === nuevaHora()">{{ h }}</option> }
+                    @empty { <option value="">Cerrado ese día</option> }
+                  </select>
+                </label>
+                @if (datos()?.profesionales?.length) {
+                  <label>Con
+                    <select (change)="nuevaPersona.set(+$any($event.target).value || null)">
+                      @for (p of datos()!.profesionales; track p.id) { <option [value]="p.id" [selected]="p.id === nuevaPersona()">{{ p.nombre }}</option> }
+                    </select>
+                  </label>
+                }
+                <div class="botones">
+                  <button type="button" class="btn primario" [disabled]="guardando() || !horasParaMover().length" (click)="mover2(c)">Mover cita</button>
+                  <button type="button" class="btn secundario" (click)="moviendo.set(false)">Cancelar</button>
+                </div>
+              </div>
+            }
           }
           @if (errorFicha(); as e) { <p class="error" role="alert">{{ e }}</p> }
           <a class="ver-pedido" routerLink="/admin/pedidos">Ver en Pedidos ›</a>
@@ -384,15 +464,19 @@ export class AgendaPage {
       !abierto || yaPaso ? [] : huecosLibres(citas, abre, cierra, this.paso(), esHoy ? this.ahora() : null);
     const cols: Columna[] = a.profesionales.map((p: Profesional) => {
       const citas = a.citas.filter((c) => c.empleadoId === p.id);
+      const franjas = franjasSinServicio(a.bloqueos, this.desde(), p.id)
+        .map((f) => ({ ...f, desde: Math.max(f.desde, abre), hasta: Math.min(f.hasta, cierra) }))
+        .filter((f) => f.hasta > f.desde);
       return {
         id: p.id, nombre: p.nombre, especialidades: p.especialidades, color: p.id % COLORES_PERSONA, avatar: p.avatar ?? null,
-        citas, libres: libres(citas),
+        citas, franjas,
+        libres: libres(citas).filter((t) => !franjas.some((f) => t < f.hasta && t + this.paso() > f.desde)),
       };
     });
     const ids = new Set(a.profesionales.map((p) => p.id));
     const sueltas = a.citas.filter((c) => c.empleadoId === null || !ids.has(c.empleadoId));
     if (sueltas.length) {
-      cols.push({ id: null, nombre: 'Sin asignar', especialidades: null, color: 0, avatar: null, citas: sueltas, libres: [] });
+      cols.push({ id: null, nombre: 'Sin asignar', especialidades: null, color: 0, avatar: null, citas: sueltas, libres: [], franjas: [] });
     }
     return cols;
   });
@@ -409,6 +493,31 @@ export class AgendaPage {
       .filter((c) => usadas.has(c))
       .map((nombre) => ({ nombre, color: colorDeCategoria(nombre, a?.categorias) }));
   });
+  /** Si todo el negocio está sin servicio ese día: el motivo (o «Sin servicio»). */
+  protected readonly cierreDelDia = computed(() => {
+    const { abre, cierra, abierto } = this.rango();
+    if (!abierto) return null;
+    const f = franjasSinServicio(this.datos()?.bloqueos, this.desde(), null).find((x) => x.desde <= abre && x.hasta >= cierra);
+    return f ? (f.motivo ?? 'Sin servicio') : null;
+  });
+  /** Citas que caen en horario sin servicio (en la vista actual). */
+  protected readonly porReprogramar = computed(() => (this.datos()?.citas ?? []).filter((c) => c.sinServicio).length);
+
+  // ---- Cambiar el horario de una cita (encargado)
+  protected readonly moviendo = signal(false);
+  protected readonly nuevaFecha = signal('');
+  protected readonly nuevaHora = signal('');
+  protected readonly nuevaPersona = signal<number | null>(null);
+  /** Horas del horario de citas en la fecha elegida. */
+  protected readonly horasParaMover = computed(() => {
+    const f = this.nuevaFecha();
+    const turno = f ? this.datos()?.horario?.[String(diaDeLaSemana(f))] : null;
+    if (!turno) return [];
+    const r: string[] = [];
+    for (let t = minutos(turno[0]); t + this.paso() <= minutos(turno[1]); t += this.paso()) r.push(this.hhmm(t));
+    return r;
+  });
+
   protected readonly lineaAhora = computed(() => {
     if (this.desde() !== this.hoy()) return null;
     const t = this.ahora();
@@ -460,7 +569,61 @@ export class AgendaPage {
 
   protected abrir(c: CitaAgenda): void {
     this.errorFicha.set(null);
+    this.moviendo.set(false);
     this.abierta.set(c);
+  }
+
+  protected bloqueosDelDia(fecha: string): BloqueoAgenda[] {
+    const dia = `${fecha}T00:00:00`;
+    const sig = `${sumarDias(fecha, 1)}T00:00:00`;
+    const p = this.persona();
+    return (this.datos()?.bloqueos ?? []).filter(
+      (b) => b.inicio < sig && b.fin > dia && (p === null || b.empleadoId === null || b.empleadoId === p),
+    );
+  }
+
+  protected textoBloqueo(b: BloqueoAgenda, fecha: string): string {
+    return textoBloqueo(b, fecha);
+  }
+
+  /** WhatsApp al cliente con el aviso ya escrito. */
+  protected avisoWhatsapp(c: CitaAgenda): string {
+    const t =
+      `Hola ${c.clienteNombre}, te escribimos de ${this.datos()?.negocioNombre ?? 'el negocio'}. ` +
+      `Tu cita del ${fechaCompleta(c.inicio.slice(0, 10)).toLowerCase()} a las ${hora(c.inicio)} no podrá atenderse en ese horario. ` +
+      '¿Te parece si la cambiamos a otro día u hora?';
+    return `https://wa.me/52${c.clienteTelefono}?text=${encodeURIComponent(t)}`;
+  }
+
+  protected empezarAMover(c: CitaAgenda): void {
+    this.errorFicha.set(null);
+    this.nuevaFecha.set(c.inicio.slice(0, 10) < this.hoy() ? this.hoy() : c.inicio.slice(0, 10));
+    this.nuevaHora.set(hora(c.inicio));
+    this.nuevaPersona.set(c.empleadoId);
+    this.moviendo.set(true);
+  }
+
+  protected mover2(c: CitaAgenda): void {
+    if (!this.nuevaFecha() || !this.nuevaHora()) {
+      this.errorFicha.set('Elige el día y la hora.');
+      return;
+    }
+    this.guardando.set(true);
+    this.errorFicha.set(null);
+    this.api
+      .reprogramarCita(c.pedidoId, { fecha: this.nuevaFecha(), hora: this.nuevaHora(), empleadoId: this.nuevaPersona() })
+      .subscribe({
+        next: (nueva) => {
+          this.guardando.set(false);
+          this.moviendo.set(false);
+          this.abierta.set(nueva);
+          this.agenda.reload();
+        },
+        error: (e) => {
+          this.guardando.set(false);
+          this.errorFicha.set(mensajeDeError(e));
+        },
+      });
   }
 
   protected avanzar(c: CitaAgenda, estado: EstadoPedido): void {

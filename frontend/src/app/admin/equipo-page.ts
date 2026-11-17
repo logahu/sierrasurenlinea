@@ -8,6 +8,7 @@ import { NegocioTabs } from './negocio-tabs';
 import { MINIMO_CONTRASENA as MINIMO } from '../cuenta/cuenta.model';
 import { telefonoLegible } from './usuarios-filtros';
 import { VerContrasena } from '../compartido/ver-contrasena';
+import { DiasSinServicio } from './dias-sin-servicio';
 
 export const DIAS_SEMANA = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
 
@@ -35,7 +36,7 @@ export function horarioDesde(dias: DiaHorario[]): ConfiguracionAgenda['horario']
 /** «Mi equipo» del negocio: empleados que da de alta el encargado y, en negocios de citas, el horario de la agenda. */
 @Component({
   selector: 'app-equipo-page',
-  imports: [NegocioTabs, VerContrasena],
+  imports: [NegocioTabs, VerContrasena, DiasSinServicio],
   template: `
     <app-negocio-tabs [slug]="slug()" [negocio]="negocio()" seccion="equipo" />
 
@@ -146,6 +147,8 @@ export function horarioDesde(dias: DiaHorario[]): ConfiguracionAgenda['horario']
           <p class="ayuda">Cargando…</p>
         }
       </section>
+
+      <app-dias-sin-servicio [slug]="slug()" [negocioNombre]="negocio()?.nombre ?? ''" [personas]="personas()" />
     }
   `,
   styles: `
@@ -194,6 +197,12 @@ export class EquipoPage {
 
   protected readonly equipo = rxResource({ params: () => this.slug(), stream: ({ params }) => this.api.equipo(params) });
   protected readonly empleados = computed(() => (this.equipo.hasValue() ? this.equipo.value()?.empleados : []) ?? []);
+  /** Quienes atienden citas: empleados activos y el encargado si también atiende. */
+  protected readonly personas = computed(() => {
+    const e = this.equipo.hasValue() ? this.equipo.value()?.encargado : null;
+    const l = this.empleados().filter((u) => u.activo && u.atiendeCitas !== false).map((u) => ({ id: u.id, nombre: u.nombre }));
+    return e?.atiendeCitas ? [...l, { id: e.id, nombre: e.nombre }] : l;
+  });
 
   protected readonly config = rxResource({
     params: () => (this.esCitas() ? this.slug() : undefined),

@@ -47,7 +47,8 @@ public final class Agenda {
     public record Horario(String hora, List<Long> libres) {
     }
 
-    public record Dia(String fecha, String nombre, boolean abierto, List<Horario> horarios) {
+    /** {@code aviso}: por qué está cerrado ese día (p. ej. «Día de Muertos»), si lo cerró el encargado. */
+    public record Dia(String fecha, String nombre, boolean abierto, List<Horario> horarios, String aviso) {
     }
 
     /**
@@ -64,24 +65,36 @@ public final class Agenda {
         LocalDate fin = inicio.plusDays(Math.max(1, Math.min(dias, 14)));
         LocalDate tope = hoy.plusDays(DIAS_ADELANTE);
         Set<String> ocupados = ocupados(n, inicio.atStartOfDay(), fin.atStartOfDay());
+        List<AgendaBloqueo> bloqueos = AgendaBloqueo.entre(n, inicio.atStartOfDay(), fin.atStartOfDay());
+        long dur = (long) n.minutosCita * bloques;
 
         List<Dia> r = new ArrayList<>();
         for (LocalDate f = inicio; f.isBefore(fin); f = f.plusDays(1)) {
             HorarioCitas.Turno t = horario.turno(f.getDayOfWeek());
             String nombre = nombreDia(f);
             if (t == null || f.isAfter(tope)) {
-                r.add(new Dia(f.toString(), nombre, false, List.of()));
+                r.add(new Dia(f.toString(), nombre, false, List.of(), null));
+                continue;
+            }
+            LocalDateTime abre = f.atTime(t.abre());
+            LocalDateTime cierra = f.atTime(t.cierra());
+            AgendaBloqueo cierre = bloqueos.stream()
+                    .filter(b -> b.deTodos() && !b.inicio.isAfter(abre) && !b.fin.isBefore(cierra)).findFirst().orElse(null);
+            if (cierre != null) {
+                r.add(new Dia(f.toString(), nombre, false, List.of(),
+                        cierre.motivo == null || cierre.motivo.isBlank() ? "Sin servicio" : cierre.motivo));
                 continue;
             }
             List<Horario> horarios = new ArrayList<>();
             for (LocalDateTime s : inicios(n, f, t, bloques)) {
                 List<Long> libres = profesionales.stream()
-                        .filter(u -> libre(ocupados, u.id, s, bloques, n.minutosCita)).map(u -> u.id).toList();
+                        .filter(u -> libre(ocupados, u.id, s, bloques, n.minutosCita))
+                        .filter(u -> sinBloqueo(bloqueos, u.id, s, s.plusMinutes(dur))).map(u -> u.id).toList();
                 if (!libres.isEmpty()) {
                     horarios.add(new Horario(s.toLocalTime().toString(), libres));
                 }
             }
-            r.add(new Dia(f.toString(), nombre, true, horarios));
+            r.add(new Dia(f.toString(), nombre, true, horarios, null));
         }
         return r;
     }
@@ -112,6 +125,10 @@ public final class Agenda {
         return true;
     }
 
+    private static boolean sinBloqueo(List<AgendaBloqueo> bloqueos, Long empleado, LocalDateTime desde, LocalDateTime hasta) {
+        return bloqueos.stream().noneMatch(b -> b.cubre(empleado, desde, hasta));
+    }
+
     private static Set<String> ocupados(Negocio n, LocalDateTime desde, LocalDateTime hasta) {
         Set<String> r = new HashSet<>();
         for (CitaBloque b : CitaBloque.<CitaBloque>list(
@@ -134,9 +151,16 @@ public final class Agenda {
                 || fecha.isAfter(ahora().toLocalDate().plusDays(DIAS_ADELANTE))) {
             throw Errores.de(Status.CONFLICT, "Ese horario ya no está disponible. Elige otro.");
         }
-        Set<String> ocupados = ocupados(n, s, s.plusMinutes((long) n.minutosCita * bloques));
-        List<Usuario> candidatos = Usuario.profesionalesDe(n).stream()
+        LocalDateTime termina = s.plusMinutes((long) n.minutosCita * bloques);
+        Set<String> ocupados = ocupados(n, s, termina);
+        List<AgendaBloqueo> sinServicio = AgendaBloqueo.entre(n, s, termina);
+        List<Usuario> disponibles = Usuario.profesionalesDe(n).stream()
                 .filter(u -> empleadoId == null || u.id.equals(empleadoId))
+                .filter(u -> sinBloqueo(sinServicio, u.id, s, termina)).toList();
+        if (disponibles.isEmpty()) {
+            throw Errores.de(Status.CONFLICT, "Ese horario ya no está disponible. Elige otro.");
+        }
+        List<Usuario> candidatos = disponibles.stream()
                 .filter(u -> libre(ocupados, u.id, s, bloques, n.minutosCita)).toList();
         if (candidatos.isEmpty()) {
             throw Errores.de(Status.CONFLICT, "Ese horario se acaba de ocupar. Elige otro.");
@@ -177,6 +201,25 @@ public final class Agenda {
         return Character.toUpperCase(dia.charAt(0)) + dia.substring(1) + " "
                 + inicio.format(DateTimeFormatter.ofPattern("d 'de' MMMM, HH:mm", ES)) + " a "
                 + fin.format(DateTimeFormatter.ofPattern("HH:mm", ES));
+    }
+
+    /** «Jueves 24 de diciembre, todo el día», «24 al 26 de diciembre» o «Viernes 20 de noviembre, 15:00 a 19:00». */
+    public static String textoRango(LocalDateTime inicio, LocalDateTime fin) {
+        boolean diasCompletos = inicio.toLocalTime().equals(LocalTime.MIDNIGHT) && fin.toLocalTime().equals(LocalTime.MIDNIGHT);
+        if (!diasCompletos) {
+            return inicio.toLocalDate().equals(fin.toLocalDate()) ? texto(inicio, fin)
+                    : texto(inicio, inicio).replaceAll(" a \\d\\d:\\d\\d$", "") + " a "
+                            + fin.format(DateTimeFormatter.ofPattern("d 'de' MMMM, HH:mm", ES));
+        }
+        LocalDate a = inicio.toLocalDate();
+        LocalDate b = fin.toLocalDate().minusDays(1);
+        if (a.equals(b)) {
+            String dia = a.getDayOfWeek().getDisplayName(TextStyle.FULL, ES);
+            return Character.toUpperCase(dia.charAt(0)) + dia.substring(1) + " "
+                    + a.format(DateTimeFormatter.ofPattern("d 'de' MMMM", ES)) + ", todo el día";
+        }
+        return a.format(DateTimeFormatter.ofPattern(a.getMonth() == b.getMonth() ? "d" : "d 'de' MMMM", ES)) + " al "
+                + b.format(DateTimeFormatter.ofPattern("d 'de' MMMM", ES));
     }
 
     static String nombreDia(LocalDate f) {

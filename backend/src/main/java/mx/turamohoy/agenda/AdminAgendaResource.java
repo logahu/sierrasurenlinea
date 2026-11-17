@@ -8,7 +8,11 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.Consumes;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
@@ -56,7 +60,32 @@ public class AdminAgendaResource {
                           Long empleadoId, String empleadoNombre, String clienteNombre, String clienteTelefono,
                           List<String> servicios, String notas, boolean prueba,
                           /** Categoría del primer servicio (para el color en la agenda); null si no se sabe. */
-                          String categoria) {
+                          String categoria,
+                          /** Cae en un horario sin servicio: hay que avisar al cliente y reprogramarla. */
+                          boolean sinServicio) {
+    }
+
+    /** Rango sin servicio; {@code empleadoId} null = todo el negocio. */
+    public record BloqueoDto(Long id, LocalDateTime inicio, LocalDateTime fin, Long empleadoId, String empleadoNombre,
+                             String motivo, int citasAfectadas) {
+    }
+
+    public record NuevoBloqueo(
+            /** Primer día (2026-12-24). */
+            @NotBlank(message = "Elige el día.") String fecha,
+            /** Último día, para bloquear días completos; null = solo {@code fecha}. */
+            String fechaFin,
+            /** De qué hora a qué hora (solo en {@code fecha}); null = todo el día. */
+            String horaInicio, String horaFin,
+            /** null = todo el negocio. */
+            Long empleadoId,
+            @Size(max = 80, message = "El motivo es de máximo 80 letras.") String motivo,
+            /** Guardar aunque haya citas en ese horario (se avisa y se reprograman). */
+            boolean confirmar) {
+    }
+
+    /** Si hay citas y no se confirmó, {@code bloqueo} viene vacío y {@code afectadas} dice cuáles. */
+    public record ResultadoBloqueo(BloqueoDto bloqueo, List<CitaDto> afectadas) {
     }
 
     public record AgendaDto(String negocioSlug, String negocioNombre, boolean soloMias, List<Profesional> profesionales,
@@ -65,7 +94,9 @@ public class AdminAgendaResource {
                             List<String> categorias,
                             /** Horario de citas: 1 = lunes … 7 = domingo; sin llave = cerrado. */
                             Map<Integer, List<String>> horario,
-                            int minutosCita) {
+                            int minutosCita,
+                            /** Horarios sin servicio en el rango (los del empleado: suyos y del negocio). */
+                            List<BloqueoDto> bloqueos) {
     }
 
     public record Configuracion(boolean activa, int minutosCita, Map<Integer, List<String>> horario) {
@@ -97,26 +128,177 @@ public class AdminAgendaResource {
                 + " and p.citaInicio < ?3 and p.estado <> 'CANCELADO'" + (soloMias ? " and p.empleado = ?4" : "")
                 + " order by p.citaInicio";
         List<Pedido> pedidos = soloMias ? Pedido.<Pedido>find(q, n, de, a, u).list() : Pedido.<Pedido>find(q, n, de, a).list();
-        Map<Long, List<PedidoLinea>> lineas = pedidos.isEmpty() ? Map.of()
-                : PedidoLinea.<PedidoLinea>find("select l from PedidoLinea l left join fetch l.producto pr"
-                                + " left join fetch pr.categoria where l.pedido in ?1 order by l.orden", pedidos).list().stream()
-                        .collect(Collectors.groupingBy(l -> l.pedido.id));
-        List<CitaDto> citas = pedidos.stream().map(p -> {
-            List<PedidoLinea> ls = lineas.getOrDefault(p.id, List.of());
-            String categoria = ls.stream().filter(l -> l.producto != null && l.producto.categoria != null)
-                    .map(l -> l.producto.categoria.nombre).findFirst().orElse(null);
-            return new CitaDto(p.id, p.folio, p.estado, p.citaInicio, p.citaFin,
-                    p.empleado == null ? null : p.empleado.id, p.empleado == null ? null : p.empleado.nombre,
-                    p.clienteNombre, p.clienteTelefono, ls.stream().map(l -> l.nombre).toList(), p.notas, p.prueba,
-                    categoria);
-        }).toList();
+        List<AgendaBloqueo> bloqueos = AgendaBloqueo.entre(n, de, a).stream()
+                .filter(b -> !soloMias || b.deTodos() || b.empleado.id.equals(u.id)).toList();
+        List<CitaDto> citas = citasDto(pedidos, bloqueos);
         List<Profesional> profesionales = soloMias
                 ? List.of(new Profesional(u.id, u.nombre, u.especialidades, u.rol, u.avatar))
                 : Usuario.profesionalesDe(n).stream()
                         .map(x -> new Profesional(x.id, x.nombre, x.especialidades, x.rol, x.avatar)).toList();
         List<String> categorias = Categoria.delNegocio(n).stream().map(c -> c.nombre).toList();
         return new AgendaDto(n.slug, n.nombre, soloMias, profesionales, citas, categorias,
-                HorarioCitas.de(n.horarioCitas).comoMapa(), n.minutosCita);
+                HorarioCitas.de(n.horarioCitas).comoMapa(), n.minutosCita,
+                bloqueos.stream().map(b -> dto(b, 0)).toList());
+    }
+
+    private static List<CitaDto> citasDto(List<Pedido> pedidos, List<AgendaBloqueo> bloqueos) {
+        Map<Long, List<PedidoLinea>> lineas = pedidos.isEmpty() ? Map.of()
+                : PedidoLinea.<PedidoLinea>find("select l from PedidoLinea l left join fetch l.producto pr"
+                                + " left join fetch pr.categoria where l.pedido in ?1 order by l.orden", pedidos).list().stream()
+                        .collect(Collectors.groupingBy(l -> l.pedido.id));
+        return pedidos.stream().map(p -> {
+            List<PedidoLinea> ls = lineas.getOrDefault(p.id, List.of());
+            String categoria = ls.stream().filter(l -> l.producto != null && l.producto.categoria != null)
+                    .map(l -> l.producto.categoria.nombre).findFirst().orElse(null);
+            return new CitaDto(p.id, p.folio, p.estado, p.citaInicio, p.citaFin,
+                    p.empleado == null ? null : p.empleado.id, p.empleado == null ? null : p.empleado.nombre,
+                    p.clienteNombre, p.clienteTelefono, ls.stream().map(l -> l.nombre).toList(), p.notas, p.prueba,
+                    categoria, p.empleado != null && bloqueos.stream()
+                            .anyMatch(b -> b.cubre(p.empleado.id, p.citaInicio, p.citaFin)));
+        }).toList();
+    }
+
+    private static BloqueoDto dto(AgendaBloqueo b, int afectadas) {
+        return new BloqueoDto(b.id, b.inicio, b.fin, b.empleado == null ? null : b.empleado.id,
+                b.empleado == null ? null : b.empleado.nombre, b.motivo, afectadas);
+    }
+
+    /** Citas vigentes (no canceladas) que se cruzan con el rango y la persona (null = todas). */
+    private static List<Pedido> citasEn(Negocio n, LocalDateTime inicio, LocalDateTime fin, Long empleadoId) {
+        return Pedido.<Pedido>find("select p from Pedido p left join fetch p.empleado where p.negocio = ?1"
+                        + " and p.citaInicio < ?3 and p.citaFin > ?2 and p.estado <> 'CANCELADO' order by p.citaInicio",
+                n, inicio, fin).list().stream()
+                .filter(p -> empleadoId == null || (p.empleado != null && p.empleado.id.equals(empleadoId))).toList();
+    }
+
+    /** Días y horas sin servicio de hoy en adelante, con cuántas citas caen en cada uno. */
+    @GET
+    @Path("/negocios/{slug}/bloqueos")
+    @Transactional
+    public List<BloqueoDto> bloqueos(@PathParam("slug") String slug) {
+        Negocio n = sesion.negocioEditable(slug);
+        LocalDateTime ahora = Agenda.ahora();
+        return AgendaBloqueo.<AgendaBloqueo>find("select b from AgendaBloqueo b left join fetch b.empleado"
+                        + " where b.negocio = ?1 and b.fin > ?2 order by b.inicio", n, ahora).list().stream()
+                .map(b -> dto(b, citasEn(n, b.inicio, b.fin, b.empleado == null ? null : b.empleado.id).size()))
+                .toList();
+    }
+
+    /**
+     * Bloquea días completos (fecha a fechaFin) o unas horas de un día, para todo el negocio o
+     * una persona. Si ya hay citas ahí y no viene {@code confirmar}, no guarda y dice cuáles.
+     */
+    @POST
+    @Path("/negocios/{slug}/bloqueos")
+    @Transactional
+    public ResultadoBloqueo bloquear(@PathParam("slug") String slug, @Valid @NotNull NuevoBloqueo b) {
+        Negocio n = sesion.negocioEditable(slug);
+        LocalDate dia = fecha(b.fecha());
+        LocalDateTime inicio;
+        LocalDateTime fin;
+        boolean conHoras = b.horaInicio() != null && !b.horaInicio().isBlank();
+        try {
+            if (conHoras) {
+                inicio = dia.atTime(LocalTime.parse(b.horaInicio()));
+                fin = dia.atTime(LocalTime.parse(b.horaFin() == null ? "" : b.horaFin()));
+            } else {
+                LocalDate ultimo = b.fechaFin() == null || b.fechaFin().isBlank() ? dia : LocalDate.parse(b.fechaFin());
+                inicio = dia.atStartOfDay();
+                fin = ultimo.plusDays(1).atStartOfDay();
+            }
+        } catch (DateTimeParseException e) {
+            throw Errores.de(Status.BAD_REQUEST, "Revisa las fechas y horas (formato 10:00).");
+        }
+        if (!fin.isAfter(inicio)) {
+            throw Errores.de(Status.BAD_REQUEST, conHoras ? "La hora final debe ser después de la inicial."
+                    : "El último día no puede ser antes del primero.");
+        }
+        LocalDateTime ahora = Agenda.ahora();
+        if (!fin.isAfter(ahora)) {
+            throw Errores.de(Status.BAD_REQUEST, "Ese horario ya pasó.");
+        }
+        if (inicio.isBefore(ahora)) {
+            inicio = ahora.withSecond(0).withNano(0);
+        }
+        if (fin.isAfter(ahora.plusDays(366))) {
+            throw Errores.de(Status.BAD_REQUEST, "Solo se puede bloquear hasta un año adelante.");
+        }
+        Usuario empleado = null;
+        if (b.empleadoId() != null) {
+            empleado = Usuario.profesionalesDe(n).stream().filter(x -> x.id.equals(b.empleadoId())).findFirst()
+                    .orElseThrow(() -> Errores.de(Status.BAD_REQUEST, "Esa persona no atiende citas en este negocio."));
+        }
+        List<Pedido> afectadas = citasEn(n, inicio, fin, b.empleadoId());
+        if (!afectadas.isEmpty() && !b.confirmar()) {
+            return new ResultadoBloqueo(null, citasDto(afectadas, List.of()));
+        }
+        AgendaBloqueo nuevo = new AgendaBloqueo();
+        nuevo.negocio = n;
+        nuevo.empleado = empleado;
+        nuevo.inicio = inicio;
+        nuevo.fin = fin;
+        nuevo.motivo = b.motivo() == null || b.motivo().isBlank() ? null : b.motivo().trim();
+        nuevo.creadoPor = sesion.usuario();
+        nuevo.persist();
+        String quien = empleado == null ? "todo el negocio" : empleado.nombre;
+        Bitacora.anotar(sesion.usuario(), n, Bitacora.NEGOCIO, n.id, "Bloqueó la agenda de " + n.nombre,
+                Agenda.textoRango(inicio, fin) + " · " + quien + (nuevo.motivo == null ? "" : " · " + nuevo.motivo)
+                        + (afectadas.isEmpty() ? "" : " · " + afectadas.size() + " cita(s) por reprogramar"));
+        List<AgendaBloqueo> este = List.of(nuevo);
+        return new ResultadoBloqueo(dto(nuevo, afectadas.size()), citasDto(afectadas, este));
+    }
+
+    public record CambioHorario(@NotBlank(message = "Elige el día.") String fecha,
+                                @NotBlank(message = "Elige la hora.") String hora, Long empleadoId) {
+    }
+
+    /**
+     * El encargado mueve una cita a otro día, hora o persona (p. ej. si cayó en un horario sin
+     * servicio). Libera las horas de antes y aparta las nuevas con la misma duración.
+     */
+    @PUT
+    @Path("/citas/{pedidoId}/horario")
+    @Transactional
+    public CitaDto reprogramar(@PathParam("pedidoId") Long pedidoId, @Valid @NotNull CambioHorario c) {
+        Pedido p = Pedido.<Pedido>findByIdOptional(pedidoId).filter(x -> x.citaInicio != null)
+                .orElseThrow(() -> Errores.de(Status.NOT_FOUND, "No existe esa cita."));
+        Usuario u = sesion.usuario();
+        if (!u.puedeEditar(p.negocio)) {
+            throw Errores.de(Status.FORBIDDEN, "Solo el encargado puede cambiar el horario de una cita.");
+        }
+        if ("CANCELADO".equals(p.estado) || "ENTREGADO".equals(p.estado)) {
+            throw Errores.de(Status.BAD_REQUEST, "Esa cita ya no se puede cambiar.");
+        }
+        LocalTime hora;
+        try {
+            hora = LocalTime.parse(c.hora());
+        } catch (DateTimeParseException e) {
+            throw Errores.de(Status.BAD_REQUEST, "Hora no válida.");
+        }
+        String antes = p.cuando;
+        int bloques = (int) Math.max(1, CitaBloque.count("pedido", p));
+        Agenda.liberar(p);
+        Agenda.apartar(p, fecha(c.fecha()), hora, c.empleadoId(), bloques);
+        try {
+            CitaBloque.flush();
+        } catch (RuntimeException e) {
+            throw Errores.de(Status.CONFLICT, "Ese horario se acaba de ocupar. Elige otro.");
+        }
+        Bitacora.anotar(u, p.negocio, Bitacora.PEDIDO, p.id, "Cambió el horario de la cita " + p.folio,
+                antes + " → " + p.cuando);
+        return citasDto(List.of(p), AgendaBloqueo.entre(p.negocio, p.citaInicio, p.citaFin)).get(0);
+    }
+
+    @DELETE
+    @Path("/negocios/{slug}/bloqueos/{id}")
+    @Transactional
+    public void quitarBloqueo(@PathParam("slug") String slug, @PathParam("id") Long id) {
+        Negocio n = sesion.negocioEditable(slug);
+        AgendaBloqueo b = AgendaBloqueo.<AgendaBloqueo>findByIdOptional(id).filter(x -> x.negocio.id.equals(n.id))
+                .orElseThrow(() -> Errores.de(Status.NOT_FOUND, "Ese bloqueo ya no existe."));
+        Bitacora.anotar(sesion.usuario(), n, Bitacora.NEGOCIO, n.id, "Quitó un bloqueo de la agenda de " + n.nombre,
+                Agenda.textoRango(b.inicio, b.fin) + " · " + (b.empleado == null ? "todo el negocio" : b.empleado.nombre));
+        b.delete();
     }
 
     @GET
