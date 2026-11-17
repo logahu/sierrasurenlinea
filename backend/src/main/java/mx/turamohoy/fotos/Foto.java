@@ -69,6 +69,8 @@ public class Foto extends PanacheEntityBase {
                 .forEach(r -> usos.add("Lugar de comida: " + r.nombre));
         mx.turamohoy.catalogo.model.Platillo.<mx.turamohoy.catalogo.model.Platillo>list("imagenUrl", url)
                 .forEach(p -> usos.add("Platillo: " + p.nombre));
+        mx.turamohoy.publicidad.Anuncio.<mx.turamohoy.publicidad.Anuncio>list("imagenUrl", url)
+                .forEach(a -> usos.add("Anuncio: " + a.titulo));
         return usos;
     }
 }

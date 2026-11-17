@@ -27,10 +27,11 @@ public class VisitaResource {
 
     /**
      * Solo se aceptan las formas de ruta que existen en el sitio:
-     * "/", "/{negocio}" y "/{negocio}/producto/{id}". Así nadie puede llenar
-     * la tabla con rutas inventadas.
+     * "/", "/{negocio}", "/{negocio}/producto/{id}", "/giro/{giro}" y, para los clics en la
+     * publicidad, "/anuncio/{id}". Así nadie puede llenar la tabla con rutas inventadas.
      */
-    static final Pattern RUTA_VALIDA = Pattern.compile("^/([a-z0-9-]{1,60}(/producto/\\d{1,9})?)?$");
+    static final Pattern RUTA_VALIDA = Pattern.compile(
+            "^/(anuncio/\\d{1,9}|giro/[a-z0-9-]{1,40}|[a-z0-9-]{1,60}(/producto/\\d{1,9})?)?$");
 
     /** {@code contar = false}: solo consulta el total (el visitante ya fue contado en esta sesión). */
     public record VisitaRequest(String ruta, Boolean contar) {}
