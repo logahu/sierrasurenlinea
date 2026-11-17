@@ -57,22 +57,25 @@ public class Notificador {
     /** Avisa de un pedido nuevo a quienes atienden ese negocio. No bloquea ni falla. */
     public void pedidoNuevo(Long pedidoId) {
         try {
-            record Datos(String titulo, String cuerpo, List<Destino> destinos) {
+            record Datos(String titulo, String cuerpo, List<Destino> destinos, String url) {
             }
             Datos d = QuarkusTransaction.requiringNew().call(() -> {
                 Pedido p = Pedido.findById(pedidoId);
                 // Administradores, el encargado y los repartidores del negocio; si hay que
                 // llevarlo, también los repartidores generales (sin negocio).
-                String quienes = "usuario.activo = true and (usuario.rol = 'DUENO' or usuario.negocio = ?1"
+                // De los empleados, solo quien atiende la cita.
+                String quienes = "usuario.activo = true and (usuario.rol = 'DUENO'"
+                        + " or (usuario.negocio = ?1 and usuario.rol <> 'EMPLEADO')"
+                        + (p.empleado != null ? " or usuario.id = " + p.empleado.id : "")
                         + (p.aDomicilio() ? " or (usuario.rol = 'REPARTIDOR' and usuario.negocio is null)" : "") + ")";
                 List<Destino> destinos = PushSuscripcion.<PushSuscripcion>list(quienes, p.negocio)
                         .stream().map(s -> new Destino(s.endpoint, s.p256dh, s.auth)).toList();
                 String titulo = (p.prueba ? "🧪 PRUEBA · " : "") + p.negocio.nombre + ": " + p.tipo + " · " + p.folio;
-                String cuerpo = p.clienteNombre + " · " + p.entregar
+                String cuerpo = p.citaInicio != null ? p.clienteNombre + " · " + p.cuando : p.clienteNombre + " · " + p.entregar
                         + (p.totalEstimado != null ? " · aprox. $" + p.totalEstimado.stripTrailingZeros().toPlainString() : "");
-                return new Datos(titulo, cuerpo, destinos);
+                return new Datos(titulo, cuerpo, destinos, p.citaInicio != null ? "/admin/agenda" : "/admin/pedidos");
             });
-            enviar(d.titulo(), d.cuerpo(), "pedido-" + pedidoId, "/admin/pedidos", d.destinos());
+            enviar(d.titulo(), d.cuerpo(), "pedido-" + pedidoId, d.url(), d.destinos());
         } catch (RuntimeException e) {
             LOG.warnf(e, "No se pudo avisar del pedido %d", pedidoId);
         }

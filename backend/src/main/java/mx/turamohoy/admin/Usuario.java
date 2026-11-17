@@ -63,6 +63,14 @@ public class Usuario extends PanacheEntityBase {
     @Column(nullable = false)
     public Instant creado = Instant.now();
 
+    /** «Cortes, barba»: se muestra al cliente al elegir con quién (empleados). */
+    @Column(length = 200)
+    public String especialidades;
+
+    /** El encargado también atiende citas (los empleados siempre). */
+    @Column(name = "atiende_citas", nullable = false)
+    public boolean atiendeCitas;
+
     /** Cuenta creada con «Crear usuarios de prueba». */
     @Column(name = "de_prueba", nullable = false)
     public boolean dePrueba;
@@ -74,6 +82,18 @@ public class Usuario extends PanacheEntityBase {
     /** El dueño puede con todos los negocios; el encargado, solo con el suyo. */
     public boolean puedeEditar(Negocio n) {
         return esDueno() || (Rol.ENCARGADO.equals(rol) && negocio != null && negocio.id.equals(n.id));
+    }
+
+    /** ¿Aparece en la agenda de su negocio? */
+    public boolean atiendeEnAgenda() {
+        return activo && negocio != null
+                && (Rol.EMPLEADO.equals(rol) || (Rol.ENCARGADO.equals(rol) && atiendeCitas));
+    }
+
+    /** Quienes atienden citas en el negocio, por nombre. */
+    public static java.util.List<Usuario> profesionalesDe(Negocio n) {
+        return Usuario.<Usuario>list("negocio = ?1 and activo = true and (rol = ?2 or (rol = ?3 and atiendeCitas = true))"
+                + " order by nombre", n, Rol.EMPLEADO, Rol.ENCARGADO);
     }
 
     public static String normalizarCorreo(String correo) {

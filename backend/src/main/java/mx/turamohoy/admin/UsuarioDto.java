@@ -17,7 +17,11 @@ public record UsuarioDto(
         boolean dePrueba,
         Instant creado,
         /** Pedidos entregados (solo repartidores; 0 para los demás). */
-        long entregas) {
+        long entregas,
+        /** Empleados: «Cortes, barba». */
+        String especialidades,
+        /** Aparece en la agenda de citas. */
+        boolean atiendeCitas) {
 
     public static UsuarioDto de(Usuario u) {
         return de(u, 0);
@@ -31,6 +35,8 @@ public record UsuarioDto(
                 u.bloqueadoHasta != null && u.bloqueadoHasta.isAfter(Instant.now()),
                 u.dePrueba,
                 u.creado,
-                entregas);
+                entregas,
+                u.especialidades,
+                u.atiendeEnAgenda());
     }
 }

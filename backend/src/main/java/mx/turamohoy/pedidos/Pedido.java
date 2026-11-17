@@ -88,6 +88,17 @@ public class Pedido extends PanacheEntityBase {
     @JoinColumn(name = "repartidor_id")
     public Usuario repartidor;
 
+    /** Citas con agenda: quién atiende y de qué hora a qué hora (hora local de Miahuatlán). */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "empleado_id")
+    public Usuario empleado;
+
+    @Column(name = "cita_inicio")
+    public java.time.LocalDateTime citaInicio;
+
+    @Column(name = "cita_fin")
+    public java.time.LocalDateTime citaFin;
+
     /** Cliente con cuenta que hizo el pedido. */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cliente_id")

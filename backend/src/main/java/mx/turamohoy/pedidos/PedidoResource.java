@@ -22,6 +22,8 @@ import mx.turamohoy.admin.Errores;
 import mx.turamohoy.clientes.Cliente;
 import mx.turamohoy.colonias.Colonia;
 import mx.turamohoy.clientes.SesionCliente;
+import mx.turamohoy.agenda.Agenda;
+import mx.turamohoy.agenda.CitaBloque;
 import mx.turamohoy.catalogo.model.Negocio;
 import mx.turamohoy.catalogo.model.OpcionesPlatillo;
 import mx.turamohoy.catalogo.model.Platillo;
@@ -130,7 +132,13 @@ public class PedidoResource {
             @NotBlank @Size(max = 4000) String mensaje,
             /** Punto de entrega marcado en el mapa (opcional). */
             Double lat,
-            Double lng) {
+            Double lng,
+            /** Negocios con agenda: el horario elegido. */
+            @Valid CitaPedida cita) {
+    }
+
+    /** Horario apartado: día (2026-11-18), hora (11:00) y con quién (vacío = cualquiera). */
+    public record CitaPedida(@NotBlank String fecha, @NotBlank String hora, Long empleadoId) {
     }
 
     /** Quién pide: los datos de la cuenta, salvo que mande otro nombre o teléfono. */
@@ -215,6 +223,31 @@ public class PedidoResource {
     @Path("/carrito")
     @RolesAllowed(SesionCliente.ROL)
     public Response registrarCarrito(@Valid @NotNull PedidoCarrito req) {
+        try {
+            return registrarCarritoEnTransaccion(req);
+        } catch (RuntimeException e) {
+            if (choqueDeAgenda(e)) {
+                throw Errores.de(Status.CONFLICT, "Ese horario se acaba de ocupar. Elige otro.");
+            }
+            throw e;
+        }
+    }
+
+    /** ¿Otro cliente apartó la misma hora al mismo tiempo? (la llave única de cita_bloque lo detuvo) */
+    static boolean choqueDeAgenda(Throwable e) {
+        for (Throwable t = e; t != null; t = t.getCause()) {
+            if (t instanceof org.hibernate.exception.ConstraintViolationException
+                    || (t.getMessage() != null && t.getMessage().toLowerCase().contains("uk_cita_bloque"))) {
+                return true;
+            }
+            if (t.getCause() == t) {
+                break;
+            }
+        }
+        return false;
+    }
+
+    private Response registrarCarritoEnTransaccion(PedidoCarrito req) {
         Solicitante s = solicitante(req.nombre(), req.telefono());
         Ubicacion punto = Ubicacion.de(req.lat(), req.lng());
         PedidoRegistrado r = QuarkusTransaction.requiringNew().call(() -> {
@@ -259,8 +292,12 @@ public class PedidoResource {
                 throw Errores.de(Status.BAD_REQUEST, ModoPedido.RENTA.equals(modo)
                         ? "Falta la dirección del evento." : "Falta a dónde lo llevamos.");
             }
+            boolean conAgenda = ModoPedido.CITA.equals(modo) && n.agendaActiva;
+            if (conAgenda && req.cita() == null) {
+                throw Errores.de(Status.BAD_REQUEST, "Elige el día y la hora de tu cita.");
+            }
             String cuando = limpio(req.cuando());
-            if (cuando == null && !ModoPedido.COMPRA.equals(modo)) {
+            if (cuando == null && !ModoPedido.COMPRA.equals(modo) && !conAgenda) {
                 throw Errores.de(Status.BAD_REQUEST, ModoPedido.RENTA.equals(modo)
                         ? "Falta la fecha del evento." : "Falta el día que quieres venir.");
             }
@@ -296,8 +333,22 @@ public class PedidoResource {
                 l.pedido = p;
                 l.persist();
             }
+            if (conAgenda) {
+                java.time.LocalDate fecha;
+                java.time.LocalTime hora;
+                try {
+                    fecha = java.time.LocalDate.parse(req.cita().fecha());
+                    hora = java.time.LocalTime.parse(req.cita().hora());
+                } catch (java.time.format.DateTimeParseException e) {
+                    throw Errores.de(Status.BAD_REQUEST, "Fecha u hora no válida.");
+                }
+                // Un servicio = un bloque de la agenda.
+                Agenda.apartar(p, fecha, hora, req.cita().empleadoId(), lineas.size());
+                CitaBloque.flush();
+            }
             Bitacora.anotar(p.cliente, n, Bitacora.PEDIDO, p.id, "Hizo el pedido " + p.folio + " · " + p.tipo,
-                    "Total aprox.: " + mx.turamohoy.historial.Cambios.texto(total));
+                    "Total aprox.: " + mx.turamohoy.historial.Cambios.texto(total)
+                            + (p.citaInicio == null ? "" : " · " + p.cuando));
             return new PedidoRegistrado(p.id, p.folio, total);
         });
         CompletableFuture.runAsync(() -> {
