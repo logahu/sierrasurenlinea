@@ -16,6 +16,7 @@ public class CategoriaResource {
 
     @GET
     public List<CategoriaDto> listar() {
-        return Categoria.todas().stream().map(CategoriaDto::de).toList();
+        // Solo de negocios públicos: los que están en pruebas u ocultos no se anuncian.
+        return Categoria.todas().stream().filter(c -> c.negocio.publico()).map(CategoriaDto::de).toList();
     }
 }
