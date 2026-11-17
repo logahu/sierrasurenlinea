@@ -58,6 +58,37 @@ export interface CitaAgenda {
   prueba: boolean;
   /** Categoría del primer servicio (color en la agenda). */
   categoria?: string | null;
+  /** Cae en un horario sin servicio: avisar al cliente y reprogramar. */
+  sinServicio?: boolean;
+}
+
+/** Días u horas sin servicio. Sin empleado = todo el negocio. */
+export interface BloqueoAgenda {
+  id: number;
+  inicio: string;
+  fin: string;
+  empleadoId: number | null;
+  empleadoNombre: string | null;
+  motivo: string | null;
+  citasAfectadas: number;
+}
+
+export interface NuevoBloqueo {
+  fecha: string;
+  /** Último día (días completos). */
+  fechaFin?: string | null;
+  /** De qué hora a qué hora, solo en `fecha`. Sin horas = todo el día. */
+  horaInicio?: string | null;
+  horaFin?: string | null;
+  empleadoId?: number | null;
+  motivo?: string | null;
+  confirmar?: boolean;
+}
+
+/** Sin `bloqueo`: no se guardó porque hay citas (`afectadas`) y falta confirmar. */
+export interface ResultadoBloqueo {
+  bloqueo: BloqueoAgenda | null;
+  afectadas: CitaAgenda[];
 }
 
 export interface AgendaPanel {
@@ -72,6 +103,8 @@ export interface AgendaPanel {
   /** 1 = lunes … 7 = domingo; null = cerrado. */
   horario?: Record<string, [string, string] | null>;
   minutosCita?: number;
+  /** Horarios sin servicio del rango. */
+  bloqueos?: BloqueoAgenda[];
 }
 
 /** Horario de citas: 1 = lunes … 7 = domingo; null = cerrado. */

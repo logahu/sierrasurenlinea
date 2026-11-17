@@ -4,7 +4,7 @@ import { Observable, retry, throwError, timer } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Platillo, Restaurante, TipoEncargo } from '../catalogo/catalogo.model';
 import {
-  AnuncioAdmin, AnuncioEdicion, AgendaPanel, CategoriaAdmin, CategoriaEdicion, ClienteAdmin, ColoniaAdmin, ConfiguracionAgenda, CuentaDePrueba, DatosColonia,
+  AnuncioAdmin, AnuncioEdicion, AgendaPanel, BloqueoAgenda, CitaAgenda, NuevoBloqueo, ResultadoBloqueo, CategoriaAdmin, CategoriaEdicion, ClienteAdmin, ColoniaAdmin, ConfiguracionAgenda, CuentaDePrueba, DatosColonia,
   EquipoNegocio, FotosNegocio, PaginaClientes, PaginaHistorial, Tablero, NegocioAdmin, NegocioEdicion, ProductoAdmin, ProductoEdicion, Usuario,
 } from './admin.model';
 
@@ -136,6 +136,24 @@ export class AdminApi {
 
   guardarConfiguracionAgenda(slug: string, c: ConfiguracionAgenda): Observable<ConfiguracionAgenda> {
     return this.http.put<ConfiguracionAgenda>(`${this.base}/agenda/negocios/${slug}/configuracion`, c);
+  }
+
+  /** Días y horas sin servicio, de hoy en adelante. */
+  bloqueosAgenda(slug: string): Observable<BloqueoAgenda[]> {
+    return this.http.get<BloqueoAgenda[]>(`${this.base}/agenda/negocios/${slug}/bloqueos`);
+  }
+
+  bloquearAgenda(slug: string, b: NuevoBloqueo): Observable<ResultadoBloqueo> {
+    return this.http.post<ResultadoBloqueo>(`${this.base}/agenda/negocios/${slug}/bloqueos`, b);
+  }
+
+  quitarBloqueoAgenda(slug: string, id: number): Observable<void> {
+    return this.http.delete<void>(`${this.base}/agenda/negocios/${slug}/bloqueos/${id}`);
+  }
+
+  /** Mueve una cita a otro día, hora o persona (solo el encargado). */
+  reprogramarCita(pedidoId: number, c: { fecha: string; hora: string; empleadoId: number | null }): Observable<CitaAgenda> {
+    return this.http.put<CitaAgenda>(`${this.base}/agenda/citas/${pedidoId}/horario`, c);
   }
 
   colonias(): Observable<{ colonias: ColoniaAdmin[]; zonas: string[] }> {

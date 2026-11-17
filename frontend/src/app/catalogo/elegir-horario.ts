@@ -20,6 +20,8 @@ export interface DiaAgenda {
   fecha: string;
   nombre: string;
   abierto: boolean;
+  /** Por qué cerró ese día el negocio (p. ej. «Día de Muertos»). */
+  aviso?: string | null;
   horarios: HorarioLibre[];
 }
 
@@ -122,11 +124,11 @@ export function tarjetaDia(fecha: string, nombre: string): { arriba: string; num
           <div class="tira" role="group" aria-label="Días">
             @for (dia of d.dias; track dia.fecha) {
               @let t = tarjeta(dia);
-              <button type="button" [class.elegida]="dia.fecha === fecha()" [disabled]="!dia.abierto || !dia.horarios.length"
+              <button type="button" [class.elegida]="dia.fecha === fecha()" [disabled]="!dia.abierto || !dia.horarios.length" [attr.title]="dia.aviso ?? null"
                       (click)="fecha.set(dia.fecha)" [attr.aria-pressed]="dia.fecha === fecha()" [attr.aria-label]="largo(dia.fecha)">
                 <small class="arriba">{{ t.arriba }}</small>
                 <strong>{{ t.numero }}</strong>
-                <small>{{ !dia.abierto ? 'Cerrado' : dia.horarios.length ? dia.horarios.length + (dia.horarios.length === 1 ? ' libre' : ' libres') : 'Lleno' }}</small>
+                <small [class.motivo]="!!dia.aviso">{{ dia.aviso ? 'Cerrado · ' + dia.aviso : !dia.abierto ? 'Cerrado' : dia.horarios.length ? dia.horarios.length + (dia.horarios.length === 1 ? ' libre' : ' libres') : 'Lleno' }}</small>
               </button>
             }
             <button type="button" class="mas" (click)="desde.set(siguiente())" [disabled]="cargando()">Más<br />días ›</button>
@@ -222,6 +224,7 @@ export function tarjetaDia(fecha: string, nombre: string): { arriba: string; num
     .resumen > span:first-child { display: grid; place-items: center; flex: none; width: 1.6rem; height: 1.6rem; border-radius: 50%; background: color-mix(in srgb, var(--sobre-sel) 22%, transparent); font-size: .8rem; }
     .resumen strong { display: block; font-size: 1rem; font-weight: 600; }
     .aviso { margin: 0; color: var(--suave); }
+    small.motivo { display: block; max-width: 7.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   `,
 })
 export class ElegirHorario {
