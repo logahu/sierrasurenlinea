@@ -19,6 +19,7 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response.Status;
+import mx.turamohoy.catalogo.model.Giro;
 import mx.turamohoy.catalogo.model.Negocio;
 import mx.turamohoy.historial.Bitacora;
 import mx.turamohoy.historial.Cambios;
@@ -71,7 +72,9 @@ public class AdminNegocioResource {
             @Min(value = 0, message = "El tope no puede ser negativo.")
             @Max(value = 100000, message = "El tope es demasiado alto.") Integer topeAdelanto,
             /** Foto de portada subida con /fotos o una de ejemplo; vacío = no cambia. */
-            String portadaUrl) {
+            String portadaUrl,
+            /** Slug del giro (su calle en la portada); solo el dueño; vacío = no cambia. */
+            String giro) {
     }
 
     @GET
@@ -100,6 +103,7 @@ public class AdminNegocioResource {
                 color = n.colorPrimario;
         Integer tope = n.topeAdelanto;
         String estado = n.estado;
+        String giro = n.giro == null ? null : n.giro.nombre;
         n.eslogan = limpio(e.eslogan());
         n.descripcion = limpio(e.descripcion());
         n.whatsapp = Telefonos.whatsapp(e.whatsapp());
@@ -129,6 +133,10 @@ public class AdminNegocioResource {
             if (e.colorPrimario() != null) {
                 n.colorPrimario = e.colorPrimario().toLowerCase();
             }
+            if (e.giro() != null && !e.giro().isBlank()) {
+                n.giro = Giro.porSlug(e.giro().trim())
+                        .orElseThrow(() -> Errores.de(Status.BAD_REQUEST, "No existe ese giro."));
+            }
             if (e.estado() != null && !e.estado().isBlank()) {
                 n.estado = estadoValido(e.estado());
             } else if (e.visible() != null) {
@@ -142,7 +150,8 @@ public class AdminNegocioResource {
                 .campo("Colonia", colonia, n.colonia).campo("Referencias", referencias, n.referencias)
                 .campo("Mapa", lat == null ? null : lat + ", " + lng, n.lat == null ? null : n.lat + ", " + n.lng)
                 .largo("Portada", portadaAntes, n.portadaUrl).campo("Color", color, n.colorPrimario)
-                .campo("Tope de adelanto", tope, n.topeAdelanto).campo("Visibilidad", nombreEstado(estado), nombreEstado(n.estado));
+                .campo("Tope de adelanto", tope, n.topeAdelanto).campo("Visibilidad", nombreEstado(estado), nombreEstado(n.estado))
+                .campo("Giro", giro, n.giro == null ? null : n.giro.nombre);
         if (c.hay()) {
             Bitacora.anotar(sesion.usuario(), n, Bitacora.NEGOCIO, n.id, "Editó los datos de " + n.nombre, c.toString());
         }

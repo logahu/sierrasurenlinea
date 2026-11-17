@@ -107,6 +107,12 @@ export const ADMIN_ROUTES: Routes = [
                 loadComponent: () => import('./colonias-page').then((m) => m.ColoniasPage),
               },
               {
+                path: 'publicidad',
+                title: 'Publicidad · Panel',
+                canActivate: [soloDueno],
+                loadComponent: () => import('./publicidad-page').then((m) => m.PublicidadPage),
+              },
+              {
                 path: 'usuarios',
                 title: 'Usuarios · Panel',
                 canActivate: [soloDueno],

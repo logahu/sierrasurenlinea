@@ -4,7 +4,7 @@ import { Observable, retry, throwError, timer } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Platillo, Restaurante, TipoEncargo } from '../catalogo/catalogo.model';
 import {
-  AgendaPanel, CategoriaAdmin, CategoriaEdicion, ClienteAdmin, ColoniaAdmin, ConfiguracionAgenda, CuentaDePrueba, DatosColonia,
+  AnuncioAdmin, AnuncioEdicion, AgendaPanel, CategoriaAdmin, CategoriaEdicion, ClienteAdmin, ColoniaAdmin, ConfiguracionAgenda, CuentaDePrueba, DatosColonia,
   EquipoNegocio, FotosNegocio, PaginaClientes, PaginaHistorial, Tablero, NegocioAdmin, NegocioEdicion, ProductoAdmin, ProductoEdicion, Usuario,
 } from './admin.model';
 
@@ -13,6 +13,23 @@ import {
 export class AdminApi {
   private readonly http = inject(HttpClient);
   private readonly base = `${environment.apiUrl}/admin`;
+
+  // ---- Publicidad (solo el dueño)
+  anuncios(): Observable<AnuncioAdmin[]> {
+    return this.http.get<AnuncioAdmin[]>(`${this.base}/anuncios`);
+  }
+
+  crearAnuncio(datos: AnuncioEdicion): Observable<AnuncioAdmin> {
+    return this.http.post<AnuncioAdmin>(`${this.base}/anuncios`, datos);
+  }
+
+  guardarAnuncio(id: number, datos: AnuncioEdicion): Observable<AnuncioAdmin> {
+    return this.http.put<AnuncioAdmin>(`${this.base}/anuncios/${id}`, datos);
+  }
+
+  activarAnuncio(id: number, activo: boolean): Observable<AnuncioAdmin> {
+    return this.http.put<AnuncioAdmin>(`${this.base}/anuncios/${id}/activo`, { activo });
+  }
 
   negocios(): Observable<NegocioAdmin[]> {
     return this.http.get<NegocioAdmin[]>(`${this.base}/negocios`);

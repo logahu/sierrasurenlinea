@@ -39,6 +39,8 @@ public record NegocioDto(
         Integer topeAdelanto,
         /** COMPRA, RENTA o CITA; null en servicios. */
         String modoPedido,
+        /** Su calle en la portada: {slug, nombre}. */
+        GiroDto.Resumen giro,
         List<CategoriaDto> categorias,
         /** Solo servicios: tarjetas visibles de la lista del mandado. */
         List<TipoEncargoDto> tiposEncargo) {
@@ -52,6 +54,7 @@ public record NegocioDto(
                 n.colorPrimario, n.portadaUrl, n.whatsapp, n.telefono, n.atencionEnLocal ? n.direccion : null, n.horario,
                 n.atencionEnLocal, n.agendaActiva, n.minutosCita, n.atencionEnLocal ? n.colonia : null, n.atencionEnLocal ? n.referencias : null,
                 n.atencionEnLocal ? n.lat : null, n.atencionEnLocal ? n.lng : null,
-                n.soloMayoresEdad, n.visibleApp, n.estado, n.topeAdelanto, n.modoPedido(), categorias, tiposEncargo);
+                n.soloMayoresEdad, n.visibleApp, n.estado, n.topeAdelanto, n.modoPedido(), GiroDto.Resumen.de(n.giro),
+                categorias, tiposEncargo);
     }
 }

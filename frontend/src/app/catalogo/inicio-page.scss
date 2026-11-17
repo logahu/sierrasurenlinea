@@ -1,44 +1,14 @@
-// Portada "La calle de los rótulos". Paleta y tipografía propias de esta página:
-// las páginas de cada negocio tendrán su propio estilo.
+// Portada «calles por giro»: una calle de fachadas por giro, con chips para elegir una.
+@use 'portada';
+
 :host {
-  --cal: #fbfbf8;
-  --anil: #1e2a5a;
-  --anil-suave: #4a5585;
-  --cantera: #7a9a7e;
-  --cantera-oscura: #5d7a61;
-  --sol: #f2c94c;
-  --rotulo: 'Alfa Slab One', 'Rockwell', Georgia, serif;
-  --texto: 'Atkinson Hyperlegible', system-ui, sans-serif;
-
-  display: block;
-  font-family: var(--texto);
-  color: var(--anil);
-  // Toda la portada es "la calle": fondo de cal de lado a lado de la pantalla.
-  margin-inline: calc(50% - 50vw);
-  padding-inline: max(1rem, calc(50vw - 36rem));
-  background: var(--cal);
-  margin-bottom: -6rem;
-  padding-bottom: 6rem;
-}
-
-@media (prefers-color-scheme: dark) {
-  :host {
-    --cal: #141a33;
-    --anil: #eef0f8;
-    --anil-suave: #b4bad3;
-    --cantera: #4f6a53;
-    --cantera-oscura: #3c5240;
-  }
-}
-
-// La banqueta llega de orilla a orilla, más allá del ancho del contenido.
-%ancho-completo {
-  margin-inline: calc(50% - 50vw);
+  @include portada.tokens;
+  @include portada.calle-completa;
 }
 
 h1, h2 { font-family: var(--rotulo); font-weight: 400; letter-spacing: .005em; margin: 0; }
 
-// --- La calle ----------------------------------------------------------------
+// --- Encabezado ----------------------------------------------------------------
 .calle-seccion {
   padding-top: clamp(2rem, 6vw, 3.5rem);
 }
@@ -47,7 +17,7 @@ h1, h2 { font-family: var(--rotulo); font-weight: 400; letter-spacing: .005em; m
 .cabecera {
   display: grid;
   gap: clamp(1.5rem, 4vw, 2.5rem);
-  margin-bottom: clamp(1.75rem, 5vw, 3rem);
+  margin-bottom: clamp(1.5rem, 4vw, 2.25rem);
 
   app-aviso-obra {
     justify-self: center;
@@ -64,146 +34,153 @@ h1, h2 { font-family: var(--rotulo); font-weight: 400; letter-spacing: .005em; m
   p { margin: 1rem 0 0; font-size: 1.125rem; line-height: 1.55; color: var(--anil-suave); max-width: 32rem; }
 }
 
+.banner-arriba { margin-bottom: 1.5rem; }
+.banner-entre { margin: 2rem 0 .5rem; }
+
+// --- Chips de giro -------------------------------------------------------------
+.giros {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0 -1rem 1rem;
+  padding: .6rem 1rem;
+  background: color-mix(in srgb, var(--cal) 92%, transparent);
+  backdrop-filter: blur(6px);
+}
+.chips {
+  display: flex;
+  gap: .5rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding: .15rem .1rem .35rem;
+}
+.chip {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  min-height: 2.75rem;
+  padding: .35rem .95rem;
+  border: 1.5px solid var(--chip-borde);
+  border-radius: 999px;
+  background: var(--chip);
+  color: var(--anil);
+  font: inherit;
+  font-weight: 700;
+  font-size: .95rem;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+  .cuenta {
+    min-width: 1.5rem;
+    padding: .05rem .4rem;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--anil) 10%, transparent);
+    font-size: .8rem;
+    text-align: center;
+  }
+  &:hover { border-color: var(--anil-suave); }
+  &:focus-visible { outline: 3px solid var(--sol); outline-offset: 2px; }
+  &[aria-pressed='true'] {
+    background: var(--anil);
+    border-color: var(--anil);
+    color: var(--cal);
+    .cuenta { background: color-mix(in srgb, var(--cal) 22%, transparent); }
+  }
+}
+
+// --- Cada calle ----------------------------------------------------------------
+.calle-giro {
+  margin-top: clamp(1.75rem, 4vw, 2.5rem);
+  scroll-margin-top: 5rem;
+}
+
+.cabeza-calle {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: .9rem;
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: .55rem;
+    font-size: clamp(1.45rem, 3.6vw, 2rem);
+    line-height: 1.1;
+    small { display: block; font-family: var(--texto); font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--anil-suave); }
+    app-icono-giro { flex: none; width: 2.6rem; height: 2.6rem; border-radius: 50%; background: var(--anil); color: var(--cal); font-size: 1.05rem; }
+  }
+}
+.ver-todos {
+  flex: none;
+  color: var(--anil);
+  font-weight: 700;
+  text-underline-offset: .2em;
+  &:focus-visible { outline: 3px solid var(--sol); outline-offset: 2px; border-radius: .2rem; }
+}
+
+// Fila deslizable: hasta 6 fachadas y, si hay más, la tarjeta «+N Ver todos».
 .calle {
   list-style: none;
   margin: 0;
   padding: 0;
   display: grid;
-  // Una sola cuadra: tantas fachadas como negocios haya.
   grid-auto-flow: column;
-  grid-auto-columns: 1fr;
+  grid-auto-columns: clamp(12.5rem, 30vw, 15rem);
   align-items: end;
   gap: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
   animation: levantar .6s cubic-bezier(.2, .7, .2, 1) both;
+
+  > li { scroll-snap-align: start; height: 100%; display: flex; align-items: flex-end; }
+  > li > app-fachada { width: 100%; height: auto; }
+  > li + li { border-left: 2px solid rgb(0 0 0 / .18); }
 }
 
-.fachada {
-  --pintura: #b9b2a6;
-  --sombra-pintura: color-mix(in srgb, var(--pintura) 72%, #000);
-  // Alturas distintas, como una cuadra real: unas casas de un piso, otras con pretil alto.
-  &.f0 { --alto: 26.5rem; }
-  &.f1 { --alto: 23.5rem; }
-  &.f2 { --alto: 25.5rem; }
-  &.f3 { --alto: 23rem; }
-  &.f4 { --alto: 24.5rem; }
-}
-
-.muro {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: .9rem;
-  min-height: var(--alto);
-  padding: 1.6rem 1.1rem 4.2rem;
-  color: #fff;
+.mas a {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 17.5rem;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: .2rem;
+  padding: 1rem;
+  border: 2px dashed var(--anil-suave);
+  border-bottom: 0;
+  background: color-mix(in srgb, var(--anil) 5%, var(--cal));
+  color: var(--anil);
   text-decoration: none;
-  // Guardapolvo: la franja pintada más oscura en la parte baja del muro.
-  background:
-    linear-gradient(to top, var(--sombra-pintura) 0 3.2rem, transparent 3.2rem),
-    var(--pintura);
-  border-right: 2px solid color-mix(in srgb, var(--pintura) 60%, #000);
-  outline-offset: -6px;
-
-  .f0 & { clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%); }
-  // Pretil escalonado
-  .f1 & { clip-path: polygon(0 1.4rem, 18% 1.4rem, 18% 0, 82% 0, 82% 1.4rem, 100% 1.4rem, 100% 100%, 0 100%); padding-top: 2.6rem; }
-  // Frontón curvo
-  .f2 & { clip-path: polygon(0 1.6rem, 30% .3rem, 50% 0, 70% .3rem, 100% 1.6rem, 100% 100%, 0 100%); padding-top: 2.8rem; }
-  // Cornisa de dos escalones
-  .f4 & { clip-path: polygon(0 1rem, 8% 1rem, 8% .45rem, 92% .45rem, 92% 1rem, 100% 1rem, 100% 100%, 0 100%); padding-top: 2.4rem; }
-  .fachada:last-child & { border-right: 0; }
-
-  &:focus-visible { outline: 3px solid var(--sol); }
-}
-
-.rotulo {
-  font-family: var(--rotulo);
-  // Escala con el ancho para que los nombres de una palabra (TuRamoHoy, Encarguitos)
-  // quepan completos en la fachada sin partirse.
-  font-size: clamp(1.15rem, 1.75vw, 1.85rem);
-  line-height: 1;
   text-align: center;
-  // Sombra de rotulista: un segundo trazo desplazado, sin difuminar.
-  text-shadow: .09em .09em 0 var(--sombra-pintura);
+  strong { font-family: var(--rotulo); font-weight: 400; font-size: 2.6rem; line-height: 1; }
+  span { font-weight: 700; font-size: 1.1rem; }
+  small { color: var(--anil-suave); }
+  &:hover span { text-decoration: underline; }
+  &:focus-visible { outline: 3px solid var(--sol); outline-offset: -4px; }
 }
 
-.ventana {
-  width: min(9.5rem, 70%);
-  aspect-ratio: 4 / 5;
-  border: .45rem solid #fff;
-  border-radius: 4.75rem 4.75rem .3rem .3rem;
-  overflow: hidden;
-  background: #fff;
-  img { width: 100%; height: 100%; object-fit: cover; display: block; }
-}
-
-.letrero {
-  font-size: .95rem;
-  line-height: 1.3;
-  text-align: center;
-  max-width: 14rem;
-}
-
-.aviso {
-  position: absolute;
-  bottom: .75rem;
-  left: 50%;
-  translate: -50% 0;
-  white-space: nowrap;
-  padding: .3rem .7rem;
-  background: var(--sol);
-  color: #1e2a5a;
-  font-weight: 700;
-  font-size: .82rem;
-  border-radius: .2rem;
-  transform: rotate(-2deg);
-}
-
-.banqueta {
-  @extend %ancho-completo;
-  height: 1.6rem;
-  background:
-    linear-gradient(var(--cantera-oscura) 0 .35rem, transparent .35rem),
-    repeating-linear-gradient(90deg, var(--cantera) 0 5.5rem, var(--cantera-oscura) 5.5rem calc(5.5rem + 2px));
-}
-
-// En el celular la calle se vuelve una columna de letreros.
-@media (max-width: 760px) {
-  .calle { grid-auto-flow: row; grid-template-columns: 1fr; gap: .6rem; }
-  .muro {
-    min-height: 0;
-    display: grid;
-    grid-template-columns: 6.5rem 1fr;
-    grid-template-areas: 'ventana rotulo' 'ventana letrero';
-    align-items: center;
-    column-gap: 1rem;
-    row-gap: .35rem;
-    padding: 1rem 1rem 1.4rem;
-    min-height: 9rem;
-    clip-path: none !important;
-    border-right: 0;
-    border-radius: .35rem;
-    background: linear-gradient(to top, var(--sombra-pintura) 0 .8rem, transparent .8rem), var(--pintura);
-  }
-  .rotulo { grid-area: rotulo; text-align: left; align-self: end; font-size: 1.6rem; }
-  .letrero { grid-area: letrero; text-align: left; align-self: start; }
-  .ventana { grid-area: ventana; width: 100%; border-width: .3rem; border-radius: 3.25rem 3.25rem .25rem .25rem; }
-  .aviso { left: auto; right: .75rem; bottom: auto; top: -.5rem; translate: none; }
-  .banqueta { margin-top: .9rem; }
-}
+.banqueta { @include portada.banqueta; }
 
 // Esqueleto mientras carga
-.cargando .muro {
-  background: color-mix(in srgb, var(--anil) 8%, var(--cal));
-  animation: respirar 1.4s ease-in-out infinite alternate;
+.cargando {
+  overflow: hidden;
+  .muro-cargando {
+    display: block;
+    width: 100%;
+    height: 18rem;
+    background: color-mix(in srgb, var(--anil) 8%, var(--cal));
+    animation: respirar 1.4s ease-in-out infinite alternate;
+  }
 }
 @keyframes respirar { to { opacity: .55; } }
 
-// Única animación de la página: la cuadra "se levanta" al cargar.
+// Única animación de la página: la cuadra «se levanta» al cargar.
 @keyframes levantar { from { opacity: 0; transform: translateY(1.5rem); } }
 @media (prefers-reduced-motion: reduce) {
-  .calle, .cargando .muro { animation: none; }
+  .calle, .cargando .muro-cargando { animation: none; }
 }
 
 // --- Cómo pedir ---------------------------------------------------------------

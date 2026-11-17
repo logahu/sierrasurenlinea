@@ -11,6 +11,7 @@ import { mensajeDeError } from './autorizacion';
 import { SesionService } from './sesion';
 import { MapaUbicacion } from '../mapa/mapa-ubicacion';
 import { Punto, puntoDe } from '../mapa/ubicacion';
+import { CatalogoService } from '../catalogo/catalogo.service';
 import { ColoniasService, agrupar } from '../colonias/colonias';
 
 /** Muestra el número como se ve en México: 55 4048 5363 (sin el 52). */
@@ -141,6 +142,13 @@ export function whatsappValido(texto: string): boolean {
             <textarea formControlName="descripcion" rows="4" maxlength="600"></textarea>
           </label>
           @if (sesion.esDueno()) {
+            <label>
+              Giro
+              <select formControlName="giro">
+                @for (g of giros.value() ?? []; track g.slug) { <option [value]="g.slug">{{ g.nombre }}</option> }
+              </select>
+              <small>Su calle en la portada (por ejemplo, «Flores y regalos»).</small>
+            </label>
             <label class="en-linea">
               <input type="color" formControlName="colorPrimario" />
               Color del negocio
@@ -178,9 +186,15 @@ export class EditarNegocio {
 
   protected readonly sesion = inject(SesionService);
   private readonly api = inject(AdminApi);
+  private readonly catalogo = inject(CatalogoService);
   protected readonly mensaje = mensajeDeError;
 
   protected readonly negocio = rxResource({ params: () => this.slug(), stream: ({ params }) => this.api.negocio(params) });
+  /** Giros para el selector (solo el dueño cambia el giro). */
+  protected readonly giros = rxResource({
+    params: () => (this.sesion.esDueno() ? true : undefined),
+    stream: () => this.catalogo.giros(),
+  });
   protected readonly whatsappActual = computed(() => {
     const n = this.negocio.value();
     return n ? whatsappLegible(n.whatsapp) : null;
@@ -198,6 +212,7 @@ export class EditarNegocio {
     colonia: [''],
     referencias: [''],
     colorPrimario: ['#000000'],
+    giro: [''],
     topeAdelanto: [null as number | null],
   });
   protected readonly guardando = signal(false);
@@ -259,6 +274,7 @@ export class EditarNegocio {
       colonia: n.colonia ?? '',
       referencias: n.referencias ?? '',
       colorPrimario: n.colorPrimario,
+      giro: n.giro ?? '',
       topeAdelanto: n.topeAdelanto,
     });
     if (this.sesion.esDueno()) this.form.controls.nombre.enable();
@@ -283,6 +299,7 @@ export class EditarNegocio {
       lat: p?.lat ?? null,
       lng: p?.lng ?? null,
       portadaUrl: this.portada() ?? n.portadaUrl,
+      giro: v.giro || null,
     };
     this.api
       .guardarNegocio(n.slug, datos)

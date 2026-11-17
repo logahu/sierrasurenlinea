@@ -1,6 +1,5 @@
 package mx.turamohoy.catalogo.resource;
 
-import io.quarkus.panache.common.Sort;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.Path;
@@ -33,13 +32,15 @@ public class NegocioResource {
     @jakarta.inject.Inject
     mx.turamohoy.clientes.SesionCliente sesionCliente;
 
-    /** Negocios de la portada, en orden. */
+    /** Negocios de la portada, en orden. Con {@code ?giro=flores} solo los de ese giro. */
     @GET
-    public List<NegocioDto> listar() {
-        return Negocio.<Negocio>list("estado in ?1", Sort.by("orden"), Negocio.estadosVisibles(sesionCliente.esProbador()))
-                .stream()
-                .map(NegocioDto::resumen)
-                .toList();
+    public List<NegocioDto> listar(@QueryParam("giro") String giro) {
+        List<String> estados = Negocio.estadosVisibles(sesionCliente.esProbador());
+        String q = "select n from Negocio n join fetch n.giro g where n.estado in ?1";
+        List<Negocio> negocios = (giro == null || giro.isBlank())
+                ? Negocio.<Negocio>find(q + " order by n.orden", estados).list()
+                : Negocio.<Negocio>find(q + " and g.slug = ?2 order by n.orden", estados, giro.trim()).list();
+        return negocios.stream().map(NegocioDto::resumen).toList();
     }
 
     /** Un negocio con su contacto y sus categorías. */

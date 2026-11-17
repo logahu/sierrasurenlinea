@@ -5,7 +5,10 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 import java.util.Optional;
@@ -94,6 +97,11 @@ public class Negocio extends PanacheEntityBase {
 
     @Column(nullable = false)
     public int orden;
+
+    /** Su calle en la portada (Flores y regalos, Belleza…). Son pocos: se carga siempre. */
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "giro_id", nullable = false)
+    public Giro giro;
 
     /** Lo ven todos los clientes. */
     public static final String PUBLICO = "PUBLICO";
