@@ -219,6 +219,20 @@ class AgendaTest {
                     .body("bloqueos", hasSize(1)).body("bloqueos[0].motivo", equalTo("Permiso"));
             como(dueno).when().get(base).then().statusCode(200).body("size()", equalTo(3));
 
+            // Se reprograma: el empleado no puede; el encargado la mueve al jueves con Ana y deja de estar marcada.
+            int cita = como(dueno).when().get("/api/admin/agenda?negocio=" + SLUG + "&desde=2026-11-18").then()
+                    .extract().path("citas.find { it.empleadoId == " + beto + " }.pedidoId");
+            String mover = "/api/admin/agenda/citas/" + cita + "/horario";
+            como(Sesiones.entrar(telAna, "clave-empleado-1")).body(Map.of("fecha", "2026-11-19", "hora", "11:00"))
+                    .when().put(mover).then().statusCode(403);
+            como(dueno).body(Map.of("fecha", "2026-11-18", "hora", "11:00", "empleadoId", beto)).when().put(mover)
+                    .then().statusCode(409);
+            como(dueno).body(Map.of("fecha", "2026-11-19", "hora", "11:00", "empleadoId", ana)).when().put(mover)
+                    .then().statusCode(200).body("inicio", startsWith("2026-11-19T11:00")).body("empleadoId", equalTo(ana))
+                    .body("sinServicio", equalTo(false));
+            assertFalse(como(cliente).when().get("/api/negocios/" + SLUG + "/agenda?desde=2026-11-19&dias=1").then()
+                    .extract().jsonPath().getList("dias[0].horarios.find { it.hora == '11:00' }.libres").contains(ana));
+
             // Ya pasó o el orden está al revés: no. El empleado no puede bloquear, pero ve los suyos.
             como(dueno).body(Map.of("fecha", "2026-11-16", "horaInicio", "08:00", "horaFin", "09:00")).when().post(base)
                     .then().statusCode(400);

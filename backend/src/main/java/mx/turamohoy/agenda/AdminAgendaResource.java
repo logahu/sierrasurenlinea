@@ -248,6 +248,47 @@ public class AdminAgendaResource {
         return new ResultadoBloqueo(dto(nuevo, afectadas.size()), citasDto(afectadas, este));
     }
 
+    public record CambioHorario(@NotBlank(message = "Elige el día.") String fecha,
+                                @NotBlank(message = "Elige la hora.") String hora, Long empleadoId) {
+    }
+
+    /**
+     * El encargado mueve una cita a otro día, hora o persona (p. ej. si cayó en un horario sin
+     * servicio). Libera las horas de antes y aparta las nuevas con la misma duración.
+     */
+    @PUT
+    @Path("/citas/{pedidoId}/horario")
+    @Transactional
+    public CitaDto reprogramar(@PathParam("pedidoId") Long pedidoId, @Valid @NotNull CambioHorario c) {
+        Pedido p = Pedido.<Pedido>findByIdOptional(pedidoId).filter(x -> x.citaInicio != null)
+                .orElseThrow(() -> Errores.de(Status.NOT_FOUND, "No existe esa cita."));
+        Usuario u = sesion.usuario();
+        if (!u.puedeEditar(p.negocio)) {
+            throw Errores.de(Status.FORBIDDEN, "Solo el encargado puede cambiar el horario de una cita.");
+        }
+        if ("CANCELADO".equals(p.estado) || "ENTREGADO".equals(p.estado)) {
+            throw Errores.de(Status.BAD_REQUEST, "Esa cita ya no se puede cambiar.");
+        }
+        LocalTime hora;
+        try {
+            hora = LocalTime.parse(c.hora());
+        } catch (DateTimeParseException e) {
+            throw Errores.de(Status.BAD_REQUEST, "Hora no válida.");
+        }
+        String antes = p.cuando;
+        int bloques = (int) Math.max(1, CitaBloque.count("pedido", p));
+        Agenda.liberar(p);
+        Agenda.apartar(p, fecha(c.fecha()), hora, c.empleadoId(), bloques);
+        try {
+            CitaBloque.flush();
+        } catch (RuntimeException e) {
+            throw Errores.de(Status.CONFLICT, "Ese horario se acaba de ocupar. Elige otro.");
+        }
+        Bitacora.anotar(u, p.negocio, Bitacora.PEDIDO, p.id, "Cambió el horario de la cita " + p.folio,
+                antes + " → " + p.cuando);
+        return citasDto(List.of(p), AgendaBloqueo.entre(p.negocio, p.citaInicio, p.citaFin)).get(0);
+    }
+
     @DELETE
     @Path("/negocios/{slug}/bloqueos/{id}")
     @Transactional
