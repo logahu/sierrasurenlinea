@@ -29,7 +29,7 @@ public class AgendaResource {
     SesionCliente sesionCliente;
 
     /** Quien atiende, sin datos privados (ni teléfono ni correo). */
-    public record Profesional(Long id, String nombre, String especialidades) {
+    public record Profesional(Long id, String nombre, String especialidades, String avatar) {
     }
 
     public record Disponibilidad(int minutosCita, int duracionMinutos, List<Profesional> profesionales,
@@ -58,7 +58,7 @@ public class AgendaResource {
         }
         int bloques = Math.max(1, Math.min(servicios, 8));
         List<Profesional> profesionales = Usuario.profesionalesDe(n).stream()
-                .map(u -> new Profesional(u.id, u.nombre, u.especialidades)).toList();
+                .map(u -> new Profesional(u.id, u.nombre, u.especialidades, u.avatar)).toList();
         return new Disponibilidad(n.minutosCita, n.minutosCita * bloques, profesionales,
                 HorarioCitas.de(n.horarioCitas).comoMapa(), Agenda.disponibilidad(n, inicio, dias, bloques, empleado));
     }

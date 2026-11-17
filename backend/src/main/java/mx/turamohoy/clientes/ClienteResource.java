@@ -46,6 +46,9 @@ import java.util.Set;
 @Consumes(MediaType.APPLICATION_JSON)
 public class ClienteResource {
 
+    @jakarta.inject.Inject
+    mx.turamohoy.fotos.Avatares avatares;
+
     /** Versión vigente del aviso de privacidad (cámbiala si cambias el texto del aviso). */
     public static final String VERSION_PRIVACIDAD = "2026-11";
     static final Duration DURACION_SESION = Duration.ofDays(30);
@@ -178,6 +181,34 @@ public class ClienteResource {
         c.lng = u == null ? null : u.lng();
         mx.turamohoy.historial.Bitacora.anotar(c, null, mx.turamohoy.historial.Bitacora.CLIENTE, c.id, "Actualizó sus datos", null);
         return ClienteDto.de(c);
+    }
+
+    public record Avatar(@jakarta.validation.constraints.Size(max = 500) String avatar) {
+    }
+
+    public record SolicitudFoto(String tipo, Long bytes) {
+    }
+
+    /** Mi avatar: un dibujo del sitio, mi foto de perfil o null (iniciales). */
+    @PUT
+    @Path("/yo/avatar")
+    @RolesAllowed(SesionCliente.ROL)
+    @Transactional
+    public ClienteDto cambiarAvatar(@Valid @NotNull Avatar a) {
+        Cliente c = sesion.cliente();
+        String carpeta = mx.turamohoy.fotos.Avatares.carpetaDeCliente(c.id);
+        String antes = c.avatar;
+        c.avatar = avatares.validar(a.avatar(), carpeta);
+        avatares.borrarAnterior(antes, c.avatar, carpeta);
+        return ClienteDto.de(c);
+    }
+
+    /** Permiso para subir mi foto de perfil (luego se guarda con PUT /yo/avatar). */
+    @POST
+    @Path("/yo/foto")
+    @RolesAllowed(SesionCliente.ROL)
+    public mx.turamohoy.fotos.Avatares.PermisoFoto pedirFoto(@NotNull SolicitudFoto s) {
+        return avatares.permiso(mx.turamohoy.fotos.Avatares.carpetaDeCliente(sesion.cliente().id), s.tipo(), s.bytes());
     }
 
     @PUT

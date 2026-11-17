@@ -36,6 +36,10 @@ public class Usuario extends PanacheEntityBase {
     @Column(nullable = false, length = 80)
     public String nombre;
 
+    /** «avatar:flor» (dibujo del sitio), URL de su foto de perfil o vacío (iniciales). */
+    @Column(length = 500)
+    public String avatar;
+
     /** Hash bcrypt de la contraseña; la contraseña nunca se guarda. */
     @Column(name = "contrasena_hash", nullable = false, length = 100)
     public String contrasenaHash;

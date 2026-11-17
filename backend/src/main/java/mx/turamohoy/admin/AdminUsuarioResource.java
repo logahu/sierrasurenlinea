@@ -221,7 +221,7 @@ public class AdminUsuarioResource {
     }
 
     /** Correo normalizado (o null si no se dio) que nadie más del equipo usa. */
-    private static String correoLibre(String correo, Usuario excepto) {
+    static String correoLibre(String correo, Usuario excepto) {
         if (correo == null || correo.isBlank()) {
             return null;
         }
