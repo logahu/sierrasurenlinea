@@ -25,7 +25,9 @@ public record UsuarioDto(
         /** Aparece en la agenda de citas. */
         boolean atiendeCitas,
         /** Su negocio se pide por citas: la agenda es su página de inicio en el panel. */
-        boolean negocioConAgenda) {
+        boolean negocioConAgenda,
+        /** «avatar:flor», URL de su foto o null (iniciales). */
+        String avatar) {
 
     public static UsuarioDto de(Usuario u) {
         return de(u, 0);
@@ -42,6 +44,7 @@ public record UsuarioDto(
                 entregas,
                 u.especialidades,
                 u.atiendeEnAgenda(),
-                u.negocio != null && ModoPedido.CITA.equals(u.negocio.modoPedido()));
+                u.negocio != null && ModoPedido.CITA.equals(u.negocio.modoPedido()),
+                u.avatar);
     }
 }

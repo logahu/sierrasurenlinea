@@ -49,7 +49,7 @@ public class AdminAgendaResource {
     @Inject
     SesionActual sesion;
 
-    public record Profesional(Long id, String nombre, String especialidades, String rol) {
+    public record Profesional(Long id, String nombre, String especialidades, String rol, String avatar) {
     }
 
     public record CitaDto(Long pedidoId, String folio, String estado, LocalDateTime inicio, LocalDateTime fin,
@@ -111,8 +111,9 @@ public class AdminAgendaResource {
                     categoria);
         }).toList();
         List<Profesional> profesionales = soloMias
-                ? List.of(new Profesional(u.id, u.nombre, u.especialidades, u.rol))
-                : Usuario.profesionalesDe(n).stream().map(x -> new Profesional(x.id, x.nombre, x.especialidades, x.rol)).toList();
+                ? List.of(new Profesional(u.id, u.nombre, u.especialidades, u.rol, u.avatar))
+                : Usuario.profesionalesDe(n).stream()
+                        .map(x -> new Profesional(x.id, x.nombre, x.especialidades, x.rol, x.avatar)).toList();
         List<String> categorias = Categoria.delNegocio(n).stream().map(c -> c.nombre).toList();
         return new AgendaDto(n.slug, n.nombre, soloMias, profesionales, citas, categorias,
                 HorarioCitas.de(n.horarioCitas).comoMapa(), n.minutosCita);

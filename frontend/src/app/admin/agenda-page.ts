@@ -6,6 +6,7 @@ import { AgendaPanel, CitaAgenda, EstadoPedido, Profesional } from './admin.mode
 import { mensajeDeError } from './autorizacion';
 import { PedidosService } from './pedidos';
 import { SesionService } from './sesion';
+import { Avatar } from '../compartido/avatar';
 import { telefonoLegible } from './usuarios-filtros';
 
 /** 2026-11-18 de una fecha local. */
@@ -135,6 +136,7 @@ interface Columna {
   nombre: string;
   especialidades: string | null;
   color: number;
+  avatar: string | null;
   citas: CitaAgenda[];
   libres: number[];
 }
@@ -145,7 +147,7 @@ interface Columna {
  */
 @Component({
   selector: 'app-agenda-page',
-  imports: [RouterLink],
+  imports: [RouterLink, Avatar],
   template: `
     <header class="panel-titulo">
       <h1>{{ sesion.esEmpleado() ? 'Mi agenda' : 'Agenda' }}</h1>
@@ -202,7 +204,7 @@ interface Columna {
             @for (col of columnas(); track col.id) {
               <button type="button" role="tab" [attr.aria-selected]="col.id === enCelular()" [class.elegida]="col.id === enCelular()"
                       (click)="enCelular.set(col.id)">
-                <span class="avatar" [class]="'avatar p' + col.color">{{ iniciales(col.nombre) }}</span>
+                <app-avatar class="avatar" [avatar]="col.avatar" [nombre]="col.nombre" />
                 <span class="nombre">{{ col.nombre }}</span>
                 <small>{{ col.citas.length }}</small>
               </button>
@@ -215,7 +217,7 @@ interface Columna {
           <div class="esquina"></div>
           @for (col of columnas(); track col.id) {
             <div class="cabeza" [class.en-celular]="col.id === enCelular()">
-              <span class="avatar" [class]="'avatar p' + col.color">{{ iniciales(col.nombre) }}</span>
+              <app-avatar class="avatar" [avatar]="col.avatar" [nombre]="col.nombre" />
               <strong>{{ col.nombre }}</strong>
               <small>{{ col.especialidades ? col.especialidades + ' · ' : '' }}{{ col.citas.length }} {{ col.citas.length === 1 ? 'cita' : 'citas' }}</small>
             </div>
@@ -382,12 +384,15 @@ export class AgendaPage {
       !abierto || yaPaso ? [] : huecosLibres(citas, abre, cierra, this.paso(), esHoy ? this.ahora() : null);
     const cols: Columna[] = a.profesionales.map((p: Profesional) => {
       const citas = a.citas.filter((c) => c.empleadoId === p.id);
-      return { id: p.id, nombre: p.nombre, especialidades: p.especialidades, color: p.id % COLORES_PERSONA, citas, libres: libres(citas) };
+      return {
+        id: p.id, nombre: p.nombre, especialidades: p.especialidades, color: p.id % COLORES_PERSONA, avatar: p.avatar ?? null,
+        citas, libres: libres(citas),
+      };
     });
     const ids = new Set(a.profesionales.map((p) => p.id));
     const sueltas = a.citas.filter((c) => c.empleadoId === null || !ids.has(c.empleadoId));
     if (sueltas.length) {
-      cols.push({ id: null, nombre: 'Sin asignar', especialidades: null, color: 0, citas: sueltas, libres: [] });
+      cols.push({ id: null, nombre: 'Sin asignar', especialidades: null, color: 0, avatar: null, citas: sueltas, libres: [] });
     }
     return cols;
   });

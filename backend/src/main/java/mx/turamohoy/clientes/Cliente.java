@@ -23,6 +23,10 @@ public class Cliente extends PanacheEntityBase {
     @Column(nullable = false, length = 80)
     public String nombre;
 
+    /** «avatar:flor» (dibujo del sitio), URL de su foto de perfil o vacío (iniciales). */
+    @jakarta.persistence.Column(length = 500)
+    public String avatar;
+
     @Column(nullable = false, length = 10, unique = true)
     public String telefono;
 

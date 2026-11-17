@@ -1,12 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { Component, computed, effect, inject, input, linkedSignal, model, signal, untracked } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
+import { Avatar } from '../compartido/avatar';
 import { environment } from '../../environments/environment';
 
 export interface ProfesionalPublico {
   id: number;
   nombre: string;
   especialidades: string | null;
+  avatar?: string | null;
 }
 
 export interface HorarioLibre {
@@ -92,6 +94,7 @@ export function tarjetaDia(fecha: string, nombre: string): { arriba: string; num
  */
 @Component({
   selector: 'app-elegir-horario',
+  imports: [Avatar],
   template: `
     @if (datos(); as d) {
       @if (!d.profesionales.length) {
@@ -106,7 +109,7 @@ export function tarjetaDia(fecha: string, nombre: string): { arriba: string; num
             </button>
             @for (p of d.profesionales; track p.id) {
               <button type="button" [class.elegida]="persona() === p.id" (click)="elegirPersona(p.id)" [attr.aria-pressed]="persona() === p.id">
-                <span class="avatar" [class]="'avatar p' + (p.id % 6)" aria-hidden="true">{{ iniciales(p.nombre) }}</span>
+                <app-avatar class="avatar" [avatar]="p.avatar" [nombre]="p.nombre" aria-hidden="true" />
                 <span class="nombre">{{ p.nombre }}</span>
                 @if (p.especialidades) { <small>{{ p.especialidades }}</small> }
               </button>

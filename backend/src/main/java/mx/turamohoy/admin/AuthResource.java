@@ -1,5 +1,7 @@
 package mx.turamohoy.admin;
 
+import mx.turamohoy.fotos.Avatares;
+
 import mx.turamohoy.historial.Bitacora;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import io.quarkus.narayana.jta.QuarkusTransaction;
@@ -29,6 +31,9 @@ import java.util.Set;
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 public class AuthResource {
+
+    @Inject
+    mx.turamohoy.fotos.Avatares avatares;
 
     static final Duration DURACION_SESION = Duration.ofHours(8);
     static final int INTENTOS_MAXIMOS = 5;
@@ -115,6 +120,46 @@ public class AuthResource {
     @Authenticated
     public UsuarioDto yo() {
         return UsuarioDto.de(sesion.usuario());
+    }
+
+    /** Mi perfil: nombre, correo y avatar (el teléfono y el rol los cambia el administrador). */
+    public record EdicionPerfil(
+            @NotBlank(message = "Escribe tu nombre.") @jakarta.validation.constraints.Size(max = 80) String nombre,
+            @jakarta.validation.constraints.Email(message = "El correo no es válido.")
+            @jakarta.validation.constraints.Size(max = 120) String correo,
+            @jakarta.validation.constraints.Size(max = 500) String avatar) {
+    }
+
+    public record SolicitudFoto(String tipo, Long bytes) {
+    }
+
+    @PUT
+    @Path("/yo")
+    @Authenticated
+    @Transactional
+    public UsuarioDto editarPerfil(@Valid @NotNull EdicionPerfil e) {
+        Usuario u = sesion.usuario();
+        String carpeta = Avatares.carpetaDeUsuario(u.id);
+        String nombre = u.nombre, correo = u.correo, avatar = u.avatar;
+        u.nombre = e.nombre().trim();
+        u.correo = AdminUsuarioResource.correoLibre(e.correo(), u);
+        u.avatar = avatares.validar(e.avatar(), carpeta);
+        avatares.borrarAnterior(avatar, u.avatar, carpeta);
+        mx.turamohoy.historial.Cambios c = new mx.turamohoy.historial.Cambios().campo("Nombre", nombre, u.nombre)
+                .campo("Correo", correo, u.correo).campo("Avatar", avatar == null ? "Iniciales" : "Anterior",
+                        u.avatar == null ? "Iniciales" : u.avatar.startsWith("avatar:") ? u.avatar.substring(7) : "Foto");
+        if (c.hay()) {
+            Bitacora.anotar(u, u.negocio, Bitacora.USUARIO, u.id, "Actualizó su perfil", c.toString());
+        }
+        return UsuarioDto.de(u);
+    }
+
+    /** Permiso para subir mi foto de perfil (luego se guarda con PUT /yo). */
+    @POST
+    @Path("/yo/foto")
+    @Authenticated
+    public Avatares.PermisoFoto pedirFoto(@NotNull SolicitudFoto s) {
+        return avatares.permiso(Avatares.carpetaDeUsuario(sesion.usuario().id), s.tipo(), s.bytes());
     }
 
     @PUT

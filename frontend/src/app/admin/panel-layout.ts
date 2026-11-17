@@ -2,6 +2,7 @@ import { Component, DestroyRef, ViewEncapsulation, inject } from '@angular/core'
 import { Meta } from '@angular/platform-browser';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { PedidosService } from './pedidos';
+import { Avatar } from '../compartido/avatar';
 import { SesionService } from './sesion';
 
 /**
@@ -10,7 +11,7 @@ import { SesionService } from './sesion';
  */
 @Component({
   selector: 'app-panel-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Avatar],
   encapsulation: ViewEncapsulation.None,
   styleUrl: './panel.scss',
   template: `
@@ -40,7 +41,10 @@ import { SesionService } from './sesion';
             <a routerLink="/admin/publicidad" routerLinkActive="activo">Publicidad</a>
             <a routerLink="/admin/usuarios" routerLinkActive="activo">Usuarios</a>
           }
-          <a routerLink="/admin/cuenta" routerLinkActive="activo">Mi cuenta</a>
+          <a class="panel-perfil" routerLink="/admin/cuenta" routerLinkActive="activo" [attr.aria-label]="'Mi perfil (' + u.nombre + ')'">
+            <app-avatar [avatar]="u.avatar" [nombre]="u.nombre" />
+            <span>Mi perfil</span>
+          </a>
           <span class="panel-quien">{{ u.nombre }}</span>
           <button type="button" class="panel-salir" (click)="salir()">Salir</button>
         </nav>

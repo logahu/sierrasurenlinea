@@ -31,7 +31,7 @@ export const ADMIN_ROUTES: Routes = [
           },
           {
             path: 'cuenta',
-            title: 'Mi cuenta · Panel',
+            title: 'Mi perfil · Panel',
             loadComponent: () => import('./cuenta-page').then((m) => m.CuentaPage),
           },
           {

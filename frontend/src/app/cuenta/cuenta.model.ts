@@ -12,6 +12,8 @@ export interface Cliente {
   ultimoAcceso: string | null;
   /** Ve los negocios en pruebas; sus pedidos se marcan como prueba. */
   probador: boolean;
+  /** «avatar:flor», URL de su foto o null (iniciales). */
+  avatar?: string | null;
 }
 
 export interface SesionCliente {
