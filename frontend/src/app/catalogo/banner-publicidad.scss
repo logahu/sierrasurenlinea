@@ -85,6 +85,8 @@ img + .textos { grid-column: 2; }
   &:focus-visible { outline: 3px solid var(--sol, #f2c94c); outline-offset: -3px; }
 }
 
+.banner:has(.puntos) .contenido { padding-bottom: 2.6rem; }
+
 .puntos {
   position: absolute;
   bottom: .35rem;

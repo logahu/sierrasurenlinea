@@ -382,7 +382,7 @@ export interface AnuncioAdmin {
   negocioSlug: string | null;
   negocioNombre: string | null;
   colorFondo: string | null;
-  posicion: 'PORTADA_ARRIBA' | 'ENTRE_CALLES';
+  posicion: 'PORTADA_ARRIBA' | 'DIRECTORIO';
   /** 2026-11-17; null = sin límite. */
   inicio: string | null;
   fin: string | null;

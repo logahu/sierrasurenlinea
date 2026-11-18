@@ -8,6 +8,8 @@ export type ModoPedido = 'COMPRA' | 'RENTA' | 'CITA';
 export interface GiroResumen {
   slug: string;
   nombre: string;
+  /** flor, belleza, fiesta, bebida, comida, auto, moto. */
+  icono?: string | null;
 }
 
 export interface Giro extends GiroResumen {
@@ -18,8 +20,8 @@ export interface Giro extends GiroResumen {
   negocios: number;
 }
 
-/** PORTADA_ARRIBA: bajo el encabezado · ENTRE_CALLES: después de la segunda calle. */
-export type PosicionAnuncio = 'PORTADA_ARRIBA' | 'ENTRE_CALLES';
+/** PORTADA_ARRIBA: banner de la portada · DIRECTORIO: patrocina un negocio (su tarjeta va primero). */
+export type PosicionAnuncio = 'PORTADA_ARRIBA' | 'DIRECTORIO';
 
 /** Banner de publicidad vigente (siempre lleva la etiqueta «Publicidad»). */
 export interface Anuncio {
@@ -73,8 +75,12 @@ export interface Negocio {
   modoPedido?: ModoPedido | null;
   /** Solo servicios: cuánto adelanta el repartidor, en MXN. */
   topeAdelanto?: number | null;
-  /** Su calle en la portada. */
+  /** Su giro en la portada. */
   giro?: GiroResumen | null;
+  /** Fecha de alta (ISO, hora de Miahuatlán): etiqueta «Nuevo» y orden «Nuevos». */
+  creadoEn?: string | null;
+  /** Tiene un patrocinio vigente en el directorio: va primero con «Patrocinado». */
+  patrocinado?: boolean;
   /** Vacío en el listado; con datos en el detalle de un negocio. */
   categorias: Categoria[];
   /** Solo servicios (Encarguitos): tarjetas de "Tu lista del mandado". */

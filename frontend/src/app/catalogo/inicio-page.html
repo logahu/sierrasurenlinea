@@ -1,73 +1,85 @@
-<section class="calle-seccion">
-  <div class="cabecera">
-    <app-aviso-obra />
-    <div class="intro">
-      <h1>Los negocios de Miahuatlán, a un mensaje de distancia</h1>
-      <p>Entra a un negocio, revisa su catálogo y pide directo por WhatsApp. <a class="conocenos" routerLink="/conocenos">Conócenos →</a></p>
-    </div>
-  </div>
+<section class="directorio" aria-labelledby="titulo-directorio">
+  <app-aviso-obra />
+  <app-banner-publicidad class="banner" posicion="PORTADA_ARRIBA" />
 
-  <app-banner-publicidad class="banner-arriba" posicion="PORTADA_ARRIBA" />
+  <header class="intro">
+    <h1 id="titulo-directorio">Los negocios de Miahuatlán, a un mensaje de distancia</h1>
+    <p>Busca, elige y pide directo por WhatsApp. <a class="conocenos" routerLink="/conocenos">Conócenos →</a></p>
+  </header>
+
+  <form class="buscador" role="search" (submit)="$event.preventDefault()">
+    <label class="lupa" for="buscar-negocio">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" />
+      </svg>
+      <span class="solo-lector">Buscar un negocio</span>
+    </label>
+    <input id="buscar-negocio" type="search" autocomplete="off" enterkeyhint="search"
+           placeholder="¿Qué buscas? flores, mezcal, inflables…"
+           [value]="texto()" (input)="escribir($any($event.target).value)" />
+    <label class="orden">
+      <span class="solo-lector">Ordenar por</span>
+      <select (change)="elegirOrden($any($event.target).value)">
+        @for (o of ordenes; track o.valor) {
+          <option [value]="o.valor" [selected]="o.valor === filtros().orden">{{ o.texto }}</option>
+        }
+      </select>
+    </label>
+  </form>
 
   @if (negocios.error()) {
     <div class="estado" role="alert">
       <p>No pudimos cargar los negocios. Revisa tu conexión e inténtalo de nuevo.</p>
-      <button type="button" (click)="negocios.reload()">Reintentar</button>
+      <button type="button" class="boton" (click)="negocios.reload()">Reintentar</button>
     </div>
   } @else if (negocios.isLoading() && !negocios.hasValue()) {
-    <ul class="calle cargando" aria-busy="true" aria-label="Cargando negocios">
-      @for (i of [0, 1, 2, 3]; track i) { <li><span class="muro-cargando"></span></li> }
+    <ul class="rejilla cargando" aria-busy="true" aria-label="Cargando negocios">
+      @for (i of [0, 1, 2, 3, 4, 5]; track i) { <li><span class="tarjeta-cargando"></span></li> }
     </ul>
-    <div class="banqueta" aria-hidden="true"></div>
     <p class="despertando">Estamos despertando el servidor; la primera visita puede tardar hasta un minuto.</p>
   } @else {
-    @if (calles().length > 1) {
-      <nav class="giros" aria-label="Giros">
-        <div class="chips" role="group" aria-label="Ver una calle">
-          <button type="button" class="chip" [attr.aria-pressed]="elegido() === null" (click)="elegir(null)">
-            Todos <span class="cuenta">{{ total() }}</span>
+    @if (chips().length > 1) {
+      <div class="giros" role="group" aria-label="Filtrar por giro">
+        <button type="button" class="chip" [attr.aria-pressed]="elegido() === null" (click)="elegirGiro(null)">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="3.5" width="7" height="7" rx="1.5" />
+            <rect x="3.5" y="13.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="13.5" width="7" height="7" rx="1.5" />
+          </svg>
+          Todos <span class="cuenta">{{ total() }}</span>
+        </button>
+        @for (c of chips(); track c.giro.slug) {
+          <button type="button" class="chip" [attr.aria-pressed]="elegido()?.slug === c.giro.slug" (click)="elegirGiro(c.giro.slug)">
+            <app-icono-giro [icono]="c.giro.icono" />
+            {{ c.giro.nombre }}
+            <span class="cuenta" [attr.aria-label]="c.negocios + (c.negocios === 1 ? ' negocio' : ' negocios')">{{ c.negocios }}</span>
           </button>
-          @for (c of calles(); track c.giro.slug) {
-            <button type="button" class="chip" [attr.aria-pressed]="elegido() === c.giro.slug" (click)="elegir(c.giro.slug)">
-              <app-icono-giro [icono]="c.giro.icono" />
-              {{ c.giro.nombre }} <span class="cuenta" [attr.aria-label]="c.negocios.length + (c.negocios.length === 1 ? ' negocio' : ' negocios')">{{ c.negocios.length }}</span>
-            </button>
-          }
-        </div>
-      </nav>
+        }
+      </div>
     }
 
-    @for (c of visibles(); track c.giro.slug; let i = $index) {
-      @let f = fachadas(c);
-      <section class="calle-giro" [attr.aria-labelledby]="'calle-' + c.giro.slug">
-        <header class="cabeza-calle">
-          <h2 [id]="'calle-' + c.giro.slug">
-            <app-icono-giro [icono]="c.giro.icono" />
-            <span><small>Calle de</small> {{ c.giro.nombre }}</span>
-          </h2>
-          @if (f.resto) {
-            <a class="ver-todos" [routerLink]="['/giro', c.giro.slug]">Ver los {{ c.negocios.length }} ›</a>
-          }
-        </header>
-        <ul class="calle" [attr.aria-label]="'Negocios de ' + c.giro.nombre">
-          @for (n of f.visibles; track n.id; let j = $index) {
-            <li><app-fachada [negocio]="n" [variante]="i + j" /></li>
-          }
-          @if (f.resto) {
-            <li class="mas">
-              <a [routerLink]="['/giro', c.giro.slug]">
-                <strong>+{{ f.resto }}</strong>
-                <span>Ver todos</span>
-                <small>en {{ c.giro.nombre }}</small>
-              </a>
-            </li>
-          }
-        </ul>
-        <div class="banqueta" aria-hidden="true"></div>
-      </section>
-      @if (i === bannerDespuesDe()) {
-        <app-banner-publicidad class="banner-entre" posicion="ENTRE_CALLES" />
+    <p class="resumen" aria-live="polite">
+      <span>
+        <strong>{{ lista().length }} {{ lista().length === 1 ? 'negocio' : 'negocios' }}</strong>
+        @if (elegido(); as g) { en {{ g.nombre }} }
+        @if (filtros().q.trim()) { para «{{ filtros().q.trim() }}» }
+      </span>
+      @if (hayFiltros() && lista().length) {
+        <button type="button" class="enlace" (click)="limpiar()">Ver todos</button>
       }
+    </p>
+
+    @if (lista().length) {
+      <ul class="rejilla">
+        @for (n of lista(); track n.id) {
+          <li><app-tarjeta-negocio [negocio]="n" /></li>
+        }
+      </ul>
+    } @else {
+      <div class="vacio">
+        <p><strong>No encontramos negocios con esa búsqueda.</strong></p>
+        <p>Prueba con otra palabra o revisa todos los giros.</p>
+        <button type="button" class="boton" (click)="limpiar()">Limpiar búsqueda</button>
+      </div>
     }
   }
 </section>
