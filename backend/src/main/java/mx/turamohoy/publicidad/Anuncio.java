@@ -29,9 +29,9 @@ public class Anuncio extends PanacheEntityBase {
 
     /** Bajo el encabezado de la portada. */
     public static final String PORTADA_ARRIBA = "PORTADA_ARRIBA";
-    /** Después de la segunda calle. */
-    public static final String ENTRE_CALLES = "ENTRE_CALLES";
-    public static final Set<String> POSICIONES = Set.of(PORTADA_ARRIBA, ENTRE_CALLES);
+    /** Patrocina un negocio: su tarjeta sube al principio del directorio («Patrocinado»). Exige negocio. */
+    public static final String DIRECTORIO = "DIRECTORIO";
+    public static final Set<String> POSICIONES = Set.of(PORTADA_ARRIBA, DIRECTORIO);
 
     /** Reloj de Miahuatlán (las pruebas lo fijan). */
     static Clock reloj = Clock.system(Agenda.ZONA);
@@ -91,5 +91,20 @@ public class Anuncio extends PanacheEntityBase {
                         + " and a.activo = true and (a.inicio is null or a.inicio <= ?2) and (a.fin is null or a.fin >= ?2)"
                         + " order by a.orden, a.id", posicion, hoy)
                 .list();
+    }
+
+    /**
+     * Negocios patrocinados hoy (anuncio DIRECTORIO vigente) y su lugar: el menor {@code orden}
+     * de sus anuncios. El mapa está en orden.
+     */
+    public static java.util.Map<Long, Integer> patrocinados(LocalDate hoy) {
+        java.util.Map<Long, Integer> r = new java.util.LinkedHashMap<>();
+        int i = 0;
+        for (Anuncio a : vigentes(DIRECTORIO, hoy)) {
+            if (a.negocio != null && !r.containsKey(a.negocio.id)) {
+                r.put(a.negocio.id, i++);
+            }
+        }
+        return r;
     }
 }

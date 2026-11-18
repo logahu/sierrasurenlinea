@@ -98,7 +98,11 @@ public class Negocio extends PanacheEntityBase {
     @Column(nullable = false)
     public int orden;
 
-    /** Su calle en la portada (Flores y regalos, Belleza…). Son pocos: se carga siempre. */
+    /** Fecha de alta: etiqueta «Nuevo» (30 días) y orden «Nuevos» en la portada. */
+    @Column(name = "creado_en", nullable = false)
+    public java.time.LocalDateTime creadoEn = java.time.LocalDateTime.now();
+
+    /** Su giro en la portada (Flores y regalos, Belleza…). Son pocos: se carga siempre. */
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "giro_id", nullable = false)
     public Giro giro;
