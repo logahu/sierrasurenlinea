@@ -34,8 +34,8 @@ const ESTADOS: Record<EstadoAnuncio, string> = {
   VIGENTE: 'Se ve hoy', PAUSADO: 'Pausado', PROGRAMADO: 'Programado', TERMINADO: 'Terminó',
 };
 const POSICIONES = [
-  { valor: 'PORTADA_ARRIBA', texto: 'Arriba de la portada', ayuda: 'Bajo el encabezado, antes de las calles.' },
-  { valor: 'ENTRE_CALLES', texto: 'Entre calles', ayuda: 'Después de la segunda calle.' },
+  { valor: 'PORTADA_ARRIBA', texto: 'Banner de la portada', ayuda: 'Arriba del directorio, en carrusel si hay varios.' },
+  { valor: 'DIRECTORIO', texto: 'Patrocinado en el directorio', ayuda: 'La tarjeta del negocio va primero con la etiqueta «Patrocinado».' },
 ] as const;
 
 interface ValoresAnuncio {
@@ -90,7 +90,8 @@ function hoyLocal(): string {
             }
           </div>
           <label>
-            <span>Negocio que se anuncia <span class="opcional">(opcional)</span></span>
+            <span>Negocio que se anuncia
+              @if (form.controls.posicion.value === 'DIRECTORIO') { <span class="opcional">(obligatorio)</span> } @else { <span class="opcional">(opcional)</span> }</span>
             <select formControlName="negocioSlug" (change)="sugerirEnlace()">
               <option value="">Ninguno (anuncio general)</option>
               @for (n of negocios.value() ?? []; track n.slug) { <option [value]="n.slug">{{ n.nombre }}</option> }
@@ -298,6 +299,7 @@ export class PublicidadPage {
   protected guardar(): void {
     const v = this.form.getRawValue();
     if (!v.titulo.trim()) return this.error.set('El título es obligatorio.');
+    if (v.posicion === 'DIRECTORIO' && !v.negocioSlug) return this.error.set('Para patrocinar en el directorio elige el negocio.');
     if (v.inicio && v.fin && v.fin < v.inicio) return this.error.set('La fecha final debe ser igual o posterior a la inicial.');
     const datos: AnuncioEdicion = {
       titulo: v.titulo.trim(),

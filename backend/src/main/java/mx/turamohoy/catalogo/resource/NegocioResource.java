@@ -32,7 +32,11 @@ public class NegocioResource {
     @jakarta.inject.Inject
     mx.turamohoy.clientes.SesionCliente sesionCliente;
 
-    /** Negocios de la portada, en orden. Con {@code ?giro=flores} solo los de ese giro. */
+    /**
+     * Negocios de la portada en orden «Recomendados»: primero los patrocinados (anuncio
+     * DIRECTORIO vigente, por el orden del anuncio) y luego el resto por su orden.
+     * Con {@code ?giro=flores} solo los de ese giro.
+     */
     @GET
     public List<NegocioDto> listar(@QueryParam("giro") String giro) {
         List<String> estados = Negocio.estadosVisibles(sesionCliente.esProbador());
@@ -40,7 +44,12 @@ public class NegocioResource {
         List<Negocio> negocios = (giro == null || giro.isBlank())
                 ? Negocio.<Negocio>find(q + " order by n.orden", estados).list()
                 : Negocio.<Negocio>find(q + " and g.slug = ?2 order by n.orden", estados, giro.trim()).list();
-        return negocios.stream().map(NegocioDto::resumen).toList();
+        java.util.Map<Long, Integer> patrocinados = mx.turamohoy.publicidad.Anuncio.patrocinados(
+                mx.turamohoy.publicidad.Anuncio.hoy());
+        return negocios.stream()
+                .sorted(java.util.Comparator.comparingInt(n -> patrocinados.getOrDefault(n.id, Integer.MAX_VALUE)))
+                .map(n -> NegocioDto.resumen(n, patrocinados.containsKey(n.id)))
+                .toList();
     }
 
     /** Un negocio con su contacto y sus categorías. */

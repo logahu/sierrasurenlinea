@@ -13,10 +13,10 @@ public record GiroDto(String slug, String nombre, String icono, int orden, long 
     }
 
     /** Lo que va dentro de cada negocio. */
-    public record Resumen(String slug, String nombre) {
+    public record Resumen(String slug, String nombre, String icono) {
 
         public static Resumen de(Giro g) {
-            return g == null ? null : new Resumen(g.slug, g.nombre);
+            return g == null ? null : new Resumen(g.slug, g.nombre, g.icono);
         }
     }
 }

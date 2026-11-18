@@ -30,14 +30,14 @@ public class AnuncioResource {
 
     /**
      * Activos y dentro de sus fechas, en orden. {@code ?posicion=PORTADA_ARRIBA} o
-     * {@code ENTRE_CALLES}; sin posición, todos. Si el negocio anunciado no se puede ver,
+     * {@code DIRECTORIO}; sin posición, todos. Si el negocio anunciado no se puede ver,
      * su anuncio tampoco.
      */
     @GET
     public List<AnuncioDto> vigentes(@QueryParam("posicion") String posicion) {
         boolean probador = sesionCliente.esProbador();
         List<String> posiciones = posicion == null || posicion.isBlank()
-                ? List.of(Anuncio.PORTADA_ARRIBA, Anuncio.ENTRE_CALLES)
+                ? List.of(Anuncio.PORTADA_ARRIBA, Anuncio.DIRECTORIO)
                 : List.of(posicion.trim().toUpperCase());
         return posiciones.stream()
                 .filter(Anuncio.POSICIONES::contains)

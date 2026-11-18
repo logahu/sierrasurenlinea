@@ -25,7 +25,7 @@ const CAMBIO_MS = 6000;
         <p class="mostrar"><button type="button" (click)="publicidad.mostrar()">Mostrar publicidad</button></p>
       } @else {
         @let a = actual();
-        <aside class="banner" aria-label="Publicidad" [style.--fondo]="a.colorFondo || null" [style.--sobre]="sobre()"
+        <aside class="banner" aria-label="Publicidad" [style.--anuncio-fondo]="a.colorFondo || null" [style.--sobre]="sobre()"
                (mouseenter)="pausado.set(true)" (mouseleave)="pausado.set(false)"
                (focusin)="pausado.set(true)" (focusout)="pausado.set(false)">
           <span class="etiqueta">Publicidad</span>

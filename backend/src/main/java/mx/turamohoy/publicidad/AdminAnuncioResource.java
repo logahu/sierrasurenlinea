@@ -151,6 +151,9 @@ public class AdminAnuncioResource {
         String slug = limpio(e.negocioSlug());
         a.negocio = slug == null ? null : Negocio.porSlug(slug)
                 .orElseThrow(() -> Errores.de(Status.BAD_REQUEST, "No existe el negocio " + slug + "."));
+        if (Anuncio.DIRECTORIO.equals(posicion) && a.negocio == null) {
+            throw Errores.de(Status.BAD_REQUEST, "Para patrocinar en el directorio elige el negocio.");
+        }
         a.colorFondo = e.colorFondo() == null || e.colorFondo().isBlank() ? null : e.colorFondo().toLowerCase();
         a.posicion = posicion;
         a.inicio = e.inicio();

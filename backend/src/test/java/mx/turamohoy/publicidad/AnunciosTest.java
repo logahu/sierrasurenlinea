@@ -2,6 +2,7 @@ package mx.turamohoy.publicidad;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
+import io.restassured.path.json.JsonPath;
 import io.restassured.specification.RequestSpecification;
 import mx.turamohoy.admin.Sesiones;
 import org.junit.jupiter.api.AfterEach;
@@ -18,6 +19,11 @@ import java.util.Map;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.not;
 
@@ -74,7 +80,7 @@ class AnunciosTest {
         crear(dueno, anuncio("Vigente arriba", "PORTADA_ARRIBA", "inicio", HOY.toString(), "fin", HOY.toString()));
         crear(dueno, anuncio("Ya terminó", "PORTADA_ARRIBA", "fin", HOY.minusDays(1).toString()));
         crear(dueno, anuncio("Aún no empieza", "PORTADA_ARRIBA", "inicio", HOY.plusDays(1).toString()));
-        crear(dueno, anuncio("Entre calles", "ENTRE_CALLES", "colorFondo", "#1E2A5A"));
+        crear(dueno, anuncio("Patrocinio inflables", "DIRECTORIO", "negocioSlug", "inflables", "colorFondo", "#1E2A5A"));
         int pausado = crear(dueno, anuncio("Pausado", "PORTADA_ARRIBA", "activo", false));
 
         given().when().get("/api/anuncios?posicion=PORTADA_ARRIBA").then().statusCode(200)
@@ -82,13 +88,15 @@ class AnunciosTest {
                 .body("titulo", not(hasItem("Ya terminó")))
                 .body("titulo", not(hasItem("Aún no empieza")))
                 .body("titulo", not(hasItem("Pausado")))
-                .body("titulo", not(hasItem("Entre calles")))
+                .body("titulo", not(hasItem("Patrocinio inflables")))
                 // Lo público no trae fechas ni estado.
                 .body("find { it.titulo == 'Vigente arriba' }.inicio", equalTo(null))
                 .body("find { it.titulo == 'Vigente arriba' }.enlace", equalTo("/turamohoy"));
-        given().when().get("/api/anuncios?posicion=entre_calles").then().statusCode(200)
-                .body("titulo", hasItem("Entre calles"))
-                .body("find { it.titulo == 'Entre calles' }.colorFondo", equalTo("#1e2a5a"));
+        given().when().get("/api/anuncios?posicion=directorio").then().statusCode(200)
+                .body("titulo", hasItem("Patrocinio inflables"))
+                .body("find { it.titulo == 'Patrocinio inflables' }.colorFondo", equalTo("#1e2a5a"));
+        // Ya no existe «entre calles».
+        given().when().get("/api/anuncios?posicion=ENTRE_CALLES").then().statusCode(200).body("size()", equalTo(0));
 
         // Reactivado, aparece.
         como(dueno).body(Map.of("activo", true)).when().put("/api/admin/anuncios/" + pausado + "/activo")
@@ -104,7 +112,7 @@ class AnunciosTest {
     @Test
     void siElNegocioAnunciadoNoSeVeTampocoSuAnuncio() {
         String dueno = Sesiones.dueno();
-        crear(dueno, anuncio("Promo vinatería", "ENTRE_CALLES", "negocioSlug", "vinateria", "enlace", "/vinateria"));
+        crear(dueno, anuncio("Promo vinatería", "PORTADA_ARRIBA", "negocioSlug", "vinateria", "enlace", "/vinateria"));
         given().when().get("/api/anuncios").then().body("titulo", hasItem("Promo vinatería"))
                 .body("find { it.titulo == 'Promo vinatería' }.negocioSlug", equalTo("vinateria"));
         try {
@@ -128,6 +136,10 @@ class AnunciosTest {
                 .when().post("/api/admin/anuncios").then().statusCode(400);
         como(dueno).body(anuncio("Sin lugar", "EN_EL_PIE"))
                 .when().post("/api/admin/anuncios").then().statusCode(400);
+        como(dueno).body(anuncio("Entre calles ya no", "ENTRE_CALLES"))
+                .when().post("/api/admin/anuncios").then().statusCode(400);
+        como(dueno).body(anuncio("Patrocinio sin negocio", "DIRECTORIO"))
+                .when().post("/api/admin/anuncios").then().statusCode(400).body("mensaje", containsString("negocio"));
         como(dueno).body(anuncio("Foto ajena", "PORTADA_ARRIBA", "imagenUrl", "https://otro.com/foto.jpg"))
                 .when().post("/api/admin/anuncios").then().statusCode(400);
         como(dueno).body(anuncio("Negocio inventado", "PORTADA_ARRIBA", "negocioSlug", "no-existe"))
@@ -136,9 +148,9 @@ class AnunciosTest {
                 .when().post("/api/admin/anuncios").then().statusCode(400);
         // Una URL https y la edición sí pasan.
         int id = crear(dueno, anuncio("Enlace externo", "PORTADA_ARRIBA", "enlace", "https://example.com/promo"));
-        como(dueno).body(anuncio("Enlace externo editado", "ENTRE_CALLES", "enlace", "/giro/flores"))
+        como(dueno).body(anuncio("Enlace externo editado", "DIRECTORIO", "enlace", "/turamohoy", "negocioSlug", "turamohoy"))
                 .when().put("/api/admin/anuncios/" + id).then().statusCode(200)
-                .body("titulo", equalTo("Enlace externo editado")).body("posicion", equalTo("ENTRE_CALLES"));
+                .body("titulo", equalTo("Enlace externo editado")).body("posicion", equalTo("DIRECTORIO"));
         como(dueno).body(anuncio("No existe", "PORTADA_ARRIBA")).when().put("/api/admin/anuncios/999999")
                 .then().statusCode(404);
     }
@@ -165,5 +177,45 @@ class AnunciosTest {
                 .when().post("/api/visitas").then().statusCode(200);
         given().contentType(ContentType.JSON).body(Map.of("ruta", "/anuncio/abc"))
                 .when().post("/api/visitas").then().statusCode(400);
+    }
+
+    @Test
+    void losPatrocinadosVanPrimeroEnElDirectorio() {
+        String dueno = Sesiones.dueno();
+        // Sin patrocinios, el orden de siempre y nadie marcado.
+        List<String> antes = given().when().get("/api/negocios").then().statusCode(200)
+                .body("patrocinado", not(hasItem(true))).extract().path("slug");
+
+        int vinateria = crear(dueno, anuncio("Patrocinio vinatería", "DIRECTORIO", "negocioSlug", "vinateria", "orden", 2));
+        crear(dueno, anuncio("Patrocinio inflables", "DIRECTORIO", "negocioSlug", "inflables", "orden", 1));
+        // Vencido: no cuenta.
+        crear(dueno, anuncio("Patrocinio vencido", "DIRECTORIO", "negocioSlug", "autos", "fin", HOY.minusDays(1).toString()));
+
+        JsonPath r = given().when().get("/api/negocios").then().statusCode(200).extract().jsonPath();
+        List<String> slugs = r.getList("slug");
+        assertEquals(List.of("inflables", "vinateria"), slugs.subList(0, 2));
+        assertEquals(antes.size(), slugs.size());
+        assertTrue(r.getBoolean("find { it.slug == 'inflables' }.patrocinado"));
+        assertFalse(r.getBoolean("find { it.slug == 'autos' }.patrocinado"));
+        assertFalse(r.getBoolean("find { it.slug == 'turamohoy' }.patrocinado"));
+        // El resto conserva su orden.
+        assertEquals(antes.stream().filter(x -> !x.equals("inflables") && !x.equals("vinateria")).toList(), slugs.subList(2, slugs.size()));
+        // Con filtro de giro también sube.
+        given().when().get("/api/negocios?giro=bebidas").then().body("[0].slug", equalTo("vinateria"))
+                .body("[0].patrocinado", equalTo(true));
+
+        // Pausado, deja de subir.
+        como(dueno).body(Map.of("activo", false)).when().put("/api/admin/anuncios/" + vinateria + "/activo").then().statusCode(200);
+        given().when().get("/api/negocios").then().body("[0].slug", equalTo("inflables"))
+                .body("find { it.slug == 'vinateria' }.patrocinado", equalTo(false));
+    }
+
+    @Test
+    void cadaNegocioTraeSuFechaDeAltaYElIconoDeSuGiro() {
+        given().when().get("/api/negocios").then().statusCode(200)
+                .body("creadoEn", not(hasItem(nullValue())))
+                .body("find { it.slug == 'turamohoy' }.giro.icono", equalTo("flor"));
+        given().when().get("/api/negocios/turamohoy").then().statusCode(200).body("creadoEn", notNullValue())
+                .body("patrocinado", equalTo(false));
     }
 }

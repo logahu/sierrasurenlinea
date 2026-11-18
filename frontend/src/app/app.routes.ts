@@ -1,4 +1,5 @@
-import { Routes } from '@angular/router';
+import { inject } from '@angular/core';
+import { Router, Routes } from '@angular/router';
 
 export const routes: Routes = [
   {
@@ -25,11 +26,10 @@ export const routes: Routes = [
     title: 'Aviso de privacidad · Sierra Sur en Línea',
     loadComponent: () => import('./cuenta/privacidad-page').then((m) => m.PrivacidadPage),
   },
-  // Todas las fachadas de un giro («Ver todos» de cada calle de la portada).
+  // La página de cada giro ahora es el directorio filtrado: /giro/flores → /?giro=flores
   {
     path: 'giro/:slug',
-    title: 'Negocios por giro · Sierra Sur en Línea',
-    loadComponent: () => import('./catalogo/giro-page').then((m) => m.GiroPage),
+    redirectTo: ({ params }) => inject(Router).createUrlTree(['/'], { queryParams: { giro: params['slug'] } }),
   },
   // "Cosméticos" ahora es "Belleza": los enlaces viejos siguen funcionando.
   { path: 'cosmeticos', redirectTo: 'belleza', pathMatch: 'full' },

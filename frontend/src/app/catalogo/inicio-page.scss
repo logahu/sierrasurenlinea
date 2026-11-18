@@ -1,189 +1,230 @@
-// Portada «calles por giro»: una calle de fachadas por giro, con chips para elegir una.
-@use 'portada';
+// Portada «Directorio»: buscador, orden, chips por giro y una cuadrícula de tarjetas.
+// Usa la paleta base del sitio (styles.scss): follaje, cempasúchil, rosa, Fraunces + DM Sans.
 
-:host {
-  @include portada.tokens;
-  @include portada.calle-completa;
+:host { display: block; }
+
+h1, h2 { font-family: var(--font-display); font-weight: 600; letter-spacing: -.015em; margin: 0; }
+
+.solo-lector {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
-h1, h2 { font-family: var(--rotulo); font-weight: 400; letter-spacing: .005em; margin: 0; }
+:focus-visible { outline: 3px solid var(--follaje); outline-offset: 2px; }
 
 // --- Encabezado ----------------------------------------------------------------
-.calle-seccion {
-  padding-top: clamp(2rem, 6vw, 3.5rem);
+.directorio { padding-top: clamp(1.25rem, 4vw, 2.25rem); }
+
+app-aviso-obra {
+  display: block;
+  width: min(60vw, 100%);
+  margin: 0 auto clamp(1.25rem, 4vw, 2rem);
+  @media (max-width: 700px) { width: 100%; }
 }
 
-// Arriba, al centro, el letrero de obra (60% del ancho de la pantalla); abajo, el título.
-.cabecera {
-  display: grid;
-  gap: clamp(1.5rem, 4vw, 2.5rem);
-  margin-bottom: clamp(1.5rem, 4vw, 2.25rem);
+.banner { display: block; margin-bottom: clamp(1.25rem, 3vw, 1.75rem); }
 
-  app-aviso-obra {
-    justify-self: center;
-    width: 60vw;
-    max-width: 100%;
-    @media (max-width: 700px) { width: 100%; }
+.intro {
+  h1 { font-size: clamp(1.65rem, 4.2vw, 2.5rem); line-height: 1.08; max-width: 24ch; }
+  p { margin: .45rem 0 0; color: var(--tinta-suave); }
+}
+
+.conocenos { color: inherit; font-weight: 700; white-space: nowrap; text-underline-offset: .2em; }
+
+// --- Buscador y orden -------------------------------------------------------------
+.buscador {
+  margin-top: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: 999px;
+  padding: .3rem .35rem .3rem .9rem;
+  box-shadow: 0 2px 10px rgb(42 31 26 / .06);
+
+  &:focus-within { border-color: var(--follaje); box-shadow: 0 0 0 3px color-mix(in srgb, var(--follaje) 25%, transparent); }
+
+  .lupa { display: grid; color: var(--tinta-suave); cursor: text; }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--tinta);
+    font: inherit;
+    font-size: 1rem;
+    padding: .55rem 0;
+    &::placeholder { color: var(--tinta-suave); opacity: 1; }
+  }
+
+  select {
+    border: 0;
+    border-radius: 999px;
+    background: var(--fondo-alt);
+    color: var(--tinta);
+    font: inherit;
+    font-size: .9rem;
+    font-weight: 600;
+    padding: .55rem .8rem;
+    cursor: pointer;
+    flex: none;
+  }
+
+  @media (max-width: 30rem) {
+    padding-left: .75rem;
+    select { font-size: .82rem; padding: .5rem .45rem; }
+    input { font-size: .95rem; }
   }
 }
 
-.intro {
-  max-width: 38rem;
-
-  h1 { font-size: clamp(2.1rem, 6.5vw, 3.6rem); line-height: 1.02; }
-  p { margin: 1rem 0 0; font-size: 1.125rem; line-height: 1.55; color: var(--anil-suave); max-width: 32rem; }
-}
-
-.banner-arriba { margin-bottom: 1.5rem; }
-.banner-entre { margin: 2rem 0 .5rem; }
-
-// --- Chips de giro -------------------------------------------------------------
+// --- Chips de giro ----------------------------------------------------------------
 .giros {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  margin: 0 -1rem 1rem;
-  padding: .6rem 1rem;
-  background: color-mix(in srgb, var(--cal) 92%, transparent);
-  backdrop-filter: blur(6px);
-}
-.chips {
   display: flex;
   gap: .5rem;
   overflow-x: auto;
-  scrollbar-width: thin;
-  padding: .15rem .1rem .35rem;
+  margin: 1rem -1rem 0;
+  padding: .2rem 1rem .45rem;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  &::-webkit-scrollbar { display: none; }
+
+  @media (min-width: 900px) { flex-wrap: wrap; overflow: visible; margin-inline: 0; padding-inline: 0; }
 }
+
 .chip {
   flex: none;
+  scroll-snap-align: start;
   display: inline-flex;
   align-items: center;
-  gap: .45rem;
-  min-height: 2.75rem;
-  padding: .35rem .95rem;
-  border: 1.5px solid var(--chip-borde);
+  gap: .4rem;
+  border: 1px solid var(--linea);
+  background: var(--superficie);
+  color: var(--tinta);
   border-radius: 999px;
-  background: var(--chip);
-  color: var(--anil);
+  padding: .45rem .9rem;
+  font: inherit;
+  font-size: .9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+
+  svg, app-icono-giro { width: 1.1rem; height: 1.1rem; display: inline-grid; }
+  ::ng-deep app-icono-giro svg { width: 100%; height: 100%; }
+
+  .cuenta { font-size: .78rem; font-weight: 500; color: var(--tinta-suave); }
+
+  &:hover { border-color: var(--tinta-suave); }
+  &[aria-pressed='true'] {
+    background: var(--tinta);
+    border-color: var(--tinta);
+    color: var(--fondo);
+    .cuenta { color: color-mix(in srgb, var(--fondo) 78%, var(--tinta)); }
+  }
+}
+
+// --- Resumen y rejilla --------------------------------------------------------------
+.resumen {
+  margin: .9rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: .5rem;
+  font-size: .92rem;
+  color: var(--tinta-suave);
+  strong { color: var(--tinta); }
+}
+
+.enlace {
+  border: 0;
+  background: none;
+  padding: 0;
   font: inherit;
   font-weight: 700;
-  font-size: .95rem;
-  cursor: pointer;
-  transition: background .15s, border-color .15s;
-  .cuenta {
-    min-width: 1.5rem;
-    padding: .05rem .4rem;
-    border-radius: 999px;
-    background: color-mix(in srgb, var(--anil) 10%, transparent);
-    font-size: .8rem;
-    text-align: center;
-  }
-  &:hover { border-color: var(--anil-suave); }
-  &:focus-visible { outline: 3px solid var(--sol); outline-offset: 2px; }
-  &[aria-pressed='true'] {
-    background: var(--anil);
-    border-color: var(--anil);
-    color: var(--cal);
-    .cuenta { background: color-mix(in srgb, var(--cal) 22%, transparent); }
-  }
-}
-
-// --- Cada calle ----------------------------------------------------------------
-.calle-giro {
-  margin-top: clamp(1.75rem, 4vw, 2.5rem);
-  scroll-margin-top: 5rem;
-}
-
-.cabeza-calle {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: .9rem;
-
-  h2 {
-    display: flex;
-    align-items: center;
-    gap: .55rem;
-    font-size: clamp(1.45rem, 3.6vw, 2rem);
-    line-height: 1.1;
-    small { display: block; font-family: var(--texto); font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--anil-suave); }
-    app-icono-giro { flex: none; width: 2.6rem; height: 2.6rem; border-radius: 50%; background: var(--anil); color: var(--cal); font-size: 1.05rem; }
-  }
-}
-.ver-todos {
-  flex: none;
-  color: var(--anil);
-  font-weight: 700;
+  color: var(--tinta);
+  text-decoration: underline;
   text-underline-offset: .2em;
-  &:focus-visible { outline: 3px solid var(--sol); outline-offset: 2px; border-radius: .2rem; }
+  cursor: pointer;
 }
 
-// Fila deslizable: hasta 6 fachadas y, si hay más, la tarjeta «+N Ver todos».
-.calle {
+.rejilla {
   list-style: none;
-  margin: 0;
+  margin: .9rem 0 0;
   padding: 0;
   display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: clamp(12.5rem, 30vw, 15rem);
-  align-items: end;
-  gap: 0;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: thin;
-  animation: levantar .6s cubic-bezier(.2, .7, .2, 1) both;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 1rem;
 
-  > li { scroll-snap-align: start; height: 100%; display: flex; align-items: flex-end; }
-  > li > app-fachada { width: 100%; height: auto; }
-  > li + li { border-left: 2px solid rgb(0 0 0 / .18); }
+  li { min-width: 0; animation: aparecer-tarjeta .25s ease both; }
+
+  @media (max-width: 40rem) { grid-template-columns: 1fr 1fr; gap: .7rem; }
 }
 
-.mas a {
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 17.5rem;
-  display: grid;
-  place-content: center;
-  justify-items: center;
-  gap: .2rem;
-  padding: 1rem;
-  border: 2px dashed var(--anil-suave);
-  border-bottom: 0;
-  background: color-mix(in srgb, var(--anil) 5%, var(--cal));
-  color: var(--anil);
-  text-decoration: none;
+@keyframes aparecer-tarjeta { from { opacity: 0; transform: translateY(.4rem); } }
+
+.cargando li { animation: none; }
+.tarjeta-cargando {
+  display: block;
+  aspect-ratio: 230 / 250;
+  border-radius: 1rem;
+  background: var(--fondo-alt);
+  animation: respirar 1.1s ease-in-out infinite alternate;
+}
+@keyframes respirar { to { opacity: .5; } }
+
+.vacio {
+  margin-top: 1rem;
+  padding: 2.5rem 1rem;
   text-align: center;
-  strong { font-family: var(--rotulo); font-weight: 400; font-size: 2.6rem; line-height: 1; }
-  span { font-weight: 700; font-size: 1.1rem; }
-  small { color: var(--anil-suave); }
-  &:hover span { text-decoration: underline; }
-  &:focus-visible { outline: 3px solid var(--sol); outline-offset: -4px; }
+  border: 1px dashed var(--linea);
+  border-radius: 1rem;
+  color: var(--tinta-suave);
+  p { margin: 0 0 .4rem; }
+  strong { color: var(--tinta); font-size: 1.05rem; }
+  .boton { margin-top: .8rem; }
 }
 
-.banqueta { @include portada.banqueta; }
-
-// Esqueleto mientras carga
-.cargando {
-  overflow: hidden;
-  .muro-cargando {
-    display: block;
-    width: 100%;
-    height: 18rem;
-    background: color-mix(in srgb, var(--anil) 8%, var(--cal));
-    animation: respirar 1.4s ease-in-out infinite alternate;
-  }
-}
-@keyframes respirar { to { opacity: .55; } }
-
-// Única animación de la página: la cuadra «se levanta» al cargar.
-@keyframes levantar { from { opacity: 0; transform: translateY(1.5rem); } }
-@media (prefers-reduced-motion: reduce) {
-  .calle, .cargando .muro-cargando { animation: none; }
+.boton {
+  font: inherit;
+  font-weight: 700;
+  padding: .65rem 1.3rem;
+  border-radius: 999px;
+  border: 0;
+  background: var(--follaje);
+  color: #fff;
+  cursor: pointer;
+  &:hover { background: color-mix(in srgb, var(--follaje) 85%, #000); }
 }
 
-// --- Cómo pedir ---------------------------------------------------------------
+@media (prefers-color-scheme: dark) {
+  // El follaje claro del modo oscuro necesita texto oscuro para llegar a 4.5:1.
+  .boton { color: #10261b; }
+}
+
+// --- Estados ---------------------------------------------------------------------
+.despertando {
+  color: var(--tinta-suave);
+  font-size: .95rem;
+  margin: 1rem 0 0;
+  opacity: 0;
+  animation: aparecer .4s ease 3s forwards;
+}
+@keyframes aparecer { to { opacity: 1; } }
+
+.estado {
+  padding: 2rem 0;
+  color: var(--tinta-suave);
+  p { margin: 0 0 1rem; }
+}
+
+// --- Cómo pedir ----------------------------------------------------------------------
 .pasos {
   padding-top: clamp(2.5rem, 7vw, 4rem);
   padding-bottom: clamp(2rem, 6vw, 3rem);
@@ -213,20 +254,24 @@ h1, h2 { font-family: var(--rotulo); font-weight: 400; letter-spacing: .005em; m
       width: 3rem;
       height: 3rem;
       border-radius: 50%;
-      background: var(--anil);
-      color: var(--cal);
-      font-family: var(--rotulo);
-      font-size: 1.4rem;
+      background: var(--follaje);
+      color: #fff;
+      font-family: var(--font-display);
+      font-size: 1.35rem;
+      font-weight: 600;
     }
   }
   strong { font-size: 1.1rem; align-self: end; }
-  span { color: var(--anil-suave); line-height: 1.5; max-width: 22rem; }
+  span { color: var(--tinta-suave); line-height: 1.5; max-width: 22rem; }
 }
 
-// --- Lo más pedido -------------------------------------------------------------
+@media (prefers-color-scheme: dark) {
+  .pasos li::before { color: #10261b; }
+}
+
+// --- Lo más pedido -------------------------------------------------------------------
 .pedidos {
   padding: clamp(2rem, 6vw, 3rem) 0 1rem;
-
   h2 { font-size: clamp(1.6rem, 4vw, 2.2rem); margin-bottom: 1.25rem; }
 }
 
@@ -246,9 +291,9 @@ h1, h2 { font-family: var(--rotulo); font-weight: 400; letter-spacing: .005em; m
     display: flex;
     flex-direction: column;
     gap: .2rem;
-    color: var(--anil);
+    color: var(--tinta);
     text-decoration: none;
-    &:focus-visible { outline: 3px solid var(--sol); outline-offset: 3px; border-radius: .5rem; }
+    &:focus-visible { outline: 3px solid var(--follaje); outline-offset: 3px; border-radius: .5rem; }
     &:hover .nombre { text-decoration: underline; text-underline-offset: .15em; }
   }
   img {
@@ -256,41 +301,16 @@ h1, h2 { font-family: var(--rotulo); font-weight: 400; letter-spacing: .005em; m
     height: auto;
     aspect-ratio: 1;
     object-fit: cover;
-    border-radius: .5rem;
-    border-bottom: .3rem solid var(--pintura, var(--anil));
+    border-radius: .75rem;
+    border-bottom: .3rem solid var(--pintura, var(--follaje));
     margin-bottom: .45rem;
   }
-  .de { font-size: .85rem; font-weight: 700; color: var(--pintura, var(--anil-suave)); }
+  .de { font-size: .85rem; font-weight: 700; color: var(--tinta-suave); }
   .nombre { font-size: 1rem; line-height: 1.3; }
   .precio { font-weight: 700; }
 }
 
-// --- Estados -------------------------------------------------------------------
-.despertando {
-  color: var(--anil-suave);
-  font-size: .95rem;
-  margin: 1rem 0 0;
-  opacity: 0;
-  animation: aparecer .4s ease 3s forwards;
+@media (prefers-reduced-motion: reduce) {
+  .rejilla li, .tarjeta-cargando, .despertando { animation: none; }
+  .despertando { opacity: 1; }
 }
-@keyframes aparecer { to { opacity: 1; } }
-
-.estado {
-  padding: 2rem 0;
-  color: var(--anil-suave);
-  p { margin: 0 0 1rem; }
-  button {
-    font: inherit;
-    font-weight: 700;
-    padding: .65rem 1.3rem;
-    border-radius: .3rem;
-    border: 0;
-    background: var(--anil);
-    color: var(--cal);
-    cursor: pointer;
-  }
-}
-
-.conocenos { color: inherit; font-weight: 700; white-space: nowrap; text-underline-offset: .2em; }
-
-.en-pruebas { display: block; font-size: .7rem; font-weight: 700; letter-spacing: .02em; opacity: .85; }

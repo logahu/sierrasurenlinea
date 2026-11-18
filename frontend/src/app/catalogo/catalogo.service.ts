@@ -33,7 +33,7 @@ export class CatalogoService {
     return this.negocios$;
   }
 
-  /** Giros (calles de la portada) en orden; casi no cambian: se piden una vez. */
+  /** Giros de la portada (chips del directorio) en orden; casi no cambian: se piden una vez. */
   private readonly giros$ = this.http.get<Giro[]>(`${this.base}/giros`).pipe(shareReplay({ bufferSize: 1, refCount: false }));
 
   giros(): Observable<Giro[]> {
