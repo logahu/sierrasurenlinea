@@ -237,18 +237,20 @@ app-aviso-obra {
     margin: 0;
     padding: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 13.5rem), 1fr));
     gap: 1.5rem 2.5rem;
   }
   li {
     counter-increment: paso;
     display: grid;
     grid-template-columns: 3rem 1fr;
+    grid-template-rows: minmax(3rem, auto) auto;
     column-gap: .9rem;
     row-gap: .25rem;
     &::before {
       content: counter(paso);
-      grid-row: span 2;
+      grid-row: 1;
+      align-self: start;
       display: grid;
       place-items: center;
       width: 3rem;
@@ -261,8 +263,22 @@ app-aviso-obra {
       font-weight: 600;
     }
   }
-  strong { font-size: 1.1rem; align-self: end; }
+  strong { font-size: 1.1rem; align-self: center; line-height: 1.25; }
+  span { grid-column: 2; }
+
+  // En escritorio, cuatro columnas: número arriba y título debajo, todo alineado.
+  @media (min-width: 56rem) {
+    ol { grid-template-columns: repeat(4, 1fr); gap: 2rem; }
+    li {
+      display: flex;
+      flex-direction: column;
+      gap: .35rem;
+      &::before { margin-bottom: .5rem; }
+    }
+    strong { align-self: auto; }
+  }
   span { color: var(--tinta-suave); line-height: 1.5; max-width: 22rem; }
+  a { color: var(--tinta); font-weight: 700; text-underline-offset: .2em; }
 }
 
 @media (prefers-color-scheme: dark) {
