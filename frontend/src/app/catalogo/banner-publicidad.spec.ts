@@ -51,6 +51,15 @@ describe('BannerPublicidad', () => {
     expect(el.querySelector('.banner')).not.toBeNull();
   });
 
+  it('sin color propio usa su fondo oscuro, no el de la página', () => {
+    const { el } = montar([anuncio(1)]);
+    const banner = el.querySelector('.banner') as HTMLElement;
+    expect(banner.style.getPropertyValue('--anuncio-fondo')).toBe('');
+    expect(banner.style.getPropertyValue('--fondo')).toBe('');
+    const { el: el2 } = (TestBed.resetTestingModule(), montar([anuncio(2, { colorFondo: '#a61e4d' })]));
+    expect((el2.querySelector('.banner') as HTMLElement).style.getPropertyValue('--anuncio-fondo')).toBe('#a61e4d');
+  });
+
   it('cuenta el clic y pasa de anuncio con los puntos', async () => {
     const { f, el, registrados } = montar([anuncio(1), anuncio(2, { enlace: 'https://example.com' })]);
     (el.querySelector('a.contenido') as HTMLAnchorElement).click();
