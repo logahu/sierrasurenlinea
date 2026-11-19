@@ -1,6 +1,6 @@
 import { Component, input, model, signal } from '@angular/core';
 
-/** Fotos de un anuncio: agregar (hasta 8), reordenar y quitar. La primera es la portada. */
+/** Fotos de un anuncio: agregar (hasta 8), reordenar y quitar. La primera es la portada. En servicios son opcionales. */
 @Component({
   selector: 'app-fotos-anuncio',
   template: `
@@ -26,7 +26,14 @@ import { Component, input, model, signal } from '@angular/core';
         <input type="file" accept="image/*" multiple (change)="agregar($event)" [disabled]="subiendo()" class="solo-lector" />
       </label>
     }
-    <small class="nota">De 1 a {{ maximo }} fotos reales del artículo. La primera es la portada. Se reducen para cargar rápido.</small>
+    <small class="nota">
+      @if (opcionales()) {
+        Opcional: hasta {{ maximo }} fotos de tus trabajos o de ti. Sin fotos se muestra el dibujo de la categoría.
+      } @else {
+        De 1 a {{ maximo }} fotos reales del artículo.
+      }
+      La primera es la portada. Se reducen para cargar rápido.
+    </small>
     @if (error(); as e) { <p class="error" role="alert">{{ e }}</p> }
   `,
   styles: `
@@ -49,6 +56,8 @@ import { Component, input, model, signal } from '@angular/core';
   `,
 })
 export class FotosAnuncio {
+  /** Servicios: se puede publicar sin fotos. */
+  readonly opcionales = input(false);
   readonly fotos = model<string[]>([]);
   /** Sube un archivo y devuelve su URL pública. */
   readonly subir = input.required<(archivo: File) => Promise<string>>();

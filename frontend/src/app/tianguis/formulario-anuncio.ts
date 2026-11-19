@@ -2,23 +2,23 @@ import { Component, computed, effect, input, output, signal } from '@angular/cor
 import { RouterLink } from '@angular/router';
 import { IconoGiro } from '../catalogo/icono-giro';
 import { FotosAnuncio } from './fotos-anuncio';
-import { CampoAtributo, CategoriaTianguis, Condicion, Publicacion } from './tianguis.model';
-import { CONDICIONES, whatsappValido } from './tianguis';
+import { CampoAtributo, CategoriaTianguis, Condicion, Publicacion, TipoPrecio } from './tianguis.model';
+import { CONDICIONES, TIPOS_PRECIO, whatsappValido } from './tianguis';
 
 export const PASOS = ['Categoría', 'Datos', 'Fotos', 'Tus datos', 'Reglas'] as const;
 
-/** Qué falta en cada paso (vacío = se puede seguir). */
-export function faltantes(paso: number, p: Publicacion, campos: CampoAtributo[]): string[] {
+/** Qué falta en cada paso (vacío = se puede seguir). En servicios la foto es opcional y el precio puede ser «a cotizar». */
+export function faltantes(paso: number, p: Publicacion, campos: CampoAtributo[], servicio = false): string[] {
   const f: string[] = [];
   if (paso === 0 && !p.categoria) f.push('la categoría');
   if (paso === 1) {
     if (!p.titulo.trim()) f.push('el título');
     if (!p.descripcion.trim()) f.push('la descripción');
-    if (!(p.precio >= 0)) f.push('el precio');
+    if (p.tipoPrecio !== 'COTIZAR' && !((p.precio ?? NaN) >= 0)) f.push('el precio');
     if (!p.ubicacion.trim()) f.push('la localidad o colonia');
     for (const c of campos) if (c.requerido && !(p.atributos[c.nombre] ?? '').trim()) f.push(c.etiqueta.toLowerCase());
   }
-  if (paso === 2 && !p.fotos.length) f.push('al menos una foto');
+  if (paso === 2 && !servicio && !p.fotos.length) f.push('al menos una foto');
   if (paso === 3) {
     if (!p.vendedorNombre.trim()) f.push('tu nombre');
     if (!whatsappValido(p.vendedorWhatsapp)) f.push('tu WhatsApp (10 dígitos)');
@@ -29,7 +29,7 @@ export function faltantes(paso: number, p: Publicacion, campos: CampoAtributo[])
 
 export function publicacionVacia(): Publicacion {
   return {
-    categoria: '', titulo: '', descripcion: '', precio: NaN, negociable: false, condicion: 'USADO', atributos: {},
+    categoria: '', titulo: '', descripcion: '', precio: NaN, tipoPrecio: 'FIJO', negociable: false, condicion: 'USADO', atributos: {},
     ubicacion: '', fotos: [], vendedorNombre: '', vendedorWhatsapp: '', aceptaReglas: false, sitioWeb: '',
   };
 }
@@ -56,13 +56,17 @@ export class FormularioAnuncio {
   protected readonly isNaN = Number.isNaN;
   protected readonly NaN = Number.NaN;
   protected readonly condiciones = CONDICIONES;
+  protected readonly tiposPrecio = TIPOS_PRECIO;
   protected readonly paso = signal(0);
   protected readonly datos = signal<Publicacion>(publicacionVacia());
   protected readonly intento = signal(false);
 
   protected readonly categoria = computed(() => this.categorias().find((c) => c.slug === this.datos().categoria) ?? null);
   protected readonly campos = computed(() => this.categoria()?.campos ?? []);
-  protected readonly falta = computed(() => faltantes(this.paso(), this.datos(), this.campos()));
+  protected readonly servicio = computed(() => this.categoria()?.tipo === 'SERVICIO');
+  protected readonly deArticulos = computed(() => this.categorias().filter((c) => c.tipo !== 'SERVICIO'));
+  protected readonly deServicios = computed(() => this.categorias().filter((c) => c.tipo === 'SERVICIO'));
+  protected readonly falta = computed(() => faltantes(this.paso(), this.datos(), this.campos(), this.servicio()));
 
   constructor() {
     effect(() => {
@@ -80,8 +84,19 @@ export class FormularioAnuncio {
   }
 
   protected elegirCategoria(slug: string): void {
-    // Los atributos son propios de cada categoría.
-    this.datos.update((d) => (d.categoria === slug ? d : { ...d, categoria: slug, atributos: {} }));
+    // Los atributos son propios de cada categoría; los servicios no llevan condición y los artículos llevan precio fijo.
+    const servicio = this.categorias().find((c) => c.slug === slug)?.tipo === 'SERVICIO';
+    this.datos.update((d) =>
+      d.categoria === slug
+        ? d
+        : {
+            ...d,
+            categoria: slug,
+            atributos: {},
+            condicion: servicio ? null : (d.condicion ?? 'USADO'),
+            tipoPrecio: servicio ? d.tipoPrecio : 'FIJO',
+          },
+    );
     this.intento.set(false);
     this.paso.set(1);
     this.alInicio();
@@ -96,7 +111,15 @@ export class FormularioAnuncio {
       this.alInicio();
     } else {
       const d = this.datos();
-      this.enviar.emit({ ...d, precio: Number(d.precio), titulo: d.titulo.trim(), descripcion: d.descripcion.trim() });
+      const cotizar = d.tipoPrecio === 'COTIZAR';
+      this.enviar.emit({
+        ...d,
+        precio: cotizar ? null : Number(d.precio),
+        negociable: !cotizar && d.negociable,
+        condicion: this.servicio() ? null : d.condicion,
+        titulo: d.titulo.trim(),
+        descripcion: d.descripcion.trim(),
+      });
     }
   }
 
@@ -115,6 +138,10 @@ export class FormularioAnuncio {
 
   protected condicion(valor: string): Condicion {
     return valor as Condicion;
+  }
+
+  protected tipoPrecio(valor: string): TipoPrecio {
+    return valor as TipoPrecio;
   }
 
   private alInicio(): void {

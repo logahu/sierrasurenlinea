@@ -8,13 +8,14 @@ import { usarSeo } from './seo';
 import { MotivoReporte } from './tianguis.model';
 import { TianguisService } from './tianguis.service';
 import {
-  MOTIVOS_REPORTE, NOMBRE_TIANGUIS, enlaceWhatsapp, valorAtributo, haceCuanto, idDe, mensajeContacto, precioMxn, textoCondicion,
+  MOTIVOS_REPORTE, NOMBRE_TIANGUIS, enlaceWhatsapp, valorAtributo, haceCuanto, idDe, mensajeContacto, textoCondicion, textoPrecio,
 } from './tianguis';
+import { IconoGiro } from '../catalogo/icono-giro';
 
-/** Ficha /tianguis/:idSlug: galería, precio, condición, atributos, contacto por WhatsApp, seguridad y reportes. */
+/** Ficha /tianguis/:idSlug (artículo o servicio): galería, precio, condición, atributos, contacto por WhatsApp, seguridad y reportes. */
 @Component({
   selector: 'app-anuncio-page',
-  imports: [RouterLink],
+  imports: [RouterLink, IconoGiro],
   templateUrl: './anuncio-page.html',
   styleUrls: ['./tianguis.scss', './anuncio-page.scss'],
 })
@@ -31,13 +32,14 @@ export class AnuncioPage {
   });
   protected readonly a = computed(() => (this.anuncio.hasValue() ? this.anuncio.value() : null));
 
-  protected readonly precio = computed(() => (this.a() ? precioMxn(this.a()!.precio) : ''));
+  protected readonly precio = computed(() => (this.a() ? textoPrecio(this.a()!.precio, this.a()!.tipoPrecio) : ''));
+  protected readonly servicio = computed(() => this.a()?.categoria.tipo === 'SERVICIO');
   protected readonly condicion = computed(() => (this.a() ? textoCondicion(this.a()!.condicion) : ''));
   protected readonly hace = computed(() => haceCuanto(this.a()?.fechaPublicacion));
   protected readonly url = computed(() => `${this.doc.location?.origin ?? 'https://sierrasurenlinea.com.mx'}/tianguis/${this.a()?.idSlug ?? ''}`);
   protected readonly whatsapp = computed(() => {
     const a = this.a();
-    return a ? enlaceWhatsapp(a.vendedor.whatsapp, mensajeContacto(a.titulo, this.url())) : '';
+    return a ? enlaceWhatsapp(a.vendedor.whatsapp, mensajeContacto(a.titulo, this.url(), this.servicio())) : '';
   });
 
   protected readonly valor = valorAtributo;
@@ -61,9 +63,13 @@ export class AnuncioPage {
       if (!a) return;
       // La URL con el título correcto (por si cambió o llegó solo con el número).
       if (this.idSlug() !== a.idSlug) void this.router.navigate(['/tianguis', a.idSlug], { replaceUrl: true });
+      const precio = textoPrecio(a.precio, a.tipoPrecio);
+      const negociable = a.negociable ? ' negociable' : '';
       seo({
-        titulo: `${a.titulo} · ${precioMxn(a.precio)} · ${NOMBRE_TIANGUIS}`,
-        descripcion: `${a.titulo} de segunda mano en ${a.ubicacion}, Sierra Sur. ${textoCondicion(a.condicion)}, ${precioMxn(a.precio)}${a.negociable ? ' negociable' : ''}. Contacta al vendedor por WhatsApp.`,
+        titulo: `${a.titulo} · ${precio} · ${NOMBRE_TIANGUIS}`,
+        descripcion: this.servicio()
+          ? `${a.titulo}: ${a.categoria.nombre.toLowerCase()} en ${a.ubicacion}, Sierra Sur. ${precio}${negociable}. Pide informes por WhatsApp.`
+          : `${a.titulo} en ${a.ubicacion}, Sierra Sur. ${textoCondicion(a.condicion)}, ${precio}${negociable}. Contacta al vendedor por WhatsApp.`,
         ruta: `/tianguis/${a.idSlug}`,
         imagen: a.fotos[0] ?? null,
       });

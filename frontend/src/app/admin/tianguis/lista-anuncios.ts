@@ -2,7 +2,7 @@ import { Component, computed, inject, input, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { EstadoAnuncio } from '../../tianguis/tianguis.model';
-import { ESTADOS, haceCuanto, precioMxn, textoCondicion, valorAtributo } from '../../tianguis/tianguis';
+import { ESTADOS, haceCuanto, textoCondicion, textoPrecio, valorAtributo } from '../../tianguis/tianguis';
 import { mensajeDeError } from '../autorizacion';
 import { AnuncioAdmin, MOTIVOS_RECHAZO, TianguisAdminApi } from './tianguis-admin.api';
 
@@ -48,7 +48,7 @@ import { AnuncioAdmin, MOTIVOS_RECHAZO, TianguisAdminApi } from './tianguis-admi
               @for (f of a.fotos.slice(0, modo() === 'pendientes' ? 4 : 1); track f) { <img [src]="f" alt="" width="96" height="72" loading="lazy" /> }
             </div>
             <div class="cuerpo">
-              <p class="titulo"><strong>{{ a.titulo }}</strong> · {{ precio(a.precio) }}@if (a.negociable) { <small> negociable</small> }</p>
+              <p class="titulo"><strong>{{ a.titulo }}</strong> · {{ precio(a.precio, a.tipoPrecio) }}@if (a.negociable) { <small> negociable</small> }</p>
               <p class="meta">
                 <span class="estado">{{ estados_[a.estado] }}</span>
                 {{ a.categoria.nombre }} · {{ condicion(a.condicion) }} · {{ a.ubicacion }}
@@ -165,7 +165,7 @@ export class ListaAnuncios {
   protected readonly motivo = signal('');
   protected readonly detalle = signal('');
 
-  protected precio = precioMxn;
+  protected precio = textoPrecio;
   protected condicion = textoCondicion;
   protected hace = haceCuanto;
 
@@ -184,8 +184,13 @@ export class ListaAnuncios {
     return ({ VENDEDOR: 'el vendedor', ADMIN: 'el panel', REPORTES: 'reportes', BLOQUEO: 'vendedor bloqueado' } as Record<string, string>)[p] ?? p;
   }
 
-  /** Acciones rápidas válidas según el estado. */
+  /** Acciones rápidas válidas según el estado (un servicio no se marca como vendido). */
   protected acciones(a: AnuncioAdmin): { estado: EstadoAnuncio; texto: string; hecho: string; principal?: boolean }[] {
+    const l = this.porEstado(a);
+    return a.categoria.tipo === 'SERVICIO' ? l.filter((x) => x.estado !== 'VENDIDO') : l;
+  }
+
+  private porEstado(a: AnuncioAdmin): { estado: EstadoAnuncio; texto: string; hecho: string; principal?: boolean }[] {
     switch (a.estado) {
       case 'PENDIENTE': return [
         { estado: 'PUBLICADO', texto: '✓ Aprobar y publicar', hecho: 'Publicado por 30 días.', principal: true },

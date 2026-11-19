@@ -5,6 +5,9 @@
   @media (max-width: 52rem) { grid-template-columns: 1fr; } }
 
 .galeria { position: relative; }
+// Servicio sin fotos: el dibujo de su categoría.
+.sin-fotos { aspect-ratio: 16 / 9; display: grid; place-items: center; border-radius: 1rem; background: var(--fondo-alt);
+  color: var(--tinta-suave); font-size: 5rem; }
 .carrusel {
   display: flex; overflow-x: auto; scroll-snap-type: x mandatory; border-radius: 1rem; background: var(--fondo-alt);
   scrollbar-width: none; &::-webkit-scrollbar { display: none; }

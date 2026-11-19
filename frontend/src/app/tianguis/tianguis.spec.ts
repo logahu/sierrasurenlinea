@@ -1,5 +1,5 @@
 import {
-  enlaceWhatsapp, filtrosDeUrl, valorAtributo, haceCuanto, hayFiltros, idDe, mensajeContacto, precioMxn, textoCondicion, urlDeFiltros,
+  enlaceWhatsapp, filtrosDeUrl, valorAtributo, haceCuanto, hayFiltros, idDe, mensajeContacto, precioMxn, textoCondicion, textoPrecio, urlDeFiltros,
   whatsappValido,
 } from './tianguis';
 
@@ -8,6 +8,7 @@ describe('tianguis', () => {
     expect(precioMxn(85000)).toBe('$85,000');
     expect(precioMxn(1234.5)).toBe('$1,234.50');
     expect(textoCondicion('NUEVO_SIN_USO')).toBe('Nuevo sin usar');
+    expect(textoCondicion(null)).toBe('Servicio');
     const hoy = new Date('2026-11-19T12:00:00');
     expect(haceCuanto('2026-11-19T08:00:00', hoy)).toBe('hoy');
     expect(haceCuanto('2026-11-18T23:00:00', hoy)).toBe('ayer');
@@ -21,6 +22,13 @@ describe('tianguis', () => {
     const m = mensajeContacto('Tsuru 2015', 'https://sierrasurenlinea.com.mx/tianguis/12-tsuru-2015');
     expect(m).toBe('Hola, vi tu anuncio "Tsuru 2015" en Tianguis Sierra Sur (https://sierrasurenlinea.com.mx/tianguis/12-tsuru-2015). ¿Sigue disponible?');
     expect(enlaceWhatsapp('529511234567', 'Hola y adiós')).toBe('https://wa.me/529511234567?text=Hola%20y%20adi%C3%B3s');
+  });
+
+  it('precio de artículos y servicios', () => {
+    expect(textoPrecio(85000, 'FIJO')).toBe('$85,000');
+    expect(textoPrecio(300, 'DESDE')).toBe('Desde $300');
+    expect(textoPrecio(null, 'COTIZAR')).toBe('A cotizar');
+    expect(mensajeContacto('Plomero', 'https://x/1', true)).toBe('Hola, vi tu servicio "Plomero" en Tianguis Sierra Sur (https://x/1). ¿Me das más información?');
   });
 
   it('cantidades con unidad', () => {

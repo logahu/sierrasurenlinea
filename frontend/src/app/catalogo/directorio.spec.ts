@@ -63,7 +63,7 @@ describe('directorio', () => {
     expect(tipoDe({ tipo: 'VENTA', modoPedido: 'CITA' })).toBe('Citas');
     expect(tipoDe({ tipo: 'RENTA', modoPedido: 'RENTA' })).toBe('Renta');
     expect(tipoDe({ tipo: 'VENTA', modoPedido: 'COMPRA' })).toBe('Venta');
-    expect(tipoDe({ tipo: 'VENTA', modoPedido: null, giro: { slug: 'tianguis', nombre: 'Tianguis' } })).toBe('Segunda mano');
+    expect(tipoDe({ tipo: 'VENTA', modoPedido: null, giro: { slug: 'tianguis', nombre: 'Tianguis' } })).toBe('Compra-venta y servicios');
     expect(iniciales('Renta de Inflables')).toBe('RI');
     expect(iniciales('TuRamoHoy')).toBe('TU');
     expect(iniciales('Tlayudas Doña Mary')).toBe('TD');

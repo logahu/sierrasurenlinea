@@ -44,6 +44,8 @@ export class TianguisPage {
   readonly categorias = rxResource({ stream: () => this.api.categorias() });
   protected readonly listaCategorias = computed(() => (this.categorias.hasValue() ? this.categorias.value() : []) ?? []);
   protected readonly elegida = computed(() => this.listaCategorias().find((c) => c.slug === this.categoria()) ?? null);
+  /** Antes del primer servicio va el separador «Servicios». */
+  protected readonly primerServicio = computed(() => this.listaCategorias().find((c) => c.tipo === 'SERVICIO')?.slug ?? null);
   protected readonly totalCategorias = computed(() => this.listaCategorias().reduce((s, c) => s + c.anuncios, 0));
 
   /** Primera página según categoría y filtros; «Ver más» agrega las siguientes. */
@@ -77,10 +79,12 @@ export class TianguisPage {
     effect(() => {
       const c = this.elegida();
       seo({
-        titulo: c ? `${c.nombre} de segunda mano en Miahuatlán · ${NOMBRE_TIANGUIS}` : `${NOMBRE_TIANGUIS} · Compra y vende de segunda mano en Miahuatlán`,
+        titulo: c ? `${c.nombre} en Miahuatlán · ${NOMBRE_TIANGUIS}` : `${NOMBRE_TIANGUIS} · Compra, vende y ofrece servicios en Miahuatlán`,
         descripcion: c
-          ? `${c.nombre} de segunda mano en Miahuatlán y la Sierra Sur. Contacta directo al vendedor por WhatsApp.`
-          : 'Compra y vende artículos de segunda mano en Miahuatlán y la Sierra Sur: vehículos, celulares, muebles, herramientas y más.',
+          ? c.tipo === 'SERVICIO'
+            ? `${c.nombre} en Miahuatlán y la Sierra Sur: servicios de particulares. Pide informes directo por WhatsApp.`
+            : `${c.nombre} nuevos y usados en Miahuatlán y la Sierra Sur. Contacta directo al vendedor por WhatsApp.`
+          : 'Compra y vende artículos nuevos y usados, y encuentra servicios de particulares en Miahuatlán y la Sierra Sur: vehículos, celulares, muebles, oficios, fletes, clases y más.',
         ruta: c ? `/tianguis/c/${c.slug}` : '/tianguis',
       });
     });

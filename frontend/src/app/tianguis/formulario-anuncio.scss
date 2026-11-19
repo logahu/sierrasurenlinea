@@ -12,6 +12,7 @@
 form { display: grid; gap: 1rem; padding: 1.1rem; border: 1px solid var(--linea); border-radius: 1rem; background: var(--superficie); }
 h2:focus { outline: none; }
 .ayuda { margin: 0; color: var(--tinta-suave); }
+.nota-servicios { margin: 0; font-size: .88rem; color: var(--tinta-suave); a { color: var(--tinta); font-weight: 700; } }
 
 .categorias { display: grid; grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)); gap: .6rem; }
 .categoria { display: flex; align-items: center; gap: .55rem; padding: .9rem; border-radius: .8rem; border: 1px solid var(--linea);

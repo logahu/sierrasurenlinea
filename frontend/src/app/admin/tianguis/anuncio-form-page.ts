@@ -3,28 +3,30 @@ import { rxResource } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { of } from 'rxjs';
 import { FotosAnuncio } from '../../tianguis/fotos-anuncio';
-import { Condicion } from '../../tianguis/tianguis.model';
-import { CONDICIONES, ESTADOS, precioMxn, whatsappValido } from '../../tianguis/tianguis';
+import { Condicion, TipoPrecio } from '../../tianguis/tianguis.model';
+import { CONDICIONES, ESTADOS, TIPOS_PRECIO, precioMxn, whatsappValido } from '../../tianguis/tianguis';
 import { mensajeDeError } from '../autorizacion';
 import { FotosService } from '../fotos';
 import { AnuncioEdicion, TianguisAdminApi } from './tianguis-admin.api';
 
 function vacio(): AnuncioEdicion {
   return {
-    categoria: '', titulo: '', descripcion: '', precio: NaN, negociable: false, condicion: 'USADO', modalidad: 'CLASIFICADO',
+    categoria: '', titulo: '', descripcion: '', precio: NaN, tipoPrecio: 'FIJO', negociable: false, condicion: 'USADO', modalidad: 'CLASIFICADO',
     atributos: {}, ubicacion: '', fotos: [], destacado: false, vendedorId: null, vendedorNombre: null, vendedorWhatsapp: null, publicar: false,
   };
 }
 
-/** Qué falta para guardar (vacío = listo). */
-export function faltanEnPanel(e: AnuncioEdicion, requeridos: { nombre: string; etiqueta: string }[], vendedorNuevo: boolean): string[] {
+/** Qué falta para guardar (vacío = listo). En servicios la foto es opcional y el precio puede ser «a cotizar». */
+export function faltanEnPanel(
+  e: AnuncioEdicion, requeridos: { nombre: string; etiqueta: string }[], vendedorNuevo: boolean, servicio = false,
+): string[] {
   const f: string[] = [];
   if (!e.categoria) f.push('la categoría');
   if (!e.titulo.trim()) f.push('el título');
-  if (!(e.precio >= 0)) f.push('el precio');
+  if (e.tipoPrecio !== 'COTIZAR' && !((e.precio ?? NaN) >= 0)) f.push('el precio');
   if (!e.descripcion.trim()) f.push('la descripción');
   if (!e.ubicacion.trim()) f.push('la localidad');
-  if (!e.fotos.length) f.push('al menos una foto');
+  if (!servicio && !e.fotos.length) f.push('al menos una foto');
   for (const c of requeridos) if (!(e.atributos[c.nombre] ?? '').trim()) f.push(c.etiqueta.toLowerCase());
   if (vendedorNuevo ? !(e.vendedorNombre ?? '').trim() || !whatsappValido(e.vendedorWhatsapp ?? '') : !e.vendedorId) f.push('el vendedor');
   return f;
@@ -67,6 +69,7 @@ export class AnuncioFormPage {
   readonly vendedores = rxResource({ params: () => this.buscarVendedor(), stream: ({ params }) => this.api.vendedores(params) });
 
   protected readonly condiciones = CONDICIONES;
+  protected readonly tiposPrecio = TIPOS_PRECIO;
   protected readonly estados = ESTADOS;
   protected readonly isNaN = Number.isNaN;
   protected readonly NaN = Number.NaN;
@@ -79,8 +82,9 @@ export class AnuncioFormPage {
     return !!a && !(this.vendedores.value() ?? []).some((v) => v.id === a.vendedor.id);
   });
   protected readonly categoria = computed(() => (this.categorias.value() ?? []).find((c) => c.slug === this.datos().categoria) ?? null);
+  protected readonly servicio = computed(() => this.categoria()?.tipo === 'SERVICIO');
   protected readonly falta = computed(() =>
-    faltanEnPanel(this.datos(), (this.categoria()?.campos ?? []).filter((c) => c.requerido), this.vendedorNuevo()),
+    faltanEnPanel(this.datos(), (this.categoria()?.campos ?? []).filter((c) => c.requerido), this.vendedorNuevo(), this.servicio()),
   );
   protected readonly intento = signal(false);
   protected readonly ocupado = signal(false);
@@ -92,7 +96,8 @@ export class AnuncioFormPage {
       const a = this.actual.hasValue() ? this.actual.value() : null;
       if (!a) return;
       this.datos.set({
-        categoria: a.categoria.slug, titulo: a.titulo, descripcion: a.descripcion, precio: a.precio, negociable: a.negociable,
+        categoria: a.categoria.slug, titulo: a.titulo, descripcion: a.descripcion, precio: a.precio ?? NaN, tipoPrecio: a.tipoPrecio,
+        negociable: a.negociable,
         condicion: a.condicion, modalidad: a.modalidad, atributos: { ...a.atributos }, ubicacion: a.ubicacion, fotos: [...a.fotos],
         destacado: a.destacado, vendedorId: a.vendedor.id, vendedorNombre: null, vendedorWhatsapp: null, publicar: false,
       });
@@ -108,7 +113,18 @@ export class AnuncioFormPage {
   }
 
   protected elegirCategoria(slug: string): void {
-    this.datos.update((d) => ({ ...d, categoria: slug, atributos: d.categoria === slug ? d.atributos : {} }));
+    const servicio = (this.categorias.value() ?? []).find((c) => c.slug === slug)?.tipo === 'SERVICIO';
+    this.datos.update((d) => ({
+      ...d,
+      categoria: slug,
+      atributos: d.categoria === slug ? d.atributos : {},
+      condicion: servicio ? null : (d.condicion ?? 'USADO'),
+      tipoPrecio: servicio ? d.tipoPrecio : 'FIJO',
+    }));
+  }
+
+  protected tipoPrecio(v: string): TipoPrecio {
+    return v as TipoPrecio;
   }
 
   protected condicion(v: string): Condicion {
@@ -120,7 +136,10 @@ export class AnuncioFormPage {
     if (this.falta().length) return;
     const d = this.datos();
     const e: AnuncioEdicion = {
-      ...d, precio: Number(d.precio), publicar,
+      ...d, publicar,
+      precio: d.tipoPrecio === 'COTIZAR' ? null : Number(d.precio),
+      negociable: d.tipoPrecio !== 'COTIZAR' && d.negociable,
+      condicion: this.servicio() ? null : d.condicion,
       vendedorId: this.vendedorNuevo() ? null : d.vendedorId,
       vendedorNombre: this.vendedorNuevo() ? d.vendedorNombre : null,
       vendedorWhatsapp: this.vendedorNuevo() ? d.vendedorWhatsapp : null,

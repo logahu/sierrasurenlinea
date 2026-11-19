@@ -76,7 +76,7 @@ export function esNuevo(n: Negocio, hoy: Date = new Date()): boolean {
 
 /** Venta, Renta, Servicio o Citas. */
 export function tipoDe(n: Pick<Negocio, 'tipo' | 'modoPedido'> & { giro?: Negocio['giro'] }): string {
-  if (n.giro?.slug === 'tianguis') return 'Segunda mano';
+  if (n.giro?.slug === 'tianguis') return 'Compra-venta y servicios';
   if (n.tipo === 'SERVICIO') return 'Servicio';
   if (n.modoPedido === 'CITA') return 'Citas';
   if (n.modoPedido === 'RENTA' || n.tipo === 'RENTA') return 'Renta';

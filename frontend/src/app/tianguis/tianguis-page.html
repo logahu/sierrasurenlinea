@@ -2,10 +2,10 @@
   <div>
     <p class="marca"><app-icono-giro icono="tianguis" /> {{ nombre }}</p>
     <h1>{{ elegida()?.nombre ?? subtitulo }}</h1>
-    <p class="sub">Artículos de segunda mano en Miahuatlán y la Sierra Sur. Trato directo con el vendedor por WhatsApp.</p>
+    <p class="sub">Artículos nuevos y usados, y servicios de vecinos de Miahuatlán y la Sierra Sur. Trato directo por WhatsApp.</p>
   </div>
   <div class="acciones">
-    <a class="btn primario" routerLink="/tianguis/publicar">＋ Vender un artículo</a>
+    <a class="btn primario" routerLink="/tianguis/publicar">＋ Publicar anuncio</a>
     <a class="enlace" routerLink="/tianguis/reglas">Reglas de publicación</a>
   </div>
 </header>
@@ -18,7 +18,7 @@
     <span class="solo-lector">Buscar en el tianguis</span>
   </label>
   <input id="buscar-tianguis" type="search" autocomplete="off" enterkeyhint="search"
-         placeholder="¿Qué buscas? moto, celular, refrigerador…"
+         placeholder="¿Qué buscas? moto, celular, plomero, fletes…"
          [value]="texto()" (input)="escribir($any($event.target).value)" />
 </form>
 
@@ -27,6 +27,7 @@
     Todo <span class="cuenta">{{ totalCategorias() }}</span>
   </a>
   @for (c of listaCategorias(); track c.slug) {
+    @if (c.slug === primerServicio()) { <span class="separador">Servicios</span> }
     <a class="chip" [routerLink]="rutaCategoria(c.slug)" queryParamsHandling="preserve" [attr.aria-current]="categoria() === c.slug ? 'page' : null">
       <app-icono-giro [icono]="c.icono" /> {{ c.nombre }} <span class="cuenta">{{ c.anuncios }}</span>
     </a>
@@ -34,13 +35,15 @@
 </nav>
 
 <div class="filtros">
-  <label>
-    <span>Condición</span>
-    <select (change)="cambiar('condicion', $any($event.target).value)">
-      <option value="" [selected]="!filtros().condicion">Cualquiera</option>
-      @for (c of condiciones; track c.valor) { <option [value]="c.valor" [selected]="filtros().condicion === c.valor">{{ c.texto }}</option> }
-    </select>
-  </label>
+  @if (elegida()?.tipo !== 'SERVICIO') {
+    <label>
+      <span>Condición</span>
+      <select (change)="cambiar('condicion', $any($event.target).value)">
+        <option value="" [selected]="!filtros().condicion">Cualquiera</option>
+        @for (c of condiciones; track c.valor) { <option [value]="c.valor" [selected]="filtros().condicion === c.valor">{{ c.texto }}</option> }
+      </select>
+    </label>
+  }
   <label>
     <span>Precio desde</span>
     <input type="number" inputmode="numeric" min="0" step="100" placeholder="$0" [value]="filtros().precioMin ?? ''"
@@ -64,17 +67,17 @@
     @if ($any(e).status === 404) {
       <p><strong>El tianguis todavía no está abierto.</strong> Muy pronto podrás comprar y vender aquí.</p>
     } @else {
-      <p>No pudimos cargar los artículos. Revisa tu conexión e inténtalo de nuevo.</p>
+      <p>No pudimos cargar los anuncios. Revisa tu conexión e inténtalo de nuevo.</p>
       <button type="button" class="btn primario" (click)="pagina0.reload()">Reintentar</button>
     }
   </div>
 } @else if (pagina0.isLoading() && !pagina0.hasValue()) {
-  <ul class="rejilla cargando" aria-busy="true" aria-label="Cargando artículos">
+  <ul class="rejilla cargando" aria-busy="true" aria-label="Cargando anuncios">
     @for (i of [0, 1, 2, 3, 4, 5, 6, 7]; track i) { <li><span class="tarjeta-cargando"></span></li> }
   </ul>
 } @else {
   <p class="resumen" aria-live="polite">
-    <span><strong>{{ total() }} {{ total() === 1 ? 'artículo' : 'artículos' }}</strong>
+    <span><strong>{{ total() }} {{ total() === 1 ? 'anuncio' : 'anuncios' }}</strong>
       @if (elegida(); as c) { en {{ c.nombre }} }
       @if (filtros().q.trim()) { para «{{ filtros().q.trim() }}» }</span>
     @if (conFiltros() || categoria()) { <button type="button" class="enlace" (click)="limpiar()">Quitar filtros</button> }
@@ -87,7 +90,7 @@
     @if (hayMas()) {
       <div class="mas">
         <button type="button" class="btn secundario" (click)="verMas()" [disabled]="cargandoMas()">
-          {{ cargandoMas() ? 'Cargando…' : 'Ver más artículos' }}
+          {{ cargandoMas() ? 'Cargando…' : 'Ver más anuncios' }}
         </button>
         @if (errorMas()) { <p class="error" role="alert">No se pudieron cargar más. Intenta de nuevo.</p> }
       </div>
@@ -95,22 +98,23 @@
   } @else {
     <div class="vacio">
       @if (conFiltros()) {
-        <p><strong>No encontramos artículos con esos filtros.</strong></p>
+        <p><strong>No encontramos anuncios con esos filtros.</strong></p>
         <p>Prueba con otra palabra o quita algún filtro.</p>
         <button type="button" class="btn secundario" (click)="limpiar()">Quitar filtros</button>
       } @else {
-        <p><strong>Todavía no hay artículos {{ elegida() ? 'en ' + elegida()!.nombre : 'publicados' }}.</strong></p>
-        <p>¿Tienes algo que ya no usas? Véndelo aquí.</p>
-        <a class="btn primario" routerLink="/tianguis/publicar">＋ Vender un artículo</a>
+        <p><strong>Todavía no hay anuncios {{ elegida() ? 'en ' + elegida()!.nombre : 'publicados' }}.</strong></p>
+        <p>¿Tienes algo que vender o un servicio que ofrecer? Publícalo aquí.</p>
+        <a class="btn primario" routerLink="/tianguis/publicar">＋ Publicar anuncio</a>
       }
     </div>
   }
 }
 
 <aside class="seguridad" aria-labelledby="titulo-seguridad">
-  <h2 id="titulo-seguridad">Compra con confianza</h2>
+  <h2 id="titulo-seguridad">Compra y contrata con confianza</h2>
   <ul>
     <li>Revisa el artículo en persona antes de pagar.</li>
+    <li>En servicios, acuerda el precio total antes de empezar.</li>
     <li>Reúnete en un lugar público y de día.</li>
     <li>No des anticipos a personas que no conoces.</li>
   </ul>

@@ -14,14 +14,14 @@ import { NOMBRE_TIANGUIS, enlaceWhatsapp } from './tianguis';
   selector: 'app-publicar-page',
   imports: [RouterLink, FormularioAnuncio],
   template: `
-    <nav class="migas" aria-label="Ruta"><a routerLink="/tianguis">Tianguis</a> › Vender un artículo</nav>
+    <nav class="migas" aria-label="Ruta"><a routerLink="/tianguis">Tianguis</a> › Publicar anuncio</nav>
     @if (listo(); as l) {
       <section class="listo" aria-labelledby="titulo-listo">
         <h1 id="titulo-listo" tabindex="-1">¡Listo! Tu anuncio está en revisión</h1>
         <p>Lo revisamos en cuanto podamos; normalmente el mismo día. Cuando lo aprobemos, aparecerá en el tianguis.</p>
         <div class="enlace-privado">
           <strong>Guarda tu enlace privado</strong>
-          <p>Con él ves si ya se publicó, lo corriges, lo marcas como vendido, lo pausas o lo renuevas. No lo compartas: quien lo tenga puede cambiar tu anuncio.</p>
+          <p>Con él ves si ya se publicó, lo corriges, lo pausas, lo renuevas o lo marcas como vendido. No lo compartas: quien lo tenga puede cambiar tu anuncio.</p>
           <input readonly [value]="enlace()" aria-label="Tu enlace privado" (focus)="$any($event.target).select()" />
           <div class="botones">
             <button type="button" class="btn secundario" (click)="copiar()">{{ copiado() ? '✓ Copiado' : 'Copiar enlace' }}</button>
@@ -32,8 +32,8 @@ import { NOMBRE_TIANGUIS, enlaceWhatsapp } from './tianguis';
       </section>
     } @else {
       <header>
-        <h1>Vende un artículo</h1>
-        <p class="sub">Gratis y sin crear cuenta. En unos minutos: categoría, datos, fotos y tu WhatsApp.</p>
+        <h1>Publica tu anuncio</h1>
+        <p class="sub">Vende un artículo nuevo o usado, u ofrece tu servicio. Gratis y sin crear cuenta: categoría, datos, fotos y tu WhatsApp.</p>
       </header>
       @if (categorias.error(); as e) {
         <p class="aviso" role="alert">{{ $any(e).status === 404 ? 'El tianguis todavía no está abierto.' : 'No pudimos cargar las categorías. Intenta de nuevo.' }}</p>
@@ -76,8 +76,8 @@ export class PublicarPage {
 
   constructor() {
     usarSeo()({
-      titulo: `Vende tu artículo de segunda mano · ${NOMBRE_TIANGUIS}`,
-      descripcion: 'Publica gratis y sin cuenta tu artículo de segunda mano en Miahuatlán y la Sierra Sur. Los compradores te escriben por WhatsApp.',
+      titulo: `Vende tu artículo u ofrece tu servicio · ${NOMBRE_TIANGUIS}`,
+      descripcion: 'Publica gratis y sin cuenta tu artículo nuevo o usado, o tu servicio, en Miahuatlán y la Sierra Sur. Te escriben por WhatsApp.',
       ruta: '/tianguis/publicar',
     });
   }

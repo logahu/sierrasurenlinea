@@ -1,14 +1,21 @@
 import { Params } from '@angular/router';
-import { Condicion, EstadoAnuncio, MotivoReporte, OrdenTianguis } from './tianguis.model';
+import { Condicion, EstadoAnuncio, MotivoReporte, OrdenTianguis, TipoPrecio } from './tianguis.model';
 
 export const NOMBRE_TIANGUIS = 'Tianguis Sierra Sur';
-export const SUBTITULO_TIANGUIS = 'Compra y vende de segunda mano';
+export const SUBTITULO_TIANGUIS = 'Compra, vende y ofrece servicios';
 
 export const CONDICIONES: { valor: Condicion; texto: string }[] = [
   { valor: 'NUEVO_SIN_USO', texto: 'Nuevo sin usar' },
   { valor: 'SEMINUEVO', texto: 'Seminuevo' },
   { valor: 'USADO', texto: 'Usado' },
   { valor: 'REPARADO', texto: 'Reparado' },
+];
+
+/** Cómo cobra un servicio (los artículos siempre llevan precio fijo). */
+export const TIPOS_PRECIO: { valor: TipoPrecio; texto: string }[] = [
+  { valor: 'FIJO', texto: 'Precio fijo' },
+  { valor: 'DESDE', texto: 'Desde' },
+  { valor: 'COTIZAR', texto: 'A cotizar' },
 ];
 
 export const ORDENES_TIANGUIS: { valor: OrdenTianguis; texto: string }[] = [
@@ -19,8 +26,8 @@ export const ORDENES_TIANGUIS: { valor: OrdenTianguis; texto: string }[] = [
 
 export const MOTIVOS_REPORTE: { valor: MotivoReporte; texto: string }[] = [
   { valor: 'FRAUDE', texto: 'Fraude o estafa' },
-  { valor: 'PROHIBIDO', texto: 'Artículo prohibido' },
-  { valor: 'VENDIDO', texto: 'Ya se vendió' },
+  { valor: 'PROHIBIDO', texto: 'Prohibido por las reglas' },
+  { valor: 'VENDIDO', texto: 'Ya se vendió o ya no está disponible' },
   { valor: 'FALSO', texto: 'Información falsa' },
   { valor: 'OTRO', texto: 'Otro' },
 ];
@@ -34,7 +41,9 @@ export const ESTADOS: Record<EstadoAnuncio, string> = {
   PAUSADO: 'Pausado',
 };
 
-export function textoCondicion(c: Condicion | string): string {
+/** «Usado», «Nuevo sin usar»…; los servicios no llevan condición y dicen «Servicio». */
+export function textoCondicion(c: Condicion | string | null | undefined): string {
+  if (!c) return 'Servicio';
   return CONDICIONES.find((x) => x.valor === c)?.texto ?? c;
 }
 
@@ -44,6 +53,12 @@ const PESOS_CENTAVOS = new Intl.NumberFormat('es-MX', { style: 'currency', curre
 /** $85,000 (con centavos solo si los hay). */
 export function precioMxn(n: number): string {
   return Number.isInteger(n) ? PESOS.format(n) : PESOS_CENTAVOS.format(n);
+}
+
+/** «$85,000», «Desde $300» o «A cotizar». */
+export function textoPrecio(precio: number | null | undefined, tipo: TipoPrecio | null | undefined = 'FIJO'): string {
+  if (tipo === 'COTIZAR' || precio === null || precio === undefined) return 'A cotizar';
+  return tipo === 'DESDE' ? `Desde ${precioMxn(precio)}` : precioMxn(precio);
 }
 
 /** «hoy», «ayer», «hace 3 días», «hace 2 semanas», «hace 1 mes». */
@@ -68,9 +83,11 @@ export function valorAtributo(valor: string, unidad: string | null | undefined):
   return `${n} ${unidad}`;
 }
 
-/** Mensaje de contacto ya escrito, como pide la spec. */
-export function mensajeContacto(titulo: string, url: string): string {
-  return `Hola, vi tu anuncio "${titulo}" en ${NOMBRE_TIANGUIS} (${url}). ¿Sigue disponible?`;
+/** Mensaje de contacto ya escrito, como pide la spec (para un servicio se piden informes). */
+export function mensajeContacto(titulo: string, url: string, servicio = false): string {
+  return servicio
+    ? `Hola, vi tu servicio "${titulo}" en ${NOMBRE_TIANGUIS} (${url}). ¿Me das más información?`
+    : `Hola, vi tu anuncio "${titulo}" en ${NOMBRE_TIANGUIS} (${url}). ¿Sigue disponible?`;
 }
 
 export function enlaceWhatsapp(whatsapp: string, mensaje: string): string {

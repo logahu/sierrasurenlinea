@@ -13,32 +13,56 @@
 
   @switch (paso()) {
     @case (0) {
-      <p class="ayuda">¿Qué vas a vender?</p>
+      <p class="ayuda">¿Vas a vender un artículo nuevo o usado?</p>
       <div class="categorias">
-        @for (c of categorias(); track c.slug) {
+        @for (c of deArticulos(); track c.slug) {
           <button type="button" class="categoria" [class.elegida]="datos().categoria === c.slug" (click)="elegirCategoria(c.slug)">
             <app-icono-giro [icono]="c.icono" /> {{ c.nombre }}
           </button>
         }
       </div>
+      @if (deServicios().length) {
+        <p class="ayuda">¿O vas a ofrecer un servicio?</p>
+        <div class="categorias">
+          @for (c of deServicios(); track c.slug) {
+            <button type="button" class="categoria" [class.elegida]="datos().categoria === c.slug" (click)="elegirCategoria(c.slug)">
+              <app-icono-giro [icono]="c.icono" /> {{ c.nombre }}
+            </button>
+          }
+        </div>
+        <p class="nota-servicios">Si tienes local o negocio establecido, <a routerLink="/conocenos" fragment="titulo-sumate">suma tu negocio al directorio</a> en lugar del tianguis.</p>
+      }
     }
     @case (1) {
       <div class="campos">
         <label class="campo ancho">Título
           <input maxlength="80" [value]="datos().titulo" (input)="poner('titulo', $any($event.target).value)"
-                 placeholder="Ej. Refrigerador Mabe 14 pies" />
-          <small>{{ datos().titulo.length }}/80 · Un artículo por anuncio.</small>
+                 [placeholder]="servicio() ? 'Ej. Plomería y reparaciones a domicilio' : 'Ej. Refrigerador Mabe 14 pies'" />
+          <small>{{ datos().titulo.length }}/80 · {{ servicio() ? 'Un servicio (u oficio) por anuncio.' : 'Un artículo por anuncio.' }}</small>
         </label>
-        <label class="campo">Precio (MXN)
-          <input type="number" inputmode="numeric" min="0" step="1" [value]="isNaN(datos().precio) ? '' : datos().precio"
-                 (input)="poner('precio', $any($event.target).value === '' ? NaN : +$any($event.target).value)" placeholder="$" />
-        </label>
-        <label class="campo">Condición
-          <select (change)="poner('condicion', condicion($any($event.target).value))">
-            @for (c of condiciones; track c.valor) { <option [value]="c.valor" [selected]="datos().condicion === c.valor">{{ c.texto }}</option> }
-          </select>
-        </label>
-        <label class="casilla"><input type="checkbox" [checked]="datos().negociable" (change)="poner('negociable', $any($event.target).checked)" /> El precio es negociable</label>
+        @if (servicio()) {
+          <label class="campo">¿Cómo cobras?
+            <select (change)="poner('tipoPrecio', tipoPrecio($any($event.target).value))">
+              @for (t of tiposPrecio; track t.valor) { <option [value]="t.valor" [selected]="datos().tipoPrecio === t.valor">{{ t.texto }}</option> }
+            </select>
+          </label>
+        }
+        @if (datos().tipoPrecio !== 'COTIZAR') {
+          <label class="campo">{{ datos().tipoPrecio === 'DESDE' ? 'Desde (MXN)' : 'Precio (MXN)' }}
+            <input type="number" inputmode="numeric" min="0" step="1" [value]="isNaN(datos().precio ?? NaN) ? '' : datos().precio"
+                   (input)="poner('precio', $any($event.target).value === '' ? NaN : +$any($event.target).value)" placeholder="$" />
+          </label>
+        }
+        @if (!servicio()) {
+          <label class="campo">Condición
+            <select (change)="poner('condicion', condicion($any($event.target).value))">
+              @for (c of condiciones; track c.valor) { <option [value]="c.valor" [selected]="datos().condicion === c.valor">{{ c.texto }}</option> }
+            </select>
+          </label>
+        }
+        @if (datos().tipoPrecio !== 'COTIZAR') {
+          <label class="casilla"><input type="checkbox" [checked]="datos().negociable" (change)="poner('negociable', $any($event.target).checked)" /> El precio es negociable</label>
+        }
         @for (c of campos(); track c.nombre) {
           <label class="campo">{{ c.etiqueta }}@if (c.unidad) { <span class="opcional"> ({{ c.unidad }})</span> }@if (!c.requerido) { <span class="opcional"> (opcional)</span> }
             @switch (c.tipo) {
@@ -67,17 +91,17 @@
         }
         <label class="campo ancho">Descripción
           <textarea maxlength="2000" rows="6" [value]="datos().descripcion" (input)="poner('descripcion', $any($event.target).value)"
-                    placeholder="Estado, detalles, qué incluye, por qué lo vendes…"></textarea>
+                    [placeholder]="servicio() ? 'Qué trabajos haces, experiencia, horarios, si vas a domicilio…' : 'Estado, detalles, qué incluye, por qué lo vendes…'"></textarea>
           <small>{{ datos().descripcion.length }}/2000</small>
         </label>
         <label class="campo ancho">Localidad o colonia
           <input maxlength="80" [value]="datos().ubicacion" (input)="poner('ubicacion', $any($event.target).value)" placeholder="Ej. Barrio de Guadalupe, Miahuatlán" />
-          <small>No escribas tu dirección exacta: acuerda el lugar de entrega por WhatsApp.</small>
+          <small>No escribas tu dirección exacta: {{ servicio() ? 'acuerda los detalles' : 'acuerda el lugar de entrega' }} por WhatsApp.</small>
         </label>
       </div>
     }
     @case (2) {
-      <app-fotos-anuncio [fotos]="datos().fotos" (fotosChange)="poner('fotos', $event)" [subir]="subirFoto()" />
+      <app-fotos-anuncio [fotos]="datos().fotos" (fotosChange)="poner('fotos', $event)" [subir]="subirFoto()" [opcionales]="servicio()" />
     }
     @case (3) {
       <div class="campos">
@@ -87,7 +111,7 @@
         <label class="campo">Tu WhatsApp (10 dígitos)
           <input type="tel" inputmode="tel" autocomplete="tel-national" [readonly]="editando()" [value]="datos().vendedorWhatsapp"
                  (input)="poner('vendedorWhatsapp', $any($event.target).value)" placeholder="951 123 4567" />
-          <small>{{ editando() ? 'El WhatsApp no se cambia: identifica tus anuncios.' : 'Los compradores te escribirán aquí.' }}</small>
+          <small>{{ editando() ? 'El WhatsApp no se cambia: identifica tus anuncios.' : servicio() ? 'Tus clientes te escribirán aquí.' : 'Los compradores te escribirán aquí.' }}</small>
         </label>
         <!-- Campo trampa: las personas no lo ven. -->
         <label class="trampa" aria-hidden="true">Sitio web
@@ -98,8 +122,11 @@
     @case (4) {
       <div class="reglas">
         <p>En el tianguis <strong>no se permite</strong>: artículos robados o sin procedencia, armas y municiones, animales,
-          medicamentos, bebidas alcohólicas, contenido para adultos, servicios o celulares con IMEI reportado.</p>
-        <p>Usa fotos reales del artículo, un precio real en pesos y un artículo por anuncio. Revisamos cada anuncio antes de
+          medicamentos, bebidas alcohólicas, contenido para adultos, celulares con IMEI reportado, ni servicios ilegales,
+          de salud o financieros (préstamos, inversiones).</p>
+        <p>Los servicios son para personas que trabajan por su cuenta; si tienes local o negocio establecido,
+          <a routerLink="/conocenos" fragment="titulo-sumate" target="_blank">suma tu negocio al directorio</a>.</p>
+        <p>Usa fotos reales, un precio real en pesos y un artículo o servicio por anuncio. Revisamos cada anuncio antes de
           publicarlo y podemos rechazarlo o retirarlo. <a routerLink="/tianguis/reglas" target="_blank">Leer las reglas completas</a>.</p>
         <label class="casilla"><input type="checkbox" [checked]="datos().aceptaReglas" (change)="poner('aceptaReglas', $any($event.target).checked)" />
           Acepto las reglas de publicación</label>

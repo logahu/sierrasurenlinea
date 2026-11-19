@@ -4,7 +4,7 @@
   <div class="no-esta">
     <h1>Este anuncio ya no está disponible</h1>
     <p>Puede que se haya vendido, vencido o que el vendedor lo haya pausado.</p>
-    <a class="btn primario" routerLink="/tianguis">Ver más artículos</a>
+    <a class="btn primario" routerLink="/tianguis">Ver más anuncios</a>
   </div>
 } @else {
   @let x = a()!;
@@ -13,7 +13,10 @@
   </nav>
 
   <div class="ficha">
-    <section class="galeria" aria-label="Fotos del artículo">
+    <section class="galeria" [attr.aria-label]="servicio() ? 'Fotos del servicio' : 'Fotos del artículo'">
+      @if (!x.fotos.length) {
+        <div class="sin-fotos" aria-hidden="true"><app-icono-giro [icono]="x.categoria.icono" /></div>
+      }
       <div class="carrusel" #carrusel (scroll)="alDesplazar()" tabindex="0" aria-label="Fotos; desliza para ver más">
         @for (f of x.fotos; track f; let i = $index) {
           <img [src]="f" [alt]="x.titulo + ' — foto ' + (i + 1) + ' de ' + x.fotos.length" width="800" height="600"
@@ -48,23 +51,32 @@
       </p>
 
       <div class="vendedor">
-        <span>Vende <strong>{{ x.vendedor.nombre }}</strong></span>
+        <span>{{ servicio() ? 'Ofrece' : 'Vende' }} <strong>{{ x.vendedor.nombre }}</strong></span>
         @if (x.vendedor.verificado) { <span class="etiqueta verificado">✓ Vendedor verificado</span> }
       </div>
 
       @if (x.estado !== 'VENDIDO') {
-        <a class="btn whatsapp grande" [href]="whatsapp()" target="_blank" rel="noopener">Contactar por WhatsApp</a>
+        <a class="btn whatsapp grande" [href]="whatsapp()" target="_blank" rel="noopener">{{ servicio() ? 'Pedir informes por WhatsApp' : 'Contactar por WhatsApp' }}</a>
       } @else {
         <p class="aviso">Este artículo ya se vendió. <a routerLink="/tianguis">Busca otros parecidos</a>.</p>
       }
 
       <div class="seguridad" role="note">
-        <strong>Antes de comprar</strong>
-        <ul>
-          <li>Revisa el artículo en persona y pruébalo.</li>
-          <li>Reúnete en un lugar público y de día.</li>
-          <li>No des anticipos ni depósitos a personas que no conoces.</li>
-        </ul>
+        @if (servicio()) {
+          <strong>Antes de contratar</strong>
+          <ul>
+            <li>Pide el precio total por escrito antes de empezar.</li>
+            <li>Pregunta por trabajos anteriores o referencias.</li>
+            <li>No pagues todo por adelantado a personas que no conoces.</li>
+          </ul>
+        } @else {
+          <strong>Antes de comprar</strong>
+          <ul>
+            <li>Revisa el artículo en persona y pruébalo.</li>
+            <li>Reúnete en un lugar público y de día.</li>
+            <li>No des anticipos ni depósitos a personas que no conoces.</li>
+          </ul>
+        }
       </div>
     </section>
   </div>

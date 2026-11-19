@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { CampoAtributo, CategoriaTianguis, TipoCampo } from '../../tianguis/tianguis.model';
 import { mensajeDeError } from '../autorizacion';
@@ -25,7 +25,14 @@ export function nombreDeCampo(etiqueta: string): string {
         <h2>{{ editandoId() ? 'Editar categoría' : 'Nueva categoría' }}</h2>
         <label>Nombre <input maxlength="60" [value]="c.nombre" (input)="poner('nombre', $any($event.target).value)" /></label>
         <label>Slug (en la URL) <input maxlength="60" [value]="c.slug" (input)="poner('slug', $any($event.target).value)" /></label>
-        <label>Icono <span class="opcional">(auto, moto, celular, mueble, herramienta, ropa, caja)</span>
+        <label>Tipo
+          <select (change)="poner('tipo', $any($event.target).value)" [disabled]="!!editandoId() && conAnuncios()">
+            <option value="ARTICULO" [selected]="c.tipo === 'ARTICULO'">Artículos (se venden; condición y foto obligatorias)</option>
+            <option value="SERVICIO" [selected]="c.tipo === 'SERVICIO'">Servicios (sin condición; precio fijo, desde o a cotizar; fotos opcionales)</option>
+          </select>
+          @if (editandoId() && conAnuncios()) { <small class="opcional">No se cambia porque ya tiene anuncios.</small> }
+        </label>
+        <label>Icono <span class="opcional">(auto, moto, celular, mueble, herramienta, ropa, caja, oficio, belleza, clases, flete)</span>
           <input maxlength="30" [value]="c.icono ?? ''" (input)="poner('icono', $any($event.target).value)" /></label>
         <label>Orden <input type="number" [value]="c.orden" (input)="poner('orden', +$any($event.target).value)" /></label>
         <label class="en-linea"><input type="checkbox" [checked]="c.activa" (change)="poner('activa', $any($event.target).checked)" /> Activa (se ve en el tianguis)</label>
@@ -60,7 +67,7 @@ export function nombreDeCampo(etiqueta: string): string {
       <ul class="categorias">
         @for (c of categorias.value() ?? []; track c.id) {
           <li [class.inactiva]="!c.activa">
-            <span><strong>{{ c.nombre }}</strong> · /tianguis/c/{{ c.slug }} · {{ c.anuncios }} anuncios @if (!c.activa) { · inactiva }</span>
+            <span><strong>{{ c.nombre }}</strong>@if (c.tipo === 'SERVICIO') { · servicio } · /tianguis/c/{{ c.slug }} · {{ c.anuncios }} anuncios @if (!c.activa) { · inactiva }</span>
             <span class="meta">{{ c.campos.length ? c.campos.map(etiqueta).join(', ') : 'Sin campos propios' }}</span>
             <button type="button" class="btn secundario" (click)="editar(c)">Editar</button>
           </li>
@@ -87,6 +94,10 @@ export class CategoriasTianguis {
   protected readonly nombreDeCampo = nombreDeCampo;
   protected readonly edicion = signal<CategoriaEdicion | null>(null);
   protected readonly editandoId = signal<number | null>(null);
+  /** La categoría en edición ya tiene anuncios: no se cambia entre artículo y servicio. */
+  protected readonly conAnuncios = computed(
+    () => ((this.categorias.value() ?? []).find((c) => c.id === this.editandoId())?.anuncios ?? 0) > 0,
+  );
   protected readonly ocupado = signal(false);
   protected readonly mensaje = signal<string | null>(null);
   protected readonly error = signal<string | null>(null);
@@ -96,12 +107,12 @@ export class CategoriasTianguis {
 
   protected nueva(): void {
     this.editandoId.set(null);
-    this.edicion.set({ nombre: '', slug: '', icono: null, orden: 50, activa: true, campos: [] });
+    this.edicion.set({ nombre: '', slug: '', icono: null, orden: 50, activa: true, tipo: 'ARTICULO', campos: [] });
   }
 
   protected editar(c: CategoriaTianguis): void {
     this.editandoId.set(c.id);
-    this.edicion.set({ nombre: c.nombre, slug: c.slug, icono: c.icono, orden: c.orden, activa: c.activa, campos: c.campos.map((x) => ({ ...x })) });
+    this.edicion.set({ nombre: c.nombre, slug: c.slug, icono: c.icono, orden: c.orden, activa: c.activa, tipo: c.tipo, campos: c.campos.map((x) => ({ ...x })) });
   }
 
   protected poner<K extends keyof CategoriaEdicion>(k: K, v: CategoriaEdicion[K]): void {

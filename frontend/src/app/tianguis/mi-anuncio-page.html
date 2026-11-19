@@ -5,7 +5,7 @@
 } @else if (gestion.error() || !g()) {
   <div class="aviso" role="alert">
     <p><strong>Este enlace no es válido.</strong></p>
-    <p>Revisa que lo hayas copiado completo. Si lo perdiste, publica tu artículo de nuevo.</p>
+    <p>Revisa que lo hayas copiado completo. Si lo perdiste, publica tu anuncio de nuevo.</p>
   </div>
 } @else {
   @let x = g()!;
@@ -28,7 +28,7 @@
         @if (x.renovacionesRestantes) { Puedes renovarlo {{ x.renovacionesRestantes }} {{ x.renovacionesRestantes === 1 ? 'vez' : 'veces' }} más. }</p>
     }
     @if (x.estado === 'PUBLICADO' || x.estado === 'VENDIDO') {
-      <p><a [routerLink]="['/tianguis', x.idSlug]">Ver cómo lo ven los compradores</a> · {{ x.vistas }} {{ x.vistas === 1 ? 'visita' : 'visitas' }}</p>
+      <p><a [routerLink]="['/tianguis', x.idSlug]">Ver cómo se ve en el tianguis</a> · {{ x.vistas }} {{ x.vistas === 1 ? 'visita' : 'visitas' }}</p>
     }
     @if (aviso(); as a) { <p class="exito" role="status">{{ a }}</p> }
     @if (error(); as e) { <p class="error" role="alert">{{ e }}</p> }

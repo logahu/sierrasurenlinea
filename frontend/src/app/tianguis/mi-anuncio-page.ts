@@ -6,13 +6,13 @@ import { mensajeDeError } from '../admin/autorizacion';
 import { FormularioAnuncio } from './formulario-anuncio';
 import { Gestion, Publicacion } from './tianguis.model';
 import { TianguisService } from './tianguis.service';
-import { ESTADOS, precioMxn } from './tianguis';
+import { ESTADOS, textoPrecio } from './tianguis';
 
 /** Explicación de cada estado para el vendedor. */
 export function explicacion(g: Gestion): string {
   switch (g.estado) {
     case 'PENDIENTE': return 'Lo estamos revisando. Cuando lo aprobemos aparecerá en el tianguis.';
-    case 'PUBLICADO': return 'Está publicado: los compradores lo ven y te escriben por WhatsApp.';
+    case 'PUBLICADO': return 'Está publicado: los interesados lo ven y te escriben por WhatsApp.';
     case 'PAUSADO':
       if (g.pausadoPor === 'REPORTES') return 'Lo pausamos porque varias personas lo reportaron. Lo estamos revisando.';
       if (g.pausadoPor === 'BLOQUEO') return 'Está pausado porque tu WhatsApp no puede publicar en el tianguis.';
@@ -40,7 +40,7 @@ export class MiAnuncioPage {
   protected readonly g = computed(() => (this.gestion.hasValue() ? this.gestion.value() : null));
   protected readonly estados = ESTADOS;
   protected readonly explicacion = computed(() => (this.g() ? explicacion(this.g()!) : ''));
-  protected readonly precio = computed(() => (this.g() ? precioMxn(this.g()!.precio) : ''));
+  protected readonly precio = computed(() => (this.g() ? textoPrecio(this.g()!.precio, this.g()!.tipoPrecio) : ''));
   protected readonly editando = signal(false);
   protected readonly ocupado = signal(false);
   protected readonly error = signal<string | null>(null);
@@ -51,7 +51,7 @@ export class MiAnuncioPage {
   protected readonly inicial = computed<Publicacion | null>(() => {
     const g = this.g();
     return g ? {
-      categoria: g.categoria.slug, titulo: g.titulo, descripcion: g.descripcion, precio: g.precio, negociable: g.negociable,
+      categoria: g.categoria.slug, titulo: g.titulo, descripcion: g.descripcion, precio: g.precio ?? NaN, tipoPrecio: g.tipoPrecio, negociable: g.negociable,
       condicion: g.condicion, atributos: g.atributos, ubicacion: g.ubicacion, fotos: g.fotos, vendedorNombre: g.vendedorNombre,
       vendedorWhatsapp: g.vendedorWhatsapp.slice(-10), aceptaReglas: false, sitioWeb: '',
     } : null;

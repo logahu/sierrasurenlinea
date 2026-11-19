@@ -1,12 +1,13 @@
 import { Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { AnuncioResumen } from './tianguis.model';
-import { haceCuanto, precioMxn, textoCondicion } from './tianguis';
+import { IconoGiro } from '../catalogo/icono-giro';
+import { haceCuanto, textoCondicion, textoPrecio } from './tianguis';
 
-/** Tarjeta de un artículo: foto, título, precio, condición, localidad y «hace X días». */
+/** Tarjeta de un artículo o servicio: foto, título, precio, condición (o «Servicio»), localidad y «hace X días». */
 @Component({
   selector: 'app-tarjeta-anuncio',
-  imports: [RouterLink],
+  imports: [RouterLink, IconoGiro],
   template: `
     @let a = anuncio();
     <a class="tarjeta" [routerLink]="['/tianguis', a.idSlug]" [class.vendida]="a.estado === 'VENDIDO'">
@@ -14,7 +15,7 @@ import { haceCuanto, precioMxn, textoCondicion } from './tianguis';
         @if (a.portada) {
           <img [src]="a.portada" alt="" width="320" height="240" loading="lazy" />
         } @else {
-          <span class="sin-foto" aria-hidden="true">📦</span>
+          <app-icono-giro class="sin-foto" [icono]="a.categoria.icono" />
         }
         @if (a.estado === 'VENDIDO') { <span class="sello">Vendido</span> }
       </span>
@@ -37,7 +38,7 @@ import { haceCuanto, precioMxn, textoCondicion } from './tianguis';
     }
     .foto { position: relative; aspect-ratio: 4 / 3; background: var(--fondo-alt); display: grid; place-items: center; }
     .foto img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-    .sin-foto { font-size: 2.2rem; }
+    .sin-foto { font-size: 2.6rem; color: var(--tinta-suave); }
     .vendida .foto img { filter: grayscale(.7) brightness(.85); }
     .sello { position: absolute; top: .55rem; left: .55rem; font-size: .75rem; font-weight: 800; letter-spacing: .04em;
       text-transform: uppercase; padding: .25rem .6rem; border-radius: 999px; background: #2a1f1a; color: #fff; }
@@ -52,7 +53,7 @@ export class TarjetaAnuncio {
   readonly anuncio = input.required<AnuncioResumen>();
   readonly hoy = input<Date>(new Date());
 
-  protected readonly precio = computed(() => precioMxn(this.anuncio().precio));
+  protected readonly precio = computed(() => textoPrecio(this.anuncio().precio, this.anuncio().tipoPrecio));
   protected readonly condicion = computed(() => textoCondicion(this.anuncio().condicion));
   protected readonly hace = computed(() => {
     const a = this.anuncio();

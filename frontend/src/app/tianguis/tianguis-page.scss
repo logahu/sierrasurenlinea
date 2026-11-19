@@ -33,6 +33,10 @@
     .cuenta { color: color-mix(in srgb, var(--fondo) 78%, var(--tinta)); } }
 }
 
+// «Servicios»: separa las categorías de servicios de las de artículos.
+.separador { flex: none; align-self: center; padding: 0 .2rem 0 .6rem; margin-left: .2rem; border-left: 2px solid var(--linea);
+  font-size: .78rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--tinta-suave); }
+
 .filtros {
   display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .6rem; margin-top: .6rem;
   @media (max-width: 40rem) { grid-template-columns: 1fr 1fr; }

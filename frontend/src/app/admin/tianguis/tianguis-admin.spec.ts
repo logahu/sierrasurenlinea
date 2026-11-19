@@ -22,7 +22,7 @@ describe('panel del tianguis', () => {
 
   it('pide lo necesario antes de guardar', () => {
     const e: AnuncioEdicion = {
-      categoria: 'vehiculos', titulo: 'Tsuru', descripcion: 'Bien', precio: 1000, negociable: false, condicion: 'USADO',
+      categoria: 'vehiculos', titulo: 'Tsuru', descripcion: 'Bien', precio: 1000, tipoPrecio: 'FIJO', negociable: false, condicion: 'USADO',
       modalidad: 'CLASIFICADO', atributos: { marca: 'Nissan' }, ubicacion: 'Centro', fotos: ['img/a.svg'], destacado: false,
       vendedorId: 3, vendedorNombre: null, vendedorWhatsapp: null, publicar: false,
     };
@@ -31,5 +31,7 @@ describe('panel del tianguis', () => {
     expect(faltanEnPanel({ ...e, vendedorId: null }, req, false)).toEqual(['el vendedor']);
     expect(faltanEnPanel({ ...e, vendedorNombre: 'Ana', vendedorWhatsapp: '9511234567' }, req, true)).toEqual([]);
     expect(faltanEnPanel({ ...e, fotos: [], atributos: {}, precio: NaN }, req, false)).toEqual(['el precio', 'al menos una foto', 'marca']);
+    // Servicio a cotizar: sin precio ni fotos.
+    expect(faltanEnPanel({ ...e, fotos: [], precio: null, tipoPrecio: 'COTIZAR', condicion: null }, req, false, true)).toEqual([]);
   });
 });

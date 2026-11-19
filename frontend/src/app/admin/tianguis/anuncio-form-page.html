@@ -11,21 +11,34 @@
   <label>Categoría
     <select (change)="elegirCategoria($any($event.target).value)">
       <option value="" [selected]="!datos().categoria">Elige…</option>
-      @for (c of categorias.value() ?? []; track c.slug) { <option [value]="c.slug" [selected]="datos().categoria === c.slug">{{ c.nombre }}@if (!c.activa) { (inactiva) }</option> }
+      @for (c of categorias.value() ?? []; track c.slug) { <option [value]="c.slug" [selected]="datos().categoria === c.slug">{{ c.nombre }}@if (c.tipo === 'SERVICIO') { (servicio) }@if (!c.activa) { (inactiva) }</option> }
     </select>
   </label>
   <label>Título <input maxlength="80" [value]="datos().titulo" (input)="poner('titulo', $any($event.target).value)" /></label>
   <div class="dos">
-    <label>Precio (MXN)
-      <input type="number" min="0" [value]="isNaN(datos().precio) ? '' : datos().precio" (input)="poner('precio', $any($event.target).value === '' ? NaN : +$any($event.target).value)" />
-    </label>
-    <label>Condición
-      <select (change)="poner('condicion', condicion($any($event.target).value))">
-        @for (c of condiciones; track c.valor) { <option [value]="c.valor" [selected]="datos().condicion === c.valor">{{ c.texto }}</option> }
-      </select>
-    </label>
+    @if (servicio()) {
+      <label>¿Cómo cobra?
+        <select (change)="poner('tipoPrecio', tipoPrecio($any($event.target).value))">
+          @for (t of tiposPrecio; track t.valor) { <option [value]="t.valor" [selected]="datos().tipoPrecio === t.valor">{{ t.texto }}</option> }
+        </select>
+      </label>
+    }
+    @if (datos().tipoPrecio !== 'COTIZAR') {
+      <label>{{ datos().tipoPrecio === 'DESDE' ? 'Desde (MXN)' : 'Precio (MXN)' }}
+        <input type="number" min="0" [value]="isNaN(datos().precio ?? NaN) ? '' : datos().precio" (input)="poner('precio', $any($event.target).value === '' ? NaN : +$any($event.target).value)" />
+      </label>
+    }
+    @if (!servicio()) {
+      <label>Condición
+        <select (change)="poner('condicion', condicion($any($event.target).value))">
+          @for (c of condiciones; track c.valor) { <option [value]="c.valor" [selected]="datos().condicion === c.valor">{{ c.texto }}</option> }
+        </select>
+      </label>
+    }
   </div>
-  <label class="en-linea"><input type="checkbox" [checked]="datos().negociable" (change)="poner('negociable', $any($event.target).checked)" /> Precio negociable</label>
+  @if (datos().tipoPrecio !== 'COTIZAR') {
+    <label class="en-linea"><input type="checkbox" [checked]="datos().negociable" (change)="poner('negociable', $any($event.target).checked)" /> Precio negociable</label>
+  }
 
   @if (categoria(); as c) {
     @if (c.campos.length) {
@@ -56,7 +69,7 @@
 
   <fieldset>
     <legend>Fotos</legend>
-    <app-fotos-anuncio [fotos]="datos().fotos" (fotosChange)="poner('fotos', $event)" [subir]="subir" />
+    <app-fotos-anuncio [fotos]="datos().fotos" (fotosChange)="poner('fotos', $event)" [subir]="subir" [opcionales]="servicio()" />
   </fieldset>
 
   <fieldset>

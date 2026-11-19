@@ -2,7 +2,9 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { CampoAtributo, CategoriaCorta, CategoriaTianguis, Condicion, EstadoAnuncio, Pagina } from '../../tianguis/tianguis.model';
+import {
+  CampoAtributo, CategoriaCorta, CategoriaTianguis, Condicion, EstadoAnuncio, Pagina, TipoCategoria, TipoPrecio,
+} from '../../tianguis/tianguis.model';
 
 export interface VendedorAdmin {
   id: number;
@@ -21,9 +23,12 @@ export interface AnuncioAdmin {
   idSlug: string;
   titulo: string;
   descripcion: string;
-  precio: number;
+  /** null solo si es «a cotizar». */
+  precio: number | null;
+  tipoPrecio: TipoPrecio;
   negociable: boolean;
-  condicion: Condicion;
+  /** null en servicios. */
+  condicion: Condicion | null;
   estado: EstadoAnuncio;
   modalidad: 'CLASIFICADO' | 'CONSIGNACION' | 'PROPIO';
   fotos: string[];
@@ -50,9 +55,12 @@ export interface AnuncioEdicion {
   categoria: string;
   titulo: string;
   descripcion: string;
-  precio: number;
+  /** null solo si es «a cotizar». */
+  precio: number | null;
+  tipoPrecio: TipoPrecio;
   negociable: boolean;
-  condicion: Condicion;
+  /** null en servicios. */
+  condicion: Condicion | null;
   modalidad: string;
   atributos: Record<string, string>;
   ubicacion: string;
@@ -82,6 +90,7 @@ export interface CategoriaEdicion {
   icono: string | null;
   orden: number;
   activa: boolean;
+  tipo: TipoCategoria;
   campos: CampoAtributo[];
 }
 
@@ -180,10 +189,11 @@ export class TianguisAdminApi {
 
 /** Motivos frecuentes de rechazo (más texto libre). */
 export const MOTIVOS_RECHAZO = [
-  'Las fotos no son del artículo o no se ve bien',
+  'Las fotos no son reales o no se ve bien',
   'Artículo prohibido por las reglas',
   'Precio irreal o sin precio',
-  'Más de un artículo en el anuncio',
-  'Es un servicio, no un artículo',
+  'Más de un artículo o servicio en el anuncio',
+  'Es un negocio establecido: debe sumarse al directorio',
+  'Servicio no permitido por las reglas',
   'Información incompleta o confusa',
 ];
