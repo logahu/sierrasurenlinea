@@ -162,7 +162,7 @@ public class TianguisResource {
         int t = Math.max(1, Math.min(tamano, MAX_TAMANO));
         int pag = Math.max(0, pagina);
         var consulta = AnuncioTianguis.<AnuncioTianguis>find(
-                w + " order by a.fechaVendido asc nulls first, " + porOrden + ", a.id desc", p);
+                w + " order by case when a.estado = :vendido then 1 else 0 end, " + porOrden + ", a.id desc", p);
         long total = consulta.count();
         List<AnuncioResumen> lista = consulta.page(Page.of(pag, t)).list().stream().map(AnuncioResumen::de).toList();
         return new Pagina<>(lista, total, pag, t, (int) Math.ceil(total / (double) t));

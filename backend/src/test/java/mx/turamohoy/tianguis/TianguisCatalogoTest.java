@@ -141,8 +141,8 @@ class TianguisCatalogoTest extends BaseTianguis {
         given().when().get(base + "&orden=precioDesc").then()
                 .body("anuncios.precio", contains(100000.0f, 50000.0f, 20000.0f, 3000.0f));
         // Sin acentos ni mayúsculas: «telefono» encuentra «Teléfono»; también busca en atributos.
-        given().when().get("/api/tianguis/anuncios?q=" + w + "%20TELEFONO").then().body("total", equalTo(1));
-        given().when().get("/api/tianguis/anuncios?q=" + w + "%20italika").then().body("total", equalTo(1));
+        given().queryParam("q", w + " TELEFONO").when().get("/api/tianguis/anuncios").then().body("total", equalTo(1));
+        given().queryParam("q", w + " italika").when().get("/api/tianguis/anuncios").then().body("total", equalTo(1));
         // Paginación: tamaño máximo 24.
         given().when().get(base + "&size=3&page=1&orden=precioAsc").then()
                 .body("total", equalTo(4)).body("paginas", equalTo(2)).body("anuncios", hasSize(1))
