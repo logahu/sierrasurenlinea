@@ -134,7 +134,7 @@ const CONSEJOS: Record<string, string[]> = {
   ],
   'estudio-melgarejo': [
     'Cada paquete dura una hora. Atendemos de lunes a sábado de 10:00 a 19:00; los domingos está cerrado.',
-    'Si quieres que te atienda alguien en particular, escríbelo en "Notas".',
+    'Si buscas un corte o peinado en particular, escríbelo en "Notas" o trae una foto de referencia.',
   ],
   autos: [
     'Revisa las fotos y características de cada vehículo antes de agendar.',
@@ -143,7 +143,9 @@ const CONSEJOS: Record<string, string[]> = {
 };
 
 /** Arma la guía de un negocio según cómo se pide en él. */
-export function guiaDe(n: Pick<Negocio, 'slug' | 'nombre' | 'tipo' | 'modoPedido' | 'colorPrimario' | 'soloMayoresEdad'>): Guia {
+export function guiaDe(
+  n: Pick<Negocio, 'slug' | 'nombre' | 'tipo' | 'modoPedido' | 'colorPrimario' | 'soloMayoresEdad' | 'agendaActiva'>,
+): Guia {
   const base = { slug: n.slug, nombre: n.nombre, color: n.colorPrimario, consejos: CONSEJOS[n.slug] ?? [] };
   if (n.tipo === 'SERVICIO') {
     return {
@@ -176,6 +178,24 @@ export function guiaDe(n: Pick<Negocio, 'slug' | 'nombre' | 'tipo' | 'modoPedido
         ENVIAR,
       ],
       consejos: ['El negocio te confirma disponibilidad para tu fecha, el anticipo y la hora de instalación.', ...base.consejos],
+    };
+  }
+  if (modo === 'CITA' && n.agendaActiva) {
+    return {
+      ...base,
+      resumen: 'Servicios por paquete con agenda en línea: eliges con quién, el día y la hora, y tu lugar queda apartado.',
+      pasos: [
+        { titulo: 'Elige tus paquetes', detalle: 'Abre cada paquete para ver qué incluye y su precio. Toca "Agregar a mi cita"; puedes juntar varios.' },
+        { titulo: 'Elige con quién', detalle: 'Toca "Quien esté disponible" o la persona que prefieras.' },
+        { titulo: 'Elige día y hora', detalle: 'Solo aparecen los horarios libres, hasta 30 días adelante. Si elegiste varios paquetes, se atienden seguidos con la misma persona.' },
+        { titulo: 'Inicia sesión y aparta', detalle: 'Toca "Apartar mi cita". Tu horario queda apartado al momento, recibes un folio y se abre WhatsApp con tu cita ya escrita: solo envía el mensaje.' },
+      ],
+      consejos: [
+        'Si no puedes llegar, avísanos por WhatsApp para liberar tu lugar.',
+        'Si alguien aparta ese mismo horario un instante antes, te avisamos para que elijas otro.',
+        'Consulta tus citas en Mi historial, en tu cuenta.',
+        ...base.consejos,
+      ],
     };
   }
   if (modo === 'CITA') {
