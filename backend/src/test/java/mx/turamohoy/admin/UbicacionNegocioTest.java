@@ -74,4 +74,47 @@ class UbicacionNegocioTest {
             como(dueno).body(antes).when().put("/api/admin/negocios/" + SLUG).then().statusCode(200);
         }
     }
+
+    @Test
+    void estudioMelgarejoYaTraeSusEnlacesDeGoogleYSuPin() {
+        Map<?, ?> n = como(Sesiones.dueno()).when().get("/api/admin/negocios/estudio-melgarejo").then().statusCode(200)
+                .body("googleMapsUrl", equalTo("https://maps.app.goo.gl/bpEujxaGgXyRK41H8"))
+                .body("googleResenasUrl", equalTo("https://g.page/r/CYv59KJmIXj6EBM/review"))
+                .body("atencionEnLocal", equalTo(true))
+                .extract().as(Map.class);
+        org.junit.jupiter.api.Assertions.assertEquals(16.323368, ((Number) n.get("lat")).doubleValue(), 0.000001);
+        org.junit.jupiter.api.Assertions.assertEquals(-96.588286, ((Number) n.get("lng")).doubleValue(), 0.000001);
+    }
+
+    @Test
+    void losEnlacesDeGoogleSeGuardanSeMuestranYSoloAceptanGoogle() {
+        String dueno = Sesiones.dueno();
+        Map<String, Object> antes = actual(dueno);
+        try {
+            Map<String, Object> m = actual(dueno);
+            m.put("googleMapsUrl", " https://maps.app.goo.gl/abc123 ");
+            m.put("googleResenasUrl", "https://g.page/r/XYZ/review");
+            como(dueno).body(m).when().put("/api/admin/negocios/" + SLUG).then().statusCode(200)
+                    .body("googleMapsUrl", equalTo("https://maps.app.goo.gl/abc123"))
+                    .body("googleResenasUrl", equalTo("https://g.page/r/XYZ/review"));
+            // Se muestran aunque el negocio sea solo en línea: son de su perfil, no de su local.
+            given().when().get("/api/negocios/" + SLUG).then().statusCode(200)
+                    .body("googleMapsUrl", equalTo("https://maps.app.goo.gl/abc123"))
+                    .body("googleResenasUrl", equalTo("https://g.page/r/XYZ/review"));
+
+            // Otro sitio o sin https: no.
+            for (String malo : new String[] {"https://ejemplo.com/maps", "http://maps.app.goo.gl/abc", "https://goo.gl/xyz", "javascript:alert(1)"}) {
+                Map<String, Object> x = new HashMap<>(m);
+                x.put("googleMapsUrl", malo);
+                como(dueno).body(x).when().put("/api/admin/negocios/" + SLUG).then().statusCode(400);
+            }
+            // Vacíos los quitan.
+            m.put("googleMapsUrl", "");
+            m.put("googleResenasUrl", null);
+            como(dueno).body(m).when().put("/api/admin/negocios/" + SLUG).then().statusCode(200)
+                    .body("googleMapsUrl", nullValue()).body("googleResenasUrl", nullValue());
+        } finally {
+            como(dueno).body(antes).when().put("/api/admin/negocios/" + SLUG).then().statusCode(200);
+        }
+    }
 }

@@ -23,6 +23,8 @@ public record NegocioAdminDto(
         String referencias,
         java.math.BigDecimal lat,
         java.math.BigDecimal lng,
+        String googleMapsUrl,
+        String googleResenasUrl,
         boolean soloMayoresEdad,
         /** true solo si es público (se conserva para compatibilidad). */
         boolean visible,
@@ -44,7 +46,7 @@ public record NegocioAdminDto(
         return new NegocioAdminDto(n.id, n.slug, n.nombre, n.eslogan, n.descripcion, n.tipo,
                 n.colorPrimario, n.portadaUrl, n.whatsapp, n.telefono, n.direccion, n.horario,
                 n.atencionEnLocal, n.colonia, n.referencias, n.lat, n.lng,
-                n.soloMayoresEdad, n.publico(), n.estado, n.visibleApp, n.topeAdelanto, n.orden, productosActivos, encargado,
+                n.googleMapsUrl, n.googleResenasUrl, n.soloMayoresEdad, n.publico(), n.estado, n.visibleApp, n.topeAdelanto, n.orden, productosActivos, encargado,
                 n.modoPedido(), n.agendaActiva, n.giro == null ? null : n.giro.slug);
     }
 }

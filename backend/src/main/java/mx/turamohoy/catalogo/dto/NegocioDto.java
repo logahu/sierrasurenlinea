@@ -31,6 +31,9 @@ public record NegocioDto(
         String referencias,
         java.math.BigDecimal lat,
         java.math.BigDecimal lng,
+        /** Perfil en Google Maps y enlace para dejar reseña (opcionales). */
+        String googleMapsUrl,
+        String googleResenasUrl,
         boolean soloMayoresEdad,
         /** Si se muestra dentro de la app de Google Play. */
         boolean visibleApp,
@@ -67,6 +70,7 @@ public record NegocioDto(
                 n.colorPrimario, n.portadaUrl, n.whatsapp, n.telefono, n.atencionEnLocal ? n.direccion : null, n.horario,
                 n.atencionEnLocal, n.agendaActiva, n.minutosCita, n.atencionEnLocal ? n.colonia : null, n.atencionEnLocal ? n.referencias : null,
                 n.atencionEnLocal ? n.lat : null, n.atencionEnLocal ? n.lng : null,
+                n.googleMapsUrl, n.googleResenasUrl,
                 n.soloMayoresEdad, n.visibleApp, n.estado, n.topeAdelanto, n.modoPedido(), GiroDto.Resumen.de(n.giro),
                 n.creadoEn, patrocinado, categorias, tiposEncargo);
     }
