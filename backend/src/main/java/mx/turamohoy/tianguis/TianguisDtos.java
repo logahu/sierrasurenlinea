@@ -18,16 +18,17 @@ public final class TianguisDtos {
     }
 
     public record CategoriaDto(Long id, String nombre, String slug, String icono, int orden, boolean activa,
-                               List<CampoAtributo> campos, long anuncios) {
+                               String tipo, List<CampoAtributo> campos, long anuncios) {
 
         static CategoriaDto de(CategoriaTianguis c, long anuncios) {
-            return new CategoriaDto(c.id, c.nombre, c.slug, c.icono, c.orden, c.activa, c.campos(), anuncios);
+            return new CategoriaDto(c.id, c.nombre, c.slug, c.icono, c.orden, c.activa, c.tipo.name(), c.campos(),
+                    anuncios);
         }
     }
 
-    public record CategoriaCorta(String slug, String nombre, String icono) {
+    public record CategoriaCorta(String slug, String nombre, String icono, String tipo) {
         static CategoriaCorta de(CategoriaTianguis c) {
-            return new CategoriaCorta(c.slug, c.nombre, c.icono);
+            return new CategoriaCorta(c.slug, c.nombre, c.icono, c.tipo.name());
         }
     }
 
@@ -38,27 +39,28 @@ public final class TianguisDtos {
     public record VendedorPublico(String nombre, String whatsapp, boolean verificado) {
     }
 
-    public record AnuncioResumen(Long id, String idSlug, String titulo, BigDecimal precio, boolean negociable,
-                                 String condicion, String estado, String portada, CategoriaCorta categoria,
+    public record AnuncioResumen(Long id, String idSlug, String titulo, BigDecimal precio, String tipoPrecio,
+                                 boolean negociable, String condicion, String estado, String portada, CategoriaCorta categoria,
                                  String ubicacion, LocalDateTime fechaPublicacion, LocalDateTime fechaVendido) {
 
         static AnuncioResumen de(AnuncioTianguis a) {
             List<String> f = a.listaFotos();
-            return new AnuncioResumen(a.id, a.idSlug(), a.titulo, a.precio, a.negociable, a.condicion.name(),
+            return new AnuncioResumen(a.id, a.idSlug(), a.titulo, a.precio, a.tipoPrecio.name(), a.negociable,
+                    a.condicionTexto(),
                     a.estado.name(), f.isEmpty() ? null : f.get(0), CategoriaCorta.de(a.categoria), a.ubicacion,
                     a.fechaPublicacion, a.fechaVendido);
         }
     }
 
     public record AnuncioDetalle(Long id, String idSlug, String titulo, String descripcion, BigDecimal precio,
-                                 boolean negociable, String condicion, String estado, List<String> fotos,
+                                 String tipoPrecio, boolean negociable, String condicion, String estado, List<String> fotos,
                                  CategoriaCorta categoria, List<Atributo> atributos, String ubicacion,
                                  LocalDateTime fechaPublicacion, LocalDateTime fechaVendido,
                                  VendedorPublico vendedor, int vistas) {
 
         static AnuncioDetalle de(AnuncioTianguis a) {
-            return new AnuncioDetalle(a.id, a.idSlug(), a.titulo, a.descripcion, a.precio, a.negociable,
-                    a.condicion.name(), a.estado.name(), a.listaFotos(), CategoriaCorta.de(a.categoria),
+            return new AnuncioDetalle(a.id, a.idSlug(), a.titulo, a.descripcion, a.precio, a.tipoPrecio.name(),
+                    a.negociable, a.condicionTexto(), a.estado.name(), a.listaFotos(), CategoriaCorta.de(a.categoria),
                     atributosDe(a), a.ubicacion, a.fechaPublicacion, a.fechaVendido,
                     new VendedorPublico(a.vendedor.nombre, a.vendedor.whatsapp, a.vendedor.verificado), a.vistas);
         }
@@ -79,11 +81,15 @@ public final class TianguisDtos {
     public record Publicacion(
             @NotBlank(message = "Elige la categoría.") String categoria,
             @NotBlank(message = "Escribe el título.") @Size(max = 80, message = "El título es de máximo 80 letras.") String titulo,
-            @NotBlank(message = "Describe el artículo.") @Size(max = 2000, message = "La descripción es de máximo 2000 letras.") String descripcion,
-            @NotNull(message = "Escribe el precio.") @DecimalMin(value = "0", message = "El precio no puede ser negativo.")
+            @NotBlank(message = "Escribe la descripción.") @Size(max = 2000, message = "La descripción es de máximo 2000 letras.") String descripcion,
+            /** Obligatorio salvo «a cotizar». */
+            @DecimalMin(value = "0", message = "El precio no puede ser negativo.")
             @DecimalMax(value = "99999999", message = "Revisa el precio.") BigDecimal precio,
+            /** FIJO (por omisión), DESDE o COTIZAR; los dos últimos solo en servicios. */
+            String tipoPrecio,
             boolean negociable,
-            @NotBlank(message = "Elige la condición.") String condicion,
+            /** Obligatoria en artículos; se ignora en servicios. */
+            String condicion,
             Map<String, String> atributos,
             @NotBlank(message = "Escribe la localidad o colonia.") @Size(max = 80, message = "La ubicación es de máximo 80 letras.") String ubicacion,
             List<String> fotos,
@@ -99,7 +105,7 @@ public final class TianguisDtos {
     }
 
     public record Gestion(Long id, String idSlug, String titulo, String descripcion, BigDecimal precio,
-                          boolean negociable, String condicion, String estado, List<String> fotos,
+                          String tipoPrecio, boolean negociable, String condicion, String estado, List<String> fotos,
                           CategoriaCorta categoria, Map<String, String> atributos, String ubicacion,
                           String vendedorNombre, String vendedorWhatsapp, String motivoRechazo, String pausadoPor,
                           LocalDateTime fechaCreacion, LocalDateTime fechaPublicacion,
@@ -118,11 +124,15 @@ public final class TianguisDtos {
     public record AnuncioEdicion(
             @NotBlank(message = "Elige la categoría.") String categoria,
             @NotBlank(message = "Escribe el título.") @Size(max = 80, message = "El título es de máximo 80 letras.") String titulo,
-            @NotBlank(message = "Describe el artículo.") @Size(max = 2000, message = "La descripción es de máximo 2000 letras.") String descripcion,
-            @NotNull(message = "Escribe el precio.") @DecimalMin(value = "0", message = "El precio no puede ser negativo.")
+            @NotBlank(message = "Escribe la descripción.") @Size(max = 2000, message = "La descripción es de máximo 2000 letras.") String descripcion,
+            /** Obligatorio salvo «a cotizar». */
+            @DecimalMin(value = "0", message = "El precio no puede ser negativo.")
             @DecimalMax(value = "99999999", message = "Revisa el precio.") BigDecimal precio,
+            /** FIJO (por omisión), DESDE o COTIZAR; los dos últimos solo en servicios. */
+            String tipoPrecio,
             boolean negociable,
-            @NotBlank(message = "Elige la condición.") String condicion,
+            /** Obligatoria en artículos; se ignora en servicios. */
+            String condicion,
             String modalidad,
             Map<String, String> atributos,
             @NotBlank(message = "Escribe la localidad o colonia.") @Size(max = 80, message = "La ubicación es de máximo 80 letras.") String ubicacion,
@@ -154,7 +164,7 @@ public final class TianguisDtos {
     }
 
     public record AnuncioAdmin(Long id, String idSlug, String titulo, String descripcion, BigDecimal precio,
-                               boolean negociable, String condicion, String estado, String modalidad,
+                               String tipoPrecio, boolean negociable, String condicion, String estado, String modalidad,
                                List<String> fotos, CategoriaCorta categoria, Map<String, String> atributos,
                                String ubicacion, boolean destacado, String motivoRechazo, String pausadoPor,
                                int renovaciones, VendedorAdmin vendedor, LocalDateTime fechaCreacion,
@@ -163,8 +173,8 @@ public final class TianguisDtos {
                                long reportesSinAtender, boolean delPublico) {
 
         static AnuncioAdmin de(AnuncioTianguis a) {
-            return new AnuncioAdmin(a.id, a.idSlug(), a.titulo, a.descripcion, a.precio, a.negociable,
-                    a.condicion.name(), a.estado.name(), a.modalidad.name(), a.listaFotos(),
+            return new AnuncioAdmin(a.id, a.idSlug(), a.titulo, a.descripcion, a.precio, a.tipoPrecio.name(),
+                    a.negociable, a.condicionTexto(), a.estado.name(), a.modalidad.name(), a.listaFotos(),
                     CategoriaCorta.de(a.categoria), a.mapaAtributos(), a.ubicacion, a.destacado, a.motivoRechazo,
                     a.pausadoPor, a.renovaciones, VendedorAdmin.de(a.vendedor), a.fechaCreacion, a.actualizado,
                     a.fechaPublicacion, a.fechaVencimiento, a.fechaVendido, a.vistas,
@@ -175,6 +185,8 @@ public final class TianguisDtos {
     public record CategoriaEdicion(@NotBlank(message = "Escribe el nombre.") @Size(max = 60) String nombre,
                                    @NotBlank(message = "Escribe el slug.") @Size(max = 60) String slug,
                                    @Size(max = 30) String icono, int orden, boolean activa,
+                                   /** ARTICULO (por omisión) o SERVICIO. */
+                                   String tipo,
                                    List<CampoAtributo> campos) {
     }
 

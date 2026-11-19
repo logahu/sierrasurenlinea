@@ -169,7 +169,7 @@ public class AdminTianguisResource {
 
     private void llenar(AnuncioTianguis a, AnuncioEdicion e) {
         servicio.llenar(a, new TianguisServicio.Datos(e.categoria(), e.titulo(), e.descripcion(), e.precio(),
-                e.negociable(), e.condicion(), e.atributos(), e.ubicacion(), e.fotos()));
+                e.tipoPrecio(), e.negociable(), e.condicion(), e.atributos(), e.ubicacion(), e.fotos()));
         try {
             a.modalidad = e.modalidad() == null || e.modalidad().isBlank() ? AnuncioTianguis.Modalidad.CLASIFICADO
                     : AnuncioTianguis.Modalidad.valueOf(e.modalidad().trim().toUpperCase(Locale.ROOT));
@@ -288,6 +288,17 @@ public class AdminTianguisResource {
         c.icono = Tianguis.limpio(e.icono());
         c.orden = e.orden();
         c.activa = e.activa();
+        CategoriaTianguis.Tipo tipo;
+        try {
+            tipo = e.tipo() == null || e.tipo().isBlank() ? CategoriaTianguis.Tipo.ARTICULO
+                    : CategoriaTianguis.Tipo.valueOf(e.tipo().trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            throw Errores.de(Status.BAD_REQUEST, "Tipo de categoría no válido.");
+        }
+        if (c.id != null && tipo != c.tipo && AnuncioTianguis.count("categoria", c) > 0) {
+            throw Errores.de(Status.CONFLICT, "La categoría ya tiene anuncios; no se puede cambiar entre artículo y servicio.");
+        }
+        c.tipo = tipo;
         c.camposAtributos = CampoAtributo.escribir(CampoAtributo.validarDefinicion(e.campos()));
     }
 

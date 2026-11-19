@@ -110,13 +110,14 @@ public class TianguisResource {
 
     /**
      * Anuncios visibles con filtros combinables. {@code orden}: recientes (por omisión),
-     * precioAsc o precioDesc; los vendidos van al final. {@code size} máximo 24.
+     * precioAsc o precioDesc; los vendidos van al final. {@code tipo}: ARTICULO o SERVICIO. {@code size} máximo 24.
      */
     @GET
     @Path("/anuncios")
     @Transactional
     public Pagina<AnuncioResumen> anuncios(@QueryParam("q") String q, @QueryParam("categoria") String categoria,
                                            @QueryParam("condicion") String condicion,
+                                           @QueryParam("tipo") String tipo,
                                            @QueryParam("precioMin") BigDecimal precioMin,
                                            @QueryParam("precioMax") BigDecimal precioMax,
                                            @QueryParam("orden") @DefaultValue("recientes") String orden,
@@ -137,6 +138,14 @@ public class TianguisResource {
             w.append(" and a.categoria.slug = :categoria");
             p.and("categoria", categoria.trim());
         }
+        if (tipo != null && !tipo.isBlank()) {
+            try {
+                p.and("tipo", CategoriaTianguis.Tipo.valueOf(tipo.trim().toUpperCase(Locale.ROOT)));
+            } catch (IllegalArgumentException e) {
+                throw Errores.de(Status.BAD_REQUEST, "Tipo no válido.");
+            }
+            w.append(" and a.categoria.tipo = :tipo");
+        }
         if (condicion != null && !condicion.isBlank()) {
             try {
                 p.and("condicion", AnuncioTianguis.Condicion.valueOf(condicion.trim().toUpperCase(Locale.ROOT)));
@@ -154,8 +163,9 @@ public class TianguisResource {
             p.and("precioMax", precioMax);
         }
         String porOrden = switch (orden) {
-            case "precioAsc" -> "a.precio asc, a.fechaPublicacion desc";
-            case "precioDesc" -> "a.precio desc, a.fechaPublicacion desc";
+            // «A cotizar» (sin precio) va después de los que tienen precio.
+            case "precioAsc" -> "case when a.precio is null then 1 else 0 end, a.precio asc, a.fechaPublicacion desc";
+            case "precioDesc" -> "case when a.precio is null then 1 else 0 end, a.precio desc, a.fechaPublicacion desc";
             case "recientes" -> "a.fechaPublicacion desc";
             default -> throw Errores.de(Status.BAD_REQUEST, "Orden no válido.");
         };
@@ -254,7 +264,7 @@ public class TianguisResource {
         }
         if (v != null && AnuncioTianguis.count("vendedor = ?1 and estado in ?2", v, ACTIVOS) >= limites.activosPorVendedor) {
             throw Errores.de(Status.TOO_MANY_REQUESTS, "Tienes " + limites.activosPorVendedor
-                    + " anuncios activos. Marca alguno como vendido para publicar otro.");
+                    + " anuncios activos. Marca alguno como vendido o páusalo para publicar otro.");
         }
         if (!limites.publicarPorIp.permitir(ip)) {
             throw Errores.de(Status.TOO_MANY_REQUESTS, "Se enviaron muchos anuncios desde esta conexión. Intenta mañana.");
@@ -271,8 +281,8 @@ public class TianguisResource {
     }
 
     static TianguisServicio.Datos datos(Publicacion p) {
-        return new TianguisServicio.Datos(p.categoria(), p.titulo(), p.descripcion(), p.precio(), p.negociable(),
-                p.condicion(), p.atributos(), p.ubicacion(), p.fotos());
+        return new TianguisServicio.Datos(p.categoria(), p.titulo(), p.descripcion(), p.precio(), p.tipoPrecio(),
+                p.negociable(), p.condicion(), p.atributos(), p.ubicacion(), p.fotos());
     }
 
     private AnuncioTianguis porToken(String token) {
@@ -297,7 +307,8 @@ public class TianguisResource {
         boolean vencido = a.estado == Estado.VENCIDO
                 || (a.estado == Estado.PUBLICADO && a.fechaVencimiento != null && !a.fechaVencimiento.isAfter(ahora));
         String estado = vencido ? Estado.VENCIDO.name() : a.estado.name();
-        return new Gestion(a.id, a.idSlug(), a.titulo, a.descripcion, a.precio, a.negociable, a.condicion.name(),
+        return new Gestion(a.id, a.idSlug(), a.titulo, a.descripcion, a.precio, a.tipoPrecio.name(), a.negociable,
+                a.condicionTexto(),
                 estado, a.listaFotos(), CategoriaCorta.de(a.categoria), a.mapaAtributos(), a.ubicacion,
                 a.vendedor.nombre, a.vendedor.whatsapp, a.motivoRechazo, a.pausadoPor, a.fechaCreacion,
                 a.fechaPublicacion, a.fechaVencimiento, a.fechaVendido, a.renovaciones,
@@ -306,7 +317,7 @@ public class TianguisResource {
                 !bloqueado && a.estado == Estado.PUBLICADO && !vencido,
                 !bloqueado && a.estado == Estado.PAUSADO && AnuncioTianguis.POR_VENDEDOR.equals(a.pausadoPor),
                 !bloqueado && (vencido || a.estado == Estado.PUBLICADO) && a.renovaciones < Tianguis.MAX_RENOVACIONES,
-                !bloqueado && (a.estado == Estado.PUBLICADO || a.estado == Estado.PAUSADO || vencido),
+                !bloqueado && !a.esServicio() && (a.estado == Estado.PUBLICADO || a.estado == Estado.PAUSADO || vencido),
                 bloqueado);
     }
 

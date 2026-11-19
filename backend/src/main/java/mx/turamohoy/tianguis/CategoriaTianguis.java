@@ -3,6 +3,8 @@ package mx.turamohoy.tianguis;
 import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -15,6 +17,9 @@ import java.util.Optional;
 @Entity
 @Table(name = "tianguis_categoria")
 public class CategoriaTianguis extends PanacheEntityBase {
+
+    /** Artículo: se vende una cosa. Servicio: sin condición, precio fijo/desde/a cotizar y fotos opcionales. */
+    public enum Tipo { ARTICULO, SERVICIO }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,6 +39,14 @@ public class CategoriaTianguis extends PanacheEntityBase {
 
     @Column(nullable = false)
     public boolean activa = true;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    public Tipo tipo = Tipo.ARTICULO;
+
+    public boolean esServicio() {
+        return tipo == Tipo.SERVICIO;
+    }
 
     /** JSON con la definición de los campos (ver {@link CampoAtributo}). */
     @Column(name = "campos_atributos", nullable = false, length = 4000)

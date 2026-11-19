@@ -28,35 +28,68 @@ public class TianguisServicio {
     ImagenesPermitidas imagenes;
 
     /** Datos comunes de un anuncio, ya validados por Bean Validation. */
-    public record Datos(String categoria, String titulo, String descripcion, BigDecimal precio, boolean negociable,
-                        String condicion, Map<String, String> atributos, String ubicacion, List<String> fotos) {
+    public record Datos(String categoria, String titulo, String descripcion, BigDecimal precio, String tipoPrecio,
+                        boolean negociable, String condicion, Map<String, String> atributos, String ubicacion, List<String> fotos) {
     }
 
-    /** Llena el anuncio con datos válidos: categoría activa, atributos según la categoría y 1 a 8 fotos. */
+    /**
+     * Llena el anuncio con datos válidos: categoría activa y atributos según la categoría.
+     * Artículo: condición, precio fijo y 1 a 8 fotos. Servicio: sin condición, precio fijo/desde/a cotizar, 0 a 8 fotos.
+     */
     public void llenar(AnuncioTianguis a, Datos d) {
         CategoriaTianguis c = CategoriaTianguis.activaPorSlug(d.categoria())
                 .orElseThrow(() -> Errores.de(Status.BAD_REQUEST, "Esa categoría no existe."));
-        AnuncioTianguis.Condicion condicion;
-        try {
-            condicion = AnuncioTianguis.Condicion.valueOf(d.condicion().trim().toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException e) {
-            throw Errores.de(Status.BAD_REQUEST, "Condición no válida.");
+        AnuncioTianguis.TipoPrecio tipoPrecio = tipoPrecio(d.tipoPrecio());
+        AnuncioTianguis.Condicion condicion = null;
+        if (c.esServicio()) {
+            // La condición no aplica a un servicio: se ignora si llega.
+        } else {
+            if (tipoPrecio != AnuncioTianguis.TipoPrecio.FIJO) {
+                throw Errores.de(Status.BAD_REQUEST, "Un artículo lleva precio fijo.");
+            }
+            if (d.condicion() == null || d.condicion().isBlank()) {
+                throw Errores.de(Status.BAD_REQUEST, "Elige la condición.");
+            }
+            try {
+                condicion = AnuncioTianguis.Condicion.valueOf(d.condicion().trim().toUpperCase(Locale.ROOT));
+            } catch (IllegalArgumentException e) {
+                throw Errores.de(Status.BAD_REQUEST, "Condición no válida.");
+            }
+        }
+        BigDecimal precio = null;
+        if (tipoPrecio != AnuncioTianguis.TipoPrecio.COTIZAR) {
+            if (d.precio() == null) {
+                throw Errores.de(Status.BAD_REQUEST, "Escribe el precio.");
+            }
+            precio = d.precio().setScale(2, RoundingMode.HALF_UP);
         }
         a.categoria = c;
         a.titulo = d.titulo().trim();
         a.descripcion = d.descripcion().trim();
-        a.precio = d.precio().setScale(2, RoundingMode.HALF_UP);
-        a.negociable = d.negociable();
+        a.tipoPrecio = tipoPrecio;
+        a.precio = precio;
+        a.negociable = tipoPrecio != AnuncioTianguis.TipoPrecio.COTIZAR && d.negociable();
         a.condicion = condicion;
         a.ponerAtributos(CampoAtributo.validar(c.campos(), d.atributos()));
         a.ubicacion = d.ubicacion().trim();
-        a.ponerFotos(fotos(d.fotos()));
+        a.ponerFotos(fotos(d.fotos(), !c.esServicio()));
         a.actualizado = Tianguis.ahora();
         a.actualizarBusqueda();
     }
 
-    /** 1 a 8 fotos subidas para el tianguis (o de ejemplo del sitio), sin repetir. */
-    List<String> fotos(List<String> urls) {
+    static AnuncioTianguis.TipoPrecio tipoPrecio(String texto) {
+        if (texto == null || texto.isBlank()) {
+            return AnuncioTianguis.TipoPrecio.FIJO;
+        }
+        try {
+            return AnuncioTianguis.TipoPrecio.valueOf(texto.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            throw Errores.de(Status.BAD_REQUEST, "Tipo de precio no válido.");
+        }
+    }
+
+    /** Hasta 8 fotos subidas para el tianguis (o de ejemplo del sitio), sin repetir; los artículos llevan al menos una. */
+    List<String> fotos(List<String> urls, boolean obligatoria) {
         Negocio t = Tianguis.negocio();
         List<String> r = new ArrayList<>();
         for (String u : urls == null ? List.<String>of() : urls) {
@@ -65,7 +98,7 @@ public class TianguisServicio {
                 r.add(v);
             }
         }
-        if (r.isEmpty()) {
+        if (r.isEmpty() && obligatoria) {
             throw Errores.de(Status.BAD_REQUEST, "Agrega al menos una foto del artículo.");
         }
         if (r.size() > Tianguis.MAX_FOTOS) {

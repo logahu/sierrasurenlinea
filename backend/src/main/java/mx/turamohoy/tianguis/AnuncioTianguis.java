@@ -23,12 +23,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-/** Un artículo a la venta en el tianguis. */
+/** Un artículo a la venta o un servicio ofrecido en el tianguis (lo decide su categoría). */
 @Entity
 @Table(name = "tianguis_anuncio")
 public class AnuncioTianguis extends PanacheEntityBase {
 
     public enum Condicion { NUEVO_SIN_USO, SEMINUEVO, USADO, REPARADO }
+
+    /** Fijo: el precio exacto. Desde: «desde $300». Cotizar: sin precio. Los artículos siempre son FIJO. */
+    public enum TipoPrecio { FIJO, DESDE, COTIZAR }
 
     public enum Estado { PENDIENTE, PUBLICADO, VENDIDO, VENCIDO, RECHAZADO, PAUSADO }
 
@@ -60,14 +63,20 @@ public class AnuncioTianguis extends PanacheEntityBase {
     @Column(nullable = false, length = 2000)
     public String descripcion;
 
-    @Column(nullable = false, precision = 12, scale = 2)
+    /** Nulo solo si es «a cotizar». */
+    @Column(precision = 12, scale = 2)
     public BigDecimal precio;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_precio", nullable = false, length = 10)
+    public TipoPrecio tipoPrecio = TipoPrecio.FIJO;
 
     @Column(nullable = false)
     public boolean negociable;
 
+    /** Solo artículos; los servicios no llevan condición. */
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 15)
+    @Column(length = 15)
     public Condicion condicion;
 
     @Enumerated(EnumType.STRING)
@@ -137,6 +146,15 @@ public class AnuncioTianguis extends PanacheEntityBase {
 
     @Column(nullable = false)
     public int vistas;
+
+    public boolean esServicio() {
+        return categoria != null && categoria.esServicio();
+    }
+
+    /** Para los DTO: nombre de la condición o null (servicios). */
+    public String condicionTexto() {
+        return condicion == null ? null : condicion.name();
+    }
 
     // ---- Fotos y atributos (JSON)
 
@@ -217,6 +235,9 @@ public class AnuncioTianguis extends PanacheEntityBase {
         }
         if (!TRANSICIONES.getOrDefault(estado, Set.of()).contains(nuevo)) {
             throw Errores.de(Status.CONFLICT, "No se puede pasar de " + estado + " a " + nuevo + ".");
+        }
+        if (nuevo == Estado.VENDIDO && esServicio()) {
+            throw Errores.de(Status.CONFLICT, "Un servicio no se marca como vendido; páusalo.");
         }
         if (nuevo == Estado.PUBLICADO && vendedor.bloqueado) {
             throw Errores.de(Status.CONFLICT, "El vendedor está bloqueado; desbloquéalo primero.");
