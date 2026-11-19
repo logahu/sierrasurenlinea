@@ -1,6 +1,7 @@
-import { Component, DestroyRef, ViewEncapsulation, inject } from '@angular/core';
+import { Component, effect, DestroyRef, ViewEncapsulation, inject } from '@angular/core';
 import { Meta } from '@angular/platform-browser';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { TianguisAdminApi } from './tianguis/tianguis-admin.api';
 import { PedidosService } from './pedidos';
 import { Avatar } from '../compartido/avatar';
 import { SesionService } from './sesion';
@@ -35,6 +36,11 @@ import { SesionService } from './sesion';
             <a routerLink="/admin/tablero" routerLinkActive="activo">Tablero</a>
             <a routerLink="/admin/historial" routerLinkActive="activo">Historial</a>
           }
+          @if (sesion.veTianguis()) {
+            <a routerLink="/admin/tianguis" routerLinkActive="activo">
+              Tianguis @if (tianguis.porAtender()) { <span class="marca-nuevos" [attr.aria-label]="tianguis.porAtender() + ' por atender'">{{ tianguis.porAtender() }}</span> }
+            </a>
+          }
           @if (sesion.esDueno()) {
             <a routerLink="/admin/visibilidad" routerLinkActive="activo">En el sitio</a>
             <a routerLink="/admin/colonias" routerLinkActive="activo">Colonias</a>
@@ -56,6 +62,7 @@ import { SesionService } from './sesion';
 export class PanelLayout {
   protected readonly sesion = inject(SesionService);
   protected readonly pedidos = inject(PedidosService);
+  protected readonly tianguis = inject(TianguisAdminApi);
   private readonly router = inject(Router);
 
   constructor() {
@@ -65,7 +72,16 @@ export class PanelLayout {
     // El panel se instala como su propia app ("Sierra Sur Pedidos"), separada de la de clientes.
     const manifiesto = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
     manifiesto?.setAttribute('href', 'manifest-panel.webmanifest');
+    // Contador del tianguis (pendientes + reportes): al entrar y cada 2 minutos.
+    let reloj: ReturnType<typeof setInterval> | undefined;
+    effect(() => {
+      clearInterval(reloj);
+      if (!this.sesion.veTianguis()) return;
+      this.tianguis.actualizarResumen();
+      reloj = setInterval(() => this.tianguis.actualizarResumen(), 120_000);
+    });
     inject(DestroyRef).onDestroy(() => {
+      clearInterval(reloj);
       meta.removeTag("name='robots'");
       manifiesto?.setAttribute('href', 'manifest.webmanifest');
     });

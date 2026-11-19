@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { aSuInicio, conAgenda, conSesion, sinEmpleado, sinRepartidor, soloDueno } from './autorizacion';
+import { aSuInicio, conAgenda, conSesion, sinEmpleado, sinRepartidor, soloDueno, conTianguis } from './autorizacion';
 
 /** Panel de administración: /admin. Se carga aparte, solo cuando alguien entra. */
 export const ADMIN_ROUTES: Routes = [
@@ -99,6 +99,18 @@ export const ADMIN_ROUTES: Routes = [
                 title: 'Negocios en el sitio · Panel',
                 canActivate: [soloDueno],
                 loadComponent: () => import('./visibilidad-page').then((m) => m.VisibilidadPage),
+              },
+              {
+                path: 'tianguis',
+                title: 'Tianguis · Panel',
+                canActivate: [conTianguis],
+                loadComponent: () => import('./tianguis/tianguis-admin-page').then((m) => m.TianguisAdminPage),
+              },
+              {
+                path: 'tianguis/:id',
+                title: 'Anuncio del tianguis · Panel',
+                canActivate: [conTianguis],
+                loadComponent: () => import('./tianguis/anuncio-form-page').then((m) => m.AnuncioFormPage),
               },
               {
                 path: 'colonias',

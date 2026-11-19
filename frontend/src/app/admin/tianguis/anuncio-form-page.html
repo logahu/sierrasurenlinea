@@ -1,0 +1,110 @@
+<p class="migas"><a routerLink="/admin/tianguis">← Tianguis</a></p>
+<h1>{{ numero() ? 'Editar anuncio' : 'Nuevo anuncio' }}</h1>
+@if (actual.value(); as a) {
+  <p class="estado-actual ayuda">Estado: <strong>{{ estados[a.estado] }}</strong> · {{ a.vistas }} visitas
+    @if (a.fechaVencimiento && a.estado === 'PUBLICADO') { · vence {{ a.fechaVencimiento.slice(0, 10) }} }
+    @if (a.delPublico) { · enviado por el público }</p>
+  <p class="ayuda">Para publicar, pausar o rechazar usa las acciones de la lista. Guardar aquí no cambia el estado.</p>
+}
+
+<form (submit)="$event.preventDefault(); guardar(false)" novalidate>
+  <label>Categoría
+    <select (change)="elegirCategoria($any($event.target).value)">
+      <option value="" [selected]="!datos().categoria">Elige…</option>
+      @for (c of categorias.value() ?? []; track c.slug) { <option [value]="c.slug" [selected]="datos().categoria === c.slug">{{ c.nombre }}@if (!c.activa) { (inactiva) }</option> }
+    </select>
+  </label>
+  <label>Título <input maxlength="80" [value]="datos().titulo" (input)="poner('titulo', $any($event.target).value)" /></label>
+  <div class="dos">
+    <label>Precio (MXN)
+      <input type="number" min="0" [value]="isNaN(datos().precio) ? '' : datos().precio" (input)="poner('precio', $any($event.target).value === '' ? NaN : +$any($event.target).value)" />
+    </label>
+    <label>Condición
+      <select (change)="poner('condicion', condicion($any($event.target).value))">
+        @for (c of condiciones; track c.valor) { <option [value]="c.valor" [selected]="datos().condicion === c.valor">{{ c.texto }}</option> }
+      </select>
+    </label>
+  </div>
+  <label class="en-linea"><input type="checkbox" [checked]="datos().negociable" (change)="poner('negociable', $any($event.target).checked)" /> Precio negociable</label>
+
+  @if (categoria(); as c) {
+    @if (c.campos.length) {
+      <fieldset>
+        <legend>Características de {{ c.nombre }}</legend>
+        <div class="dos">
+          @for (f of c.campos; track f.nombre) {
+            <label><span>{{ f.etiqueta }}@if (f.unidad) { <span class="opcional"> ({{ f.unidad }})</span> }@if (!f.requerido) { <span class="opcional"> (opcional)</span> }</span>
+              @if (f.tipo === 'OPCION' || f.tipo === 'SI_NO') {
+                <select (change)="ponerAtributo(f.nombre, $any($event.target).value)">
+                  <option value="">—</option>
+                  @for (o of f.tipo === 'SI_NO' ? ['Sí', 'No'] : (f.opciones ?? []); track o) { <option [value]="o" [selected]="datos().atributos[f.nombre] === o">{{ o }}</option> }
+                </select>
+              } @else {
+                <input [type]="f.tipo === 'NUMERO' ? 'number' : 'text'" maxlength="60" [value]="datos().atributos[f.nombre] ?? ''"
+                       (input)="ponerAtributo(f.nombre, $any($event.target).value)" />
+              }
+            </label>
+          }
+        </div>
+      </fieldset>
+    }
+  }
+
+  <label>Descripción <textarea maxlength="2000" rows="6" [value]="datos().descripcion" (input)="poner('descripcion', $any($event.target).value)"></textarea></label>
+  <label><span>Localidad o colonia <span class="opcional">(nunca la dirección exacta)</span></span>
+    <input maxlength="80" [value]="datos().ubicacion" (input)="poner('ubicacion', $any($event.target).value)" /></label>
+
+  <fieldset>
+    <legend>Fotos</legend>
+    <app-fotos-anuncio [fotos]="datos().fotos" (fotosChange)="poner('fotos', $event)" [subir]="subir" />
+  </fieldset>
+
+  <fieldset>
+    <legend>Vendedor</legend>
+    <label class="en-linea"><input type="checkbox" [checked]="vendedorNuevo()" (change)="vendedorNuevo.set($any($event.target).checked)" /> Es un vendedor nuevo</label>
+    @if (vendedorNuevo()) {
+      <div class="dos">
+        <label>Nombre <input maxlength="80" [value]="datos().vendedorNombre ?? ''" (input)="poner('vendedorNombre', $any($event.target).value)" /></label>
+        <label>WhatsApp (10 dígitos) <input type="tel" [value]="datos().vendedorWhatsapp ?? ''" (input)="poner('vendedorWhatsapp', $any($event.target).value)" /></label>
+      </div>
+    } @else {
+      <label>Buscar <input type="search" placeholder="Nombre o WhatsApp" (change)="buscarVendedor.set($any($event.target).value)" /></label>
+      <ul class="resultados">
+        @if (actual.value(); as a) {
+          @if (vendedorFuera()) {
+            <li><button type="button" [attr.aria-pressed]="datos().vendedorId === a.vendedor.id" (click)="poner('vendedorId', a.vendedor.id)">{{ a.vendedor.nombre }} · {{ a.vendedor.whatsapp.slice(2) }}</button></li>
+          }
+        }
+        @for (v of (vendedores.value() ?? []).slice(0, 8); track v.id) {
+          <li><button type="button" [attr.aria-pressed]="datos().vendedorId === v.id" (click)="poner('vendedorId', v.id)">
+            {{ v.nombre }} · {{ v.whatsapp.slice(2) }}@if (v.verificado) { · ✓ }@if (v.bloqueado) { · bloqueado }</button></li>
+        }
+      </ul>
+    }
+  </fieldset>
+
+  <fieldset>
+    <legend>Para más adelante</legend>
+    <label>Modalidad
+      <select (change)="poner('modalidad', $any($event.target).value)">
+        <option value="CLASIFICADO" [selected]="datos().modalidad === 'CLASIFICADO'">Clasificado (lo vende su dueño)</option>
+        <option value="CONSIGNACION" [selected]="datos().modalidad === 'CONSIGNACION'">Consignación</option>
+        <option value="PROPIO" [selected]="datos().modalidad === 'PROPIO'">Propio</option>
+      </select>
+    </label>
+    <label class="en-linea"><input type="checkbox" [checked]="datos().destacado" (change)="poner('destacado', $any($event.target).checked)" /> Destacado <span class="opcional">(se guarda; los destacados llegan en la fase 3)</span></label>
+  </fieldset>
+
+  @if (intento() && falta().length) { <p class="error" role="alert">Falta: {{ falta().join(', ') }}.</p> }
+  @if (error(); as e) { <p class="error" role="alert">{{ e }}</p> }
+  @if (mensaje(); as m) { <p class="exito" role="status">{{ m }}</p> }
+
+  <div class="acciones">
+    @if (!numero()) {
+      <button type="button" class="btn primario" [disabled]="ocupado()" (click)="guardar(true)">Guardar y publicar</button>
+      <button type="submit" class="btn secundario" [disabled]="ocupado()">Guardar como pendiente</button>
+    } @else {
+      <button type="submit" class="btn primario" [disabled]="ocupado()">Guardar cambios</button>
+    }
+  </div>
+</form>

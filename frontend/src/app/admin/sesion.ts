@@ -29,11 +29,17 @@ export class SesionService {
     // Sesiones guardadas antes de que existiera el dato: se sigue mostrando.
     return u.rol !== 'ENCARGADO' || u.negocioConAgenda !== false;
   });
+  /** Tianguis: el administrador y el encargado del tianguis. */
+  readonly veTianguis = computed(() => {
+    const u = this.usuario();
+    return u?.rol === 'DUENO' || (u?.rol === 'ENCARGADO' && u.negocioSlug === 'tianguis');
+  });
   /** A dónde llega cada quien al entrar (y al abrir la app del panel). */
   readonly inicio = computed(() => {
     const u = this.usuario();
     if (u?.rol === 'REPARTIDOR') return '/admin/pedidos';
     if (u?.rol === 'EMPLEADO' || (u?.rol === 'ENCARGADO' && u.negocioConAgenda)) return '/admin/agenda';
+    if (u?.rol === 'ENCARGADO' && u.negocioSlug === 'tianguis') return '/admin/tianguis';
     return '/admin';
   });
 

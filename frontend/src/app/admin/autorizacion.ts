@@ -74,6 +74,10 @@ export const aSuInicio: CanActivateFn = () => {
 };
 
 /** Pantallas solo del dueño. */
+/** Panel del tianguis: dueño o encargado del tianguis. */
+export const conTianguis: CanActivateFn = () =>
+  inject(SesionService).veTianguis() ? true : inject(Router).createUrlTree(['/admin']);
+
 export const soloDueno: CanActivateFn = () =>
   inject(SesionService).esDueno() ? true : inject(Router).createUrlTree(['/admin']);
 
