@@ -59,13 +59,13 @@ public final class TianguisDtos {
         static AnuncioDetalle de(AnuncioTianguis a) {
             return new AnuncioDetalle(a.id, a.idSlug(), a.titulo, a.descripcion, a.precio, a.negociable,
                     a.condicion.name(), a.estado.name(), a.listaFotos(), CategoriaCorta.de(a.categoria),
-                    atributos(a), a.ubicacion, a.fechaPublicacion, a.fechaVendido,
+                    atributosDe(a), a.ubicacion, a.fechaPublicacion, a.fechaVendido,
                     new VendedorPublico(a.vendedor.nombre, a.vendedor.whatsapp, a.vendedor.verificado), a.vistas);
         }
     }
 
     /** Los atributos en el orden de la categoría, con su etiqueta. */
-    static List<Atributo> atributos(AnuncioTianguis a) {
+    static List<Atributo> atributosDe(AnuncioTianguis a) {
         Map<String, String> v = a.mapaAtributos();
         return a.categoria.campos().stream().filter(c -> v.containsKey(c.nombre()))
                 .map(c -> new Atributo(c.nombre(), c.etiqueta(), v.get(c.nombre()), c.unidad())).toList();

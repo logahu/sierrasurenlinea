@@ -1,7 +1,6 @@
 package mx.turamohoy.tianguis;
 
 import io.quarkus.panache.common.Page;
-import io.quarkus.panache.common.Parameters;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
@@ -87,34 +86,32 @@ public class AdminTianguisResource {
                                          @QueryParam("size") @DefaultValue("30") int tamano) {
         tianguis();
         StringBuilder w = new StringBuilder("from AnuncioTianguis a where 1 = 1");
-        Parameters p = new Parameters();
+        java.util.Map<String, Object> p = new java.util.HashMap<>();
         if (estado != null && !estado.isBlank()) {
             w.append(" and a.estado = :estado");
-            p.and("estado", estado(estado));
+            p.put("estado", estado(estado));
         }
         if (categoria != null && !categoria.isBlank()) {
             w.append(" and a.categoria.slug = :categoria");
-            p.and("categoria", categoria);
+            p.put("categoria", categoria);
         }
         if (vendedor != null) {
             w.append(" and a.vendedor.id = :vendedor");
-            p.and("vendedor", vendedor);
+            p.put("vendedor", vendedor);
         }
         String[] palabras = Tianguis.normalizar(q).split(" ");
         for (int i = 0; i < palabras.length && i < 8; i++) {
             if (!palabras[i].isBlank()) {
                 w.append(" and (a.busqueda like :q").append(i).append(" or a.vendedor.whatsapp like :q").append(i)
                         .append(" or lower(a.vendedor.nombre) like :q").append(i).append(")");
-                p.and("q" + i, "%" + palabras[i] + "%");
+                p.put("q" + i, "%" + palabras[i] + "%");
             }
         }
         int t = Math.max(1, Math.min(tamano, 100));
         int pag = Math.max(0, pagina);
         // Pendientes: los más viejos primero (para atenderlos en orden). Lo demás: lo más reciente.
         String orden = estado != null && estado.equalsIgnoreCase("PENDIENTE") ? "a.actualizado asc" : "a.actualizado desc";
-        var consulta = p.map().isEmpty()
-                ? AnuncioTianguis.<AnuncioTianguis>find(w + " order by " + orden + ", a.id desc")
-                : AnuncioTianguis.<AnuncioTianguis>find(w + " order by " + orden + ", a.id desc", p);
+        var consulta = AnuncioTianguis.<AnuncioTianguis>find(w + " order by " + orden + ", a.id desc", p);
         long total = consulta.count();
         List<AnuncioAdmin> lista = consulta.page(Page.of(pag, t)).list().stream().map(AnuncioAdmin::de).toList();
         return new Pagina<>(lista, total, pag, t, (int) Math.ceil(total / (double) t));
