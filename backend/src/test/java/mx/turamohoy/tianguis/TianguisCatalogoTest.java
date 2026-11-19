@@ -47,7 +47,8 @@ class TianguisCatalogoTest extends BaseTianguis {
     @Test
     void lasCategoriasTraenSusCamposYCuantosAnunciosHay() {
         given().when().get("/api/tianguis/categorias").then().statusCode(200)
-                .body("slug", contains("vehiculos", "motos", "electronica", "muebles", "herramientas", "ropa", "otros"))
+                .body("slug", contains("vehiculos", "motos", "electronica", "muebles", "herramientas", "ropa", "otros",
+                        "oficios", "belleza", "clases", "fletes"))
                 .body("find { it.slug == 'vehiculos' }.campos.nombre", hasItem("transmision"))
                 .body("find { it.slug == 'vehiculos' }.campos.find { it.nombre == 'marca' }.requerido", equalTo(true));
     }
