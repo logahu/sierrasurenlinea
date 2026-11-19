@@ -37,7 +37,7 @@
    Para texto se usa --acento-texto, que en modo oscuro se aclara para que se lea. */
 * { --acento-texto: var(--acento, var(--rosa)); }
 @media (prefers-color-scheme: dark) {
-  * { --acento-texto: color-mix(in srgb, var(--acento, var(--rosa)) 55%, #fff); }
+  * { --acento-texto: color-mix(in srgb, var(--acento, var(--rosa)) 40%, #fff); }
 }
 
 *, *::before, *::after { box-sizing: border-box; }
