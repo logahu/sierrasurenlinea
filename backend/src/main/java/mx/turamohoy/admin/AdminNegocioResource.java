@@ -64,6 +64,9 @@ public class AdminNegocioResource {
             /** Pin del mapa; los dos vacíos lo quitan. */
             Double lat,
             Double lng,
+            /** Perfil de Google Maps y enlace para reseñas; vacíos los quitan. */
+            String googleMapsUrl,
+            String googleResenasUrl,
             @Pattern(regexp = "#[0-9a-fA-F]{6}", message = "El color va en formato #rrggbb.") String colorPrimario,
             /** Compatibilidad: true = PUBLICO, false = OCULTO. Mejor usar {@code estado}. */
             Boolean visible,
@@ -121,6 +124,9 @@ public class AdminNegocioResource {
         mx.turamohoy.pedidos.Ubicacion u = mx.turamohoy.pedidos.Ubicacion.de(e.lat(), e.lng());
         n.lat = u == null ? null : u.lat();
         n.lng = u == null ? null : u.lng();
+        String mapsAntes = n.googleMapsUrl, resenasAntes = n.googleResenasUrl;
+        n.googleMapsUrl = mx.turamohoy.catalogo.model.EnlacesGoogle.validar(e.googleMapsUrl(), "Enlace de Google Maps");
+        n.googleResenasUrl = mx.turamohoy.catalogo.model.EnlacesGoogle.validar(e.googleResenasUrl(), "Enlace para reseñas");
         String portada = imagenes.validar(n, e.portadaUrl());
         if (portada != null) {
             n.portadaUrl = portada;
@@ -151,7 +157,8 @@ public class AdminNegocioResource {
                 .campo("Mapa", lat == null ? null : lat + ", " + lng, n.lat == null ? null : n.lat + ", " + n.lng)
                 .largo("Portada", portadaAntes, n.portadaUrl).campo("Color", color, n.colorPrimario)
                 .campo("Tope de adelanto", tope, n.topeAdelanto).campo("Visibilidad", nombreEstado(estado), nombreEstado(n.estado))
-                .campo("Giro", giro, n.giro == null ? null : n.giro.nombre);
+                .campo("Giro", giro, n.giro == null ? null : n.giro.nombre)
+                .campo("Google Maps", mapsAntes, n.googleMapsUrl).campo("Reseñas de Google", resenasAntes, n.googleResenasUrl);
         if (c.hay()) {
             Bitacora.anotar(sesion.usuario(), n, Bitacora.NEGOCIO, n.id, "Editó los datos de " + n.nombre, c.toString());
         }

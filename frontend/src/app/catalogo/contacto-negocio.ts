@@ -47,6 +47,22 @@ import { LEYENDA_EN_LINEA, direccionCorta, enlaceLlegarNegocio, puntoNegocio } f
         <a class="btn secundario" [href]="tel">📞 Llamar</a>
       }
     </div>
+    @if (n.googleMapsUrl || n.googleResenasUrl) {
+      <div class="google">
+        @if (n.googleMapsUrl) {
+          <a class="btn secundario" [href]="n.googleMapsUrl" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M12 2a7 7 0 0 0-7 7c0 5.2 7 13 7 13s7-7.8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5Z"/></svg>
+            Ver en Google Maps
+          </a>
+        }
+        @if (n.googleResenasUrl) {
+          <a class="btn secundario resena" [href]="n.googleResenasUrl" target="_blank" rel="noopener">
+            <span aria-hidden="true">★</span> Déjanos tu reseña
+          </a>
+          <small>¿Ya te atendimos? Tu opinión en Google nos ayuda a que más gente nos encuentre.</small>
+        }
+      </div>
+    }
   `,
   styles: `
     /* Toma los tokens --t-* del tema del negocio (src/temas/). */
@@ -78,6 +94,10 @@ import { LEYENDA_EN_LINEA, direccionCorta, enlaceLlegarNegocio, puntoNegocio } f
     .mapa-espera { height: 14rem; border-radius: .75rem; background: var(--t-linea, var(--linea)); display: grid; place-items: center; color: var(--tinta-suave); margin-bottom: 1rem; }
     dd small { display: block; color: var(--t-tinta-suave, var(--tinta-suave)); font-size: .88rem; }
     .btn.secundario { color: var(--t-tinta, var(--tinta)); border-color: var(--t-linea, var(--linea)); }
+    .google { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; margin-top: .9rem; padding-top: .9rem;
+      border-top: 1px dashed var(--t-linea, var(--linea)); }
+    .google small { flex-basis: 100%; color: var(--t-tinta-suave, var(--tinta-suave)); font-size: .85rem; }
+    .btn.resena span { color: #b7791f; }
     dl { display: grid; grid-template-columns: auto 1fr; gap: .35rem 1rem; margin: 0; font-size: .95rem; }
     dt { color: var(--t-tinta-suave, var(--tinta-suave)); }
     dd { margin: 0; }

@@ -91,6 +91,14 @@ public class Negocio extends PanacheEntityBase {
     @Column(precision = 9, scale = 6)
     public java.math.BigDecimal lng;
 
+    /** Perfil de Negocio de Google: «Ver en Google Maps» (opcional). */
+    @Column(name = "google_maps_url", length = 300)
+    public String googleMapsUrl;
+
+    /** Enlace para calificar en Google: «Déjanos tu reseña» (opcional). */
+    @Column(name = "google_resenas_url", length = 300)
+    public String googleResenasUrl;
+
     /** Si es true, el sitio muestra el aviso de venta solo a mayores de 18 años. */
     @Column(name = "solo_mayores_edad", nullable = false)
     public boolean soloMayoresEdad;

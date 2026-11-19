@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, computed, effect, inject, input, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
+import { DatosEstructurados } from './datos-estructurados';
 import { RouterLink } from '@angular/router';
 import { CatalogoService } from './catalogo.service';
 import { soloEnWeb } from '../modo-app';
@@ -16,6 +17,7 @@ import { direccionCorta, horarioCorto } from './ubicacion-negocio';
 /** Catálogo de un negocio: /turamohoy, /inflables?categoria=brincolines, etc. */
 @Component({
   selector: 'app-catalogo-page',
+  providers: [DatosEstructurados],
   imports: [RouterLink, ContactoNegocio, EncargoForm, BarraCarrito],
   templateUrl: './catalogo-page.html',
   styleUrl: './catalogo-page.scss',
@@ -37,6 +39,7 @@ export class CatalogoPage {
 
   private readonly api = inject(CatalogoService);
   private readonly title = inject(Title);
+  private readonly datosEstructurados = inject(DatosEstructurados);
 
   /** Parámetro de ruta :negocio (withComponentInputBinding). */
   readonly slug = input.required<string>({ alias: 'negocio' });
@@ -92,6 +95,7 @@ export class CatalogoPage {
       const n = this.negocio.value();
       this.title.setTitle(n ? `${n.nombre} | Sierra Sur en Línea` : 'Sierra Sur en Línea');
     });
+    effect(() => this.datosEstructurados.poner(this.negocio.hasValue() ? this.negocio.value() : null));
   }
 
   reintentar(): void {
