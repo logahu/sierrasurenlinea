@@ -64,6 +64,9 @@ export interface Negocio {
   minutosCita?: number;
   colonia?: string | null;
   referencias?: string | null;
+  /** Perfil en Google Maps («Ver en Google Maps») y enlace para calificar («Déjanos tu reseña»). */
+  googleMapsUrl?: string | null;
+  googleResenasUrl?: string | null;
   lat?: number | null;
   lng?: number | null;
   soloMayoresEdad: boolean;

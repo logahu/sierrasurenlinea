@@ -109,6 +109,20 @@ export function whatsappValido(texto: string): boolean {
           }
         </fieldset>
 
+        <fieldset>
+          <legend>Google</legend>
+          <label>
+            <span>Enlace de Google Maps <span class="opcional">(opcional)</span></span>
+            <input formControlName="googleMapsUrl" type="url" inputmode="url" maxlength="300" placeholder="https://maps.app.goo.gl/…" />
+            <small>En Google Maps abre el perfil del negocio → «Compartir» → «Copiar vínculo». Muestra el botón «Ver en Google Maps».</small>
+          </label>
+          <label>
+            <span>Enlace para reseñas <span class="opcional">(opcional)</span></span>
+            <input formControlName="googleResenasUrl" type="url" inputmode="url" maxlength="300" placeholder="https://g.page/r/…/review" />
+            <small>En tu Perfil de Negocio de Google → «Pedir reseñas» → copia el enlace. Muestra «Déjanos tu reseña».</small>
+          </label>
+        </fieldset>
+
         @if (n.tipo === 'SERVICIO') {
           <fieldset>
             <legend>Mandados</legend>
@@ -211,6 +225,8 @@ export class EditarNegocio {
     atencionEnLocal: [false],
     colonia: [''],
     referencias: [''],
+    googleMapsUrl: [''],
+    googleResenasUrl: [''],
     colorPrimario: ['#000000'],
     giro: [''],
     topeAdelanto: [null as number | null],
@@ -273,6 +289,8 @@ export class EditarNegocio {
       atencionEnLocal: !!n.atencionEnLocal,
       colonia: n.colonia ?? '',
       referencias: n.referencias ?? '',
+      googleMapsUrl: n.googleMapsUrl ?? '',
+      googleResenasUrl: n.googleResenasUrl ?? '',
       colorPrimario: n.colorPrimario,
       giro: n.giro ?? '',
       topeAdelanto: n.topeAdelanto,
@@ -296,6 +314,8 @@ export class EditarNegocio {
       ...v,
       colonia: v.colonia || null,
       referencias: v.referencias.trim() || null,
+      googleMapsUrl: v.googleMapsUrl.trim() || null,
+      googleResenasUrl: v.googleResenasUrl.trim() || null,
       lat: p?.lat ?? null,
       lng: p?.lng ?? null,
       portadaUrl: this.portada() ?? n.portadaUrl,

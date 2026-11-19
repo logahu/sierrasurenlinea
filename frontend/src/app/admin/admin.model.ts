@@ -227,6 +227,9 @@ export interface NegocioAdmin {
   atencionEnLocal?: boolean;
   colonia?: string | null;
   referencias?: string | null;
+  /** Perfil de Google Maps y enlace para reseñas (opcionales). */
+  googleMapsUrl?: string | null;
+  googleResenasUrl?: string | null;
   lat?: number | null;
   lng?: number | null;
   soloMayoresEdad: boolean;
@@ -251,7 +254,7 @@ export interface NegocioAdmin {
 /** Lo que se manda al guardar un negocio. */
 export type NegocioEdicion = Pick<
   NegocioAdmin,
-  'nombre' | 'eslogan' | 'descripcion' | 'whatsapp' | 'telefono' | 'direccion' | 'horario' | 'atencionEnLocal' | 'colonia' | 'referencias' | 'lat' | 'lng' | 'colorPrimario' | 'topeAdelanto' | 'portadaUrl' | 'giro'
+  'nombre' | 'eslogan' | 'descripcion' | 'whatsapp' | 'telefono' | 'direccion' | 'horario' | 'atencionEnLocal' | 'colonia' | 'referencias' | 'googleMapsUrl' | 'googleResenasUrl' | 'lat' | 'lng' | 'colorPrimario' | 'topeAdelanto' | 'portadaUrl' | 'giro'
 >;
 
 export interface CategoriaAdmin {
