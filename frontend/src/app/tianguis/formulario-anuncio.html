@@ -64,7 +64,7 @@
           <label class="casilla"><input type="checkbox" [checked]="datos().negociable" (change)="poner('negociable', $any($event.target).checked)" /> El precio es negociable</label>
         }
         @for (c of campos(); track c.nombre) {
-          <label class="campo">{{ c.etiqueta }}@if (c.unidad) { <span class="opcional"> ({{ c.unidad }})</span> }@if (!c.requerido) { <span class="opcional"> (opcional)</span> }
+          <label class="campo"><span>{{ c.etiqueta }}@if (c.unidad) { <span class="opcional"> ({{ c.unidad }})</span> }@if (!c.requerido) { <span class="opcional"> (opcional)</span> }</span>
             @switch (c.tipo) {
               @case ('OPCION') {
                 <select (change)="ponerAtributo(c.nombre, $any($event.target).value)">
