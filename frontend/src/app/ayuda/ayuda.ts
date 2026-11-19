@@ -147,6 +147,22 @@ export function guiaDe(
   n: Pick<Negocio, 'slug' | 'nombre' | 'tipo' | 'modoPedido' | 'colorPrimario' | 'soloMayoresEdad' | 'agendaActiva'>,
 ): Guia {
   const base = { slug: n.slug, nombre: n.nombre, color: n.colorPrimario, consejos: CONSEJOS[n.slug] ?? [] };
+  if (n.slug === 'tianguis') {
+    return {
+      ...base,
+      resumen: 'Compra y vende de segunda mano: trato directo con el vendedor por WhatsApp.',
+      pasos: [
+        { titulo: 'Busca', detalle: 'Usa el buscador, las categorías y los filtros de condición y precio.' },
+        { titulo: 'Revisa la ficha', detalle: 'Mira las fotos, las características, la condición y la zona del vendedor.' },
+        { titulo: 'Escríbele al vendedor', detalle: 'Toca "Contactar por WhatsApp": el mensaje ya va escrito con el anuncio.' },
+        { titulo: '¿Quieres vender?', detalle: 'Toca "Vender un artículo": sin cuenta, en unos minutos. Lo revisamos antes de publicarlo y te damos un enlace privado para administrarlo.' },
+      ],
+      consejos: [
+        'Revisa el artículo en persona, reúnete en un lugar público y no des anticipos a desconocidos.',
+        'Si un anuncio te parece sospechoso, usa "Reportar este anuncio" en su ficha.',
+      ],
+    };
+  }
   if (n.tipo === 'SERVICIO') {
     return {
       ...base,

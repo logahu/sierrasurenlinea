@@ -1,0 +1,123 @@
+<ol class="progreso" aria-label="Pasos">
+  @for (p of pasos; track p; let i = $index) {
+    <li [class.hecho]="i < paso()" [class.actual]="i === paso()">
+      <button type="button" (click)="ir(i)" [disabled]="i >= paso()" [attr.aria-current]="i === paso() ? 'step' : null">
+        <span class="numero">{{ i + 1 }}</span><span class="nombre">{{ p }}</span>
+      </button>
+    </li>
+  }
+</ol>
+
+<form (submit)="$event.preventDefault(); siguiente()" novalidate>
+  <h2 id="paso-actual" tabindex="-1">{{ paso() + 1 }}. {{ pasos[paso()] }}</h2>
+
+  @switch (paso()) {
+    @case (0) {
+      <p class="ayuda">¿Qué vas a vender?</p>
+      <div class="categorias">
+        @for (c of categorias(); track c.slug) {
+          <button type="button" class="categoria" [class.elegida]="datos().categoria === c.slug" (click)="elegirCategoria(c.slug)">
+            <app-icono-giro [icono]="c.icono" /> {{ c.nombre }}
+          </button>
+        }
+      </div>
+    }
+    @case (1) {
+      <div class="campos">
+        <label class="campo ancho">Título
+          <input maxlength="80" [value]="datos().titulo" (input)="poner('titulo', $any($event.target).value)"
+                 placeholder="Ej. Refrigerador Mabe 14 pies" />
+          <small>{{ datos().titulo.length }}/80 · Un artículo por anuncio.</small>
+        </label>
+        <label class="campo">Precio (MXN)
+          <input type="number" inputmode="numeric" min="0" step="1" [value]="isNaN(datos().precio) ? '' : datos().precio"
+                 (input)="poner('precio', $any($event.target).value === '' ? NaN : +$any($event.target).value)" placeholder="$" />
+        </label>
+        <label class="campo">Condición
+          <select (change)="poner('condicion', condicion($any($event.target).value))">
+            @for (c of condiciones; track c.valor) { <option [value]="c.valor" [selected]="datos().condicion === c.valor">{{ c.texto }}</option> }
+          </select>
+        </label>
+        <label class="casilla"><input type="checkbox" [checked]="datos().negociable" (change)="poner('negociable', $any($event.target).checked)" /> El precio es negociable</label>
+        @for (c of campos(); track c.nombre) {
+          <label class="campo">{{ c.etiqueta }}@if (c.unidad) { <span class="opcional"> ({{ c.unidad }})</span> }@if (!c.requerido) { <span class="opcional"> (opcional)</span> }
+            @switch (c.tipo) {
+              @case ('OPCION') {
+                <select (change)="ponerAtributo(c.nombre, $any($event.target).value)">
+                  <option value="" [selected]="!datos().atributos[c.nombre]">Elige…</option>
+                  @for (o of c.opciones ?? []; track o) { <option [value]="o" [selected]="datos().atributos[c.nombre] === o">{{ o }}</option> }
+                </select>
+              }
+              @case ('SI_NO') {
+                <select (change)="ponerAtributo(c.nombre, $any($event.target).value)">
+                  <option value="" [selected]="!datos().atributos[c.nombre]">Elige…</option>
+                  <option value="Sí" [selected]="datos().atributos[c.nombre] === 'Sí'">Sí</option>
+                  <option value="No" [selected]="datos().atributos[c.nombre] === 'No'">No</option>
+                </select>
+              }
+              @case ('NUMERO') {
+                <input type="number" inputmode="numeric" min="0" [value]="datos().atributos[c.nombre] ?? ''"
+                       (input)="ponerAtributo(c.nombre, $any($event.target).value)" />
+              }
+              @default {
+                <input maxlength="60" [value]="datos().atributos[c.nombre] ?? ''" (input)="ponerAtributo(c.nombre, $any($event.target).value)" />
+              }
+            }
+          </label>
+        }
+        <label class="campo ancho">Descripción
+          <textarea maxlength="2000" rows="6" [value]="datos().descripcion" (input)="poner('descripcion', $any($event.target).value)"
+                    placeholder="Estado, detalles, qué incluye, por qué lo vendes…"></textarea>
+          <small>{{ datos().descripcion.length }}/2000</small>
+        </label>
+        <label class="campo ancho">Localidad o colonia
+          <input maxlength="80" [value]="datos().ubicacion" (input)="poner('ubicacion', $any($event.target).value)" placeholder="Ej. Barrio de Guadalupe, Miahuatlán" />
+          <small>No escribas tu dirección exacta: acuerda el lugar de entrega por WhatsApp.</small>
+        </label>
+      </div>
+    }
+    @case (2) {
+      <app-fotos-anuncio [fotos]="datos().fotos" (fotosChange)="poner('fotos', $event)" [subir]="subirFoto()" />
+    }
+    @case (3) {
+      <div class="campos">
+        <label class="campo">Tu nombre
+          <input maxlength="80" autocomplete="name" [value]="datos().vendedorNombre" (input)="poner('vendedorNombre', $any($event.target).value)" />
+        </label>
+        <label class="campo">Tu WhatsApp (10 dígitos)
+          <input type="tel" inputmode="tel" autocomplete="tel-national" [readonly]="editando()" [value]="datos().vendedorWhatsapp"
+                 (input)="poner('vendedorWhatsapp', $any($event.target).value)" placeholder="951 123 4567" />
+          <small>{{ editando() ? 'El WhatsApp no se cambia: identifica tus anuncios.' : 'Los compradores te escribirán aquí.' }}</small>
+        </label>
+        <!-- Campo trampa: las personas no lo ven. -->
+        <label class="trampa" aria-hidden="true">Sitio web
+          <input tabindex="-1" autocomplete="off" [value]="datos().sitioWeb" (input)="poner('sitioWeb', $any($event.target).value)" />
+        </label>
+      </div>
+    }
+    @case (4) {
+      <div class="reglas">
+        <p>En el tianguis <strong>no se permite</strong>: artículos robados o sin procedencia, armas y municiones, animales,
+          medicamentos, bebidas alcohólicas, contenido para adultos, servicios o celulares con IMEI reportado.</p>
+        <p>Usa fotos reales del artículo, un precio real en pesos y un artículo por anuncio. Revisamos cada anuncio antes de
+          publicarlo y podemos rechazarlo o retirarlo. <a routerLink="/tianguis/reglas" target="_blank">Leer las reglas completas</a>.</p>
+        <label class="casilla"><input type="checkbox" [checked]="datos().aceptaReglas" (change)="poner('aceptaReglas', $any($event.target).checked)" />
+          Acepto las reglas de publicación</label>
+      </div>
+    }
+  }
+
+  @if (intento() && falta().length) {
+    <p class="error" role="alert">Falta: {{ falta().join(', ') }}.</p>
+  }
+  @if (error(); as e) { <p class="error" role="alert">{{ e }}</p> }
+
+  <div class="botones">
+    @if (paso() > 0) { <button type="button" class="btn secundario" (click)="atras()">← Atrás</button> }
+    @if (paso() > 0) {
+      <button type="submit" class="btn primario" [disabled]="ocupado()">
+        {{ paso() < pasos.length - 1 ? 'Siguiente →' : ocupado() ? 'Enviando…' : editando() ? 'Guardar y enviar a revisión' : 'Enviar a revisión' }}
+      </button>
+    }
+  </div>
+</form>

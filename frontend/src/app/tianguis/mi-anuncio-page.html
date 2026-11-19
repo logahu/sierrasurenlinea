@@ -1,0 +1,65 @@
+<nav class="migas" aria-label="Ruta"><a routerLink="/tianguis">Tianguis</a> › Mi anuncio</nav>
+
+@if (gestion.isLoading() && !gestion.hasValue()) {
+  <p aria-busy="true">Cargando tu anuncio…</p>
+} @else if (gestion.error() || !g()) {
+  <div class="aviso" role="alert">
+    <p><strong>Este enlace no es válido.</strong></p>
+    <p>Revisa que lo hayas copiado completo. Si lo perdiste, publica tu artículo de nuevo.</p>
+  </div>
+} @else {
+  @let x = g()!;
+  <header class="cabeza">
+    @if (x.fotos[0]) { <img [src]="x.fotos[0]" alt="" width="160" height="120" /> }
+    <div>
+      <h1>{{ x.titulo }}</h1>
+      <p class="precio">{{ precio() }}@if (x.negociable) { <small> · negociable</small> }</p>
+      <p><span class="estado" [attr.data-estado]="x.estado">{{ estados[x.estado] }}</span></p>
+    </div>
+  </header>
+
+  <section class="situacion" aria-live="polite">
+    <p>{{ explicacion() }}</p>
+    @if (x.estado === 'RECHAZADO' && x.motivoRechazo) {
+      <p class="motivo"><strong>Motivo:</strong> {{ x.motivoRechazo }}</p>
+    }
+    @if (x.estado === 'PUBLICADO' && x.fechaVencimiento) {
+      <p>Se muestra hasta el <strong>{{ fecha(x.fechaVencimiento) }}</strong>.
+        @if (x.renovacionesRestantes) { Puedes renovarlo {{ x.renovacionesRestantes }} {{ x.renovacionesRestantes === 1 ? 'vez' : 'veces' }} más. }</p>
+    }
+    @if (x.estado === 'PUBLICADO' || x.estado === 'VENDIDO') {
+      <p><a [routerLink]="['/tianguis', x.idSlug]">Ver cómo lo ven los compradores</a> · {{ x.vistas }} {{ x.vistas === 1 ? 'visita' : 'visitas' }}</p>
+    }
+    @if (aviso(); as a) { <p class="exito" role="status">{{ a }}</p> }
+    @if (error(); as e) { <p class="error" role="alert">{{ e }}</p> }
+  </section>
+
+  @if (!editando()) {
+    <div class="acciones">
+      @if (x.puedeMarcarVendido) {
+        <button type="button" class="btn primario" [disabled]="ocupado()" (click)="hacer('vendido', '¡Listo! Lo marcamos como vendido.')">✓ Ya lo vendí</button>
+      }
+      @if (x.puedeRenovar) {
+        <button type="button" class="btn secundario" [disabled]="ocupado()" (click)="hacer('renovar', 'Renovado por 30 días más.')">↻ Renovar 30 días</button>
+      }
+      @if (x.puedePausar) {
+        <button type="button" class="btn secundario" [disabled]="ocupado()" (click)="hacer('pausar', 'Pausado: ya no se ve en el tianguis.')">⏸ Pausar</button>
+      }
+      @if (x.puedeReanudar) {
+        <button type="button" class="btn secundario" [disabled]="ocupado()" (click)="hacer('reanudar', 'Reanudado.')">▶ Reanudar</button>
+      }
+      @if (x.puedeEditar) {
+        <button type="button" class="btn secundario" [disabled]="ocupado()" (click)="editando.set(true); aviso.set(null)">✎ Corregir anuncio</button>
+      }
+    </div>
+    @if (x.puedeEditar && (x.estado === 'PUBLICADO' || x.estado === 'PAUSADO')) {
+      <p class="nota">Si lo corriges, vuelve a revisión y deja de verse hasta que lo aprobemos.</p>
+    }
+  } @else {
+    @if (categorias.hasValue()) {
+      <app-formulario-anuncio [categorias]="categorias.value() ?? []" [inicial]="inicial()" [editando]="true" [ocupado]="ocupado()"
+                              [error]="error()" [subirFoto]="subirFoto" (enviar)="guardar($event)" />
+    }
+    <button type="button" class="btn secundario cancelar" (click)="editando.set(false)">Cancelar</button>
+  }
+}

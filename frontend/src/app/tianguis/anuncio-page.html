@@ -1,0 +1,110 @@
+@if (anuncio.isLoading() && !anuncio.hasValue()) {
+  <p class="cargando" aria-busy="true">Cargando el anuncio…</p>
+} @else if (anuncio.error() || !a()) {
+  <div class="no-esta">
+    <h1>Este anuncio ya no está disponible</h1>
+    <p>Puede que se haya vendido, vencido o que el vendedor lo haya pausado.</p>
+    <a class="btn primario" routerLink="/tianguis">Ver más artículos</a>
+  </div>
+} @else {
+  @let x = a()!;
+  <nav class="migas" aria-label="Ruta">
+    <a routerLink="/tianguis">Tianguis</a> › <a [routerLink]="['/tianguis', 'c', x.categoria.slug]">{{ x.categoria.nombre }}</a>
+  </nav>
+
+  <div class="ficha">
+    <section class="galeria" aria-label="Fotos del artículo">
+      <div class="carrusel" #carrusel (scroll)="alDesplazar()" tabindex="0" aria-label="Fotos; desliza para ver más">
+        @for (f of x.fotos; track f; let i = $index) {
+          <img [src]="f" [alt]="x.titulo + ' — foto ' + (i + 1) + ' de ' + x.fotos.length" width="800" height="600"
+               [attr.loading]="i === 0 ? 'eager' : 'lazy'" />
+        }
+      </div>
+      @if (x.estado === 'VENDIDO') { <span class="sello">Vendido</span> }
+      @if (x.fotos.length > 1) {
+        <button type="button" class="flecha izq" (click)="irA(actual() - 1)" aria-label="Foto anterior">‹</button>
+        <button type="button" class="flecha der" (click)="irA(actual() + 1)" aria-label="Foto siguiente">›</button>
+        <span class="contador" aria-live="polite">{{ actual() + 1 }} / {{ x.fotos.length }}</span>
+        <div class="miniaturas">
+          @for (f of x.fotos; track f; let i = $index) {
+            <button type="button" [class.activa]="i === actual()" (click)="irA(i)" [attr.aria-label]="'Ver foto ' + (i + 1)">
+              <img [src]="f" alt="" width="64" height="48" loading="lazy" />
+            </button>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="info">
+      <h1>{{ x.titulo }}</h1>
+      <p class="precio">{{ precio() }}
+        @if (x.negociable) { <span class="etiqueta negociable">Negociable</span> }
+        @if (x.estado === 'VENDIDO') { <span class="etiqueta vendido">Vendido</span> }
+      </p>
+      <p class="datos">
+        <span class="etiqueta">{{ condicion() }}</span>
+        <span>📍 {{ x.ubicacion }} <small>(zona aproximada)</small></span>
+        <span>Publicado {{ hace() }}</span>
+      </p>
+
+      <div class="vendedor">
+        <span>Vende <strong>{{ x.vendedor.nombre }}</strong></span>
+        @if (x.vendedor.verificado) { <span class="etiqueta verificado">✓ Vendedor verificado</span> }
+      </div>
+
+      @if (x.estado !== 'VENDIDO') {
+        <a class="btn whatsapp grande" [href]="whatsapp()" target="_blank" rel="noopener">Contactar por WhatsApp</a>
+      } @else {
+        <p class="aviso">Este artículo ya se vendió. <a routerLink="/tianguis">Busca otros parecidos</a>.</p>
+      }
+
+      <div class="seguridad" role="note">
+        <strong>Antes de comprar</strong>
+        <ul>
+          <li>Revisa el artículo en persona y pruébalo.</li>
+          <li>Reúnete en un lugar público y de día.</li>
+          <li>No des anticipos ni depósitos a personas que no conoces.</li>
+        </ul>
+      </div>
+    </section>
+  </div>
+
+  @if (x.atributos.length) {
+    <section class="atributos" aria-labelledby="titulo-atributos">
+      <h2 id="titulo-atributos">Características</h2>
+      <table>
+        <tbody>
+          @for (t of x.atributos; track t.nombre) {
+            <tr><th scope="row">{{ t.etiqueta }}</th><td>{{ valor(t.valor, t.unidad) }}</td></tr>
+          }
+        </tbody>
+      </table>
+    </section>
+  }
+
+  <section class="descripcion" aria-labelledby="titulo-descripcion">
+    <h2 id="titulo-descripcion">Descripción</h2>
+    <p>{{ x.descripcion }}</p>
+  </section>
+
+  <details class="reportar">
+    <summary>Reportar este anuncio</summary>
+    @if (reporteEnviado()) {
+      <p class="exito" role="status">Gracias. Lo revisaremos pronto.</p>
+    } @else {
+      <form (submit)="$event.preventDefault(); reportar()">
+        <fieldset>
+          <legend>¿Qué pasa con este anuncio?</legend>
+          @for (m of motivos; track m.valor) {
+            <label class="opcion"><input type="radio" name="motivo" [value]="m.valor" (change)="motivo.set(m.valor)" /> {{ m.texto }}</label>
+          }
+        </fieldset>
+        <label class="campo">Comentario <span class="opcional">(opcional)</span>
+          <textarea maxlength="500" rows="3" [value]="comentario()" (input)="comentario.set($any($event.target).value)"></textarea>
+        </label>
+        @if (errorReporte(); as e) { <p class="error" role="alert">{{ e }}</p> }
+        <button class="btn secundario" type="submit" [disabled]="enviandoReporte()">{{ enviandoReporte() ? 'Enviando…' : 'Enviar reporte' }}</button>
+      </form>
+    }
+  </details>
+}

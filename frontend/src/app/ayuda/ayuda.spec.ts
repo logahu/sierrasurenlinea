@@ -13,6 +13,7 @@ describe('ayuda', () => {
     expect(JSON.stringify(salon)).not.toMatch(/veh[ií]culo|manejo/i);
     expect(salon.consejos.join(' ')).toContain('lunes a sábado');
     expect(guiaDe({ ...negocio, tipo: 'SERVICIO' }).pasos[0].titulo).toBe('Elige qué necesitas');
+    expect(guiaDe({ ...negocio, slug: 'tianguis', tipo: 'VENTA' }).pasos[2].titulo).toBe('Escríbele al vendedor');
     expect(guiaDe({ ...negocio, slug: 'vinateria', tipo: 'VENTA' }).consejos.join(' ')).toContain('mayores de 18');
   });
 

@@ -9,6 +9,8 @@ export const routes: Routes = [
   },
   // Panel de administración (va antes de :negocio para que "admin" no se tome como negocio).
   { path: 'admin', loadChildren: () => import('./admin/admin.routes').then((m) => m.ADMIN_ROUTES) },
+  // Tianguis Sierra Sur (compra-venta de segunda mano); antes que /:negocio.
+  { path: 'tianguis', loadChildren: () => import('./tianguis/tianguis.routes').then((m) => m.TIANGUIS_ROUTES) },
   // Cuenta del cliente: iniciar sesión, crear cuenta y mis pedidos.
   { path: 'cuenta', loadChildren: () => import('./cuenta/cuenta.routes').then((m) => m.CUENTA_ROUTES) },
   {

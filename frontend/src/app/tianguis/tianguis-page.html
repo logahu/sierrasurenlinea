@@ -1,0 +1,117 @@
+<header class="cabeza">
+  <div>
+    <p class="marca"><app-icono-giro icono="tianguis" /> {{ nombre }}</p>
+    <h1>{{ elegida()?.nombre ?? subtitulo }}</h1>
+    <p class="sub">Artículos de segunda mano en Miahuatlán y la Sierra Sur. Trato directo con el vendedor por WhatsApp.</p>
+  </div>
+  <div class="acciones">
+    <a class="btn primario" routerLink="/tianguis/publicar">＋ Vender un artículo</a>
+    <a class="enlace" routerLink="/tianguis/reglas">Reglas de publicación</a>
+  </div>
+</header>
+
+<form class="buscador" role="search" (submit)="$event.preventDefault()">
+  <label class="lupa" for="buscar-tianguis">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="7" /><path d="m20 20-4-4" />
+    </svg>
+    <span class="solo-lector">Buscar en el tianguis</span>
+  </label>
+  <input id="buscar-tianguis" type="search" autocomplete="off" enterkeyhint="search"
+         placeholder="¿Qué buscas? moto, celular, refrigerador…"
+         [value]="texto()" (input)="escribir($any($event.target).value)" />
+</form>
+
+<nav class="categorias" aria-label="Categorías">
+  <a class="chip" [routerLink]="rutaCategoria(null)" queryParamsHandling="preserve" [attr.aria-current]="!categoria() ? 'page' : null">
+    Todo <span class="cuenta">{{ totalCategorias() }}</span>
+  </a>
+  @for (c of listaCategorias(); track c.slug) {
+    <a class="chip" [routerLink]="rutaCategoria(c.slug)" queryParamsHandling="preserve" [attr.aria-current]="categoria() === c.slug ? 'page' : null">
+      <app-icono-giro [icono]="c.icono" /> {{ c.nombre }} <span class="cuenta">{{ c.anuncios }}</span>
+    </a>
+  }
+</nav>
+
+<div class="filtros">
+  <label>
+    <span>Condición</span>
+    <select (change)="cambiar('condicion', $any($event.target).value)">
+      <option value="" [selected]="!filtros().condicion">Cualquiera</option>
+      @for (c of condiciones; track c.valor) { <option [value]="c.valor" [selected]="filtros().condicion === c.valor">{{ c.texto }}</option> }
+    </select>
+  </label>
+  <label>
+    <span>Precio desde</span>
+    <input type="number" inputmode="numeric" min="0" step="100" placeholder="$0" [value]="filtros().precioMin ?? ''"
+           (change)="cambiar('precioMin', $any($event.target).value)" />
+  </label>
+  <label>
+    <span>hasta</span>
+    <input type="number" inputmode="numeric" min="0" step="100" placeholder="Sin límite" [value]="filtros().precioMax ?? ''"
+           (change)="cambiar('precioMax', $any($event.target).value)" />
+  </label>
+  <label>
+    <span>Ordenar</span>
+    <select (change)="cambiar('orden', $any($event.target).value)">
+      @for (o of ordenes; track o.valor) { <option [value]="o.valor" [selected]="filtros().orden === o.valor">{{ o.texto }}</option> }
+    </select>
+  </label>
+</div>
+
+@if (pagina0.error(); as e) {
+  <div class="estado" role="alert">
+    @if ($any(e).status === 404) {
+      <p><strong>El tianguis todavía no está abierto.</strong> Muy pronto podrás comprar y vender aquí.</p>
+    } @else {
+      <p>No pudimos cargar los artículos. Revisa tu conexión e inténtalo de nuevo.</p>
+      <button type="button" class="btn primario" (click)="pagina0.reload()">Reintentar</button>
+    }
+  </div>
+} @else if (pagina0.isLoading() && !pagina0.hasValue()) {
+  <ul class="rejilla cargando" aria-busy="true" aria-label="Cargando artículos">
+    @for (i of [0, 1, 2, 3, 4, 5, 6, 7]; track i) { <li><span class="tarjeta-cargando"></span></li> }
+  </ul>
+} @else {
+  <p class="resumen" aria-live="polite">
+    <span><strong>{{ total() }} {{ total() === 1 ? 'artículo' : 'artículos' }}</strong>
+      @if (elegida(); as c) { en {{ c.nombre }} }
+      @if (filtros().q.trim()) { para «{{ filtros().q.trim() }}» }</span>
+    @if (conFiltros() || categoria()) { <button type="button" class="enlace" (click)="limpiar()">Quitar filtros</button> }
+  </p>
+
+  @if (anuncios().length) {
+    <ul class="rejilla">
+      @for (a of anuncios(); track a.id) { <li><app-tarjeta-anuncio [anuncio]="a" /></li> }
+    </ul>
+    @if (hayMas()) {
+      <div class="mas">
+        <button type="button" class="btn secundario" (click)="verMas()" [disabled]="cargandoMas()">
+          {{ cargandoMas() ? 'Cargando…' : 'Ver más artículos' }}
+        </button>
+        @if (errorMas()) { <p class="error" role="alert">No se pudieron cargar más. Intenta de nuevo.</p> }
+      </div>
+    }
+  } @else {
+    <div class="vacio">
+      @if (conFiltros()) {
+        <p><strong>No encontramos artículos con esos filtros.</strong></p>
+        <p>Prueba con otra palabra o quita algún filtro.</p>
+        <button type="button" class="btn secundario" (click)="limpiar()">Quitar filtros</button>
+      } @else {
+        <p><strong>Todavía no hay artículos {{ elegida() ? 'en ' + elegida()!.nombre : 'publicados' }}.</strong></p>
+        <p>¿Tienes algo que ya no usas? Véndelo aquí.</p>
+        <a class="btn primario" routerLink="/tianguis/publicar">＋ Vender un artículo</a>
+      }
+    </div>
+  }
+}
+
+<aside class="seguridad" aria-labelledby="titulo-seguridad">
+  <h2 id="titulo-seguridad">Compra con confianza</h2>
+  <ul>
+    <li>Revisa el artículo en persona antes de pagar.</li>
+    <li>Reúnete en un lugar público y de día.</li>
+    <li>No des anticipos a personas que no conoces.</li>
+  </ul>
+</aside>
