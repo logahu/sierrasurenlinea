@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { CatalogoService } from '../catalogo/catalogo.service';
 import { enlaceWhatsapp } from '../catalogo/contacto';
 import { visiblesAqui } from '../modo-app';
+import { acentoLegible } from '../color';
 
 /** WhatsApp de Sierra Sur en Línea para negocios que quieren sumarse y para contacto general. */
 const WHATSAPP_SITIO = '525540485363';
@@ -19,6 +20,8 @@ const WHATSAPP_SITIO = '525540485363';
   styleUrl: './conocenos-page.scss',
 })
 export class ConocenosPage {
+  protected readonly acento = acentoLegible;
+
   private readonly api = inject(CatalogoService);
   protected readonly negocios = rxResource({ stream: () => this.api.negocios() });
   protected readonly visibles = computed(() => visiblesAqui(this.negocios.value() ?? []));

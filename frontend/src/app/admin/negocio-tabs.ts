@@ -2,6 +2,7 @@ import { Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NegocioAdmin } from './admin.model';
 import { textosCatalogo } from './textos';
+import { acentoLegible } from '../color';
 
 /** Encabezado de un negocio en el panel, con sus pestañas. */
 @Component({
@@ -9,7 +10,7 @@ import { textosCatalogo } from './textos';
   imports: [RouterLink],
   template: `
     <p class="migas"><a routerLink="/admin">← Negocios</a></p>
-    <header class="panel-titulo" [style.--acento]="negocio()?.colorPrimario">
+    <header class="panel-titulo" [style.--acento]="acento(negocio()?.colorPrimario)">
       <h1>{{ negocio()?.nombre ?? '…' }}</h1>
       <p class="ayuda"><a [href]="'/' + slug()" target="_blank" rel="noopener">Ver la página en el sitio ↗</a></p>
     </header>
@@ -29,6 +30,8 @@ import { textosCatalogo } from './textos';
   `,
 })
 export class NegocioTabs {
+  protected readonly acento = acentoLegible;
+
   readonly slug = input.required<string>();
   readonly negocio = input<NegocioAdmin | undefined>();
   /** Pestaña marcada; la de catálogo sigue marcada al editar un producto. */

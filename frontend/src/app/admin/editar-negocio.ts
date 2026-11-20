@@ -13,6 +13,7 @@ import { MapaUbicacion } from '../mapa/mapa-ubicacion';
 import { Punto, puntoDe } from '../mapa/ubicacion';
 import { CatalogoService } from '../catalogo/catalogo.service';
 import { ColoniasService, agrupar } from '../colonias/colonias';
+import { contrasteConBlanco } from '../color';
 
 /** Muestra el número como se ve en México: 55 4048 5363 (sin el 52). */
 export function whatsappLegible(numero: string): string {
@@ -167,6 +168,9 @@ export function whatsappValido(texto: string): boolean {
               <input type="color" formControlName="colorPrimario" />
               Color del negocio
             </label>
+            @if (contraste(form.value.colorPrimario ?? '') < 4.5) {
+              <small>Es un color claro: se usa tal cual en su tarjeta de la portada, y en botones y enlaces se usa una versión más oscura para que el texto se lea.</small>
+            }
             <p class="ayuda">
               Visibilidad:
               <strong>{{ n.estado === 'PUBLICO' ? 'Pública' : n.estado === 'PRUEBAS' ? '🧪 En pruebas (solo probadores)' : 'Oculto' }}</strong>
@@ -196,6 +200,8 @@ export function whatsappValido(texto: string): boolean {
   `,
 })
 export class EditarNegocio {
+  protected readonly contraste = contrasteConBlanco;
+
   readonly slug = input.required<string>();
 
   protected readonly sesion = inject(SesionService);

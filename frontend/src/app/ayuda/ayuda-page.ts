@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { CatalogoService } from '../catalogo/catalogo.service';
 import { visiblesAqui } from '../modo-app';
 import { PREGUNTAS, guiaDe, partesDe } from './ayuda';
+import { acentoLegible } from '../color';
 
 /**
  * Ayuda: preguntas frecuentes y una guía para pedir en cada negocio.
@@ -16,6 +17,8 @@ import { PREGUNTAS, guiaDe, partesDe } from './ayuda';
   styleUrl: './ayuda-page.scss',
 })
 export class AyudaPage {
+  protected readonly acento = acentoLegible;
+
   /** ?negocio=slug : guía que se abre al entrar. */
   readonly negocio = input<string>();
 

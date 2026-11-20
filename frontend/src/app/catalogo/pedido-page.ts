@@ -21,6 +21,7 @@ import {
   piezasDe, textoCuando, textoPiezas, totalDe,
 } from './carrito';
 import { enlaceWhatsapp, precioConUnidad } from './contacto';
+import { acentoLegible } from '../color';
 
 interface Enviado {
   folio: string | null;
@@ -40,11 +41,14 @@ interface Enviado {
   templateUrl: './pedido-page.html',
   styleUrl: './pedido-page.scss',
   host: {
-    '[style.--acento]': 'negocio.value()?.colorPrimario',
+    '[style.--acento]': 'acento()',
     '[attr.data-tema]': 'negocio.value()?.slug',
   },
 })
 export class PedidoPage {
+  /** Color del negocio, oscurecido si es muy claro para botones con texto blanco. */
+  protected readonly acento = computed(() => acentoLegible(this.negocio.value()?.colorPrimario));
+
   readonly slug = input.required<string>({ alias: 'negocio' });
 
   private readonly api = inject(CatalogoService);
