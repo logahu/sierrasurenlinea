@@ -82,10 +82,12 @@ class PanelResourceTest {
     void elDuenoVeTodosLosNegociosConSusProductos() {
         como(Sesiones.dueno()).when().get("/api/admin/negocios")
                 .then().statusCode(200)
-                .body("$", hasSize(7))
+                .body("$", hasSize(8))
                 .body("slug", hasItem("estudio-melgarejo"))
                 .body("slug", hasItem("encarguitos"))
-                .body("productosActivos", everyItem(greaterThan(0)));
+                .body("slug", hasItem("tianguis"))
+                // El tianguis no tiene productos: sus artículos son anuncios.
+                .body("findAll { it.slug != 'tianguis' }.productosActivos", everyItem(greaterThan(0)));
     }
 
     @Test

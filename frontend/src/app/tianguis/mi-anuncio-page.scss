@@ -1,0 +1,16 @@
+.cabeza { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;
+  img { width: 9rem; aspect-ratio: 4 / 3; object-fit: cover; border-radius: .8rem; background: var(--fondo-alt); }
+  h1 { font-size: clamp(1.4rem, 3.6vw, 2rem); }
+  p { margin: .3rem 0 0; }
+  .precio { font-size: 1.3rem; font-weight: 800; small { font-size: .85rem; font-weight: 600; color: var(--tinta-suave); } } }
+.estado { display: inline-block; font-weight: 800; font-size: .85rem; padding: .25rem .7rem; border-radius: 999px; background: var(--fondo-alt);
+  &[data-estado='PUBLICADO'] { background: #2f6b4f; color: #fff; }
+  &[data-estado='PENDIENTE'] { background: #f5a524; color: #2b1d00; }
+  &[data-estado='RECHAZADO'] { background: #b42318; color: #fff; }
+  &[data-estado='VENDIDO'] { background: #2a1f1a; color: #fff; } }
+.situacion { margin: 1.2rem 0; padding: 1rem 1.1rem; border-radius: 1rem; background: var(--fondo-alt);
+  p { margin: .3rem 0; line-height: 1.55; } a { color: var(--tinta); font-weight: 700; }
+  .motivo { padding: .6rem .8rem; border-radius: .6rem; background: var(--superficie); border-left: 4px solid #b42318; } }
+.acciones { display: flex; flex-wrap: wrap; gap: .5rem; }
+.nota { color: var(--tinta-suave); font-size: .9rem; }
+.cancelar { margin-top: .8rem; }

@@ -28,6 +28,33 @@ import { Component, input } from '@angular/core';
         @case ('moto') {
           <circle cx="5.5" cy="17" r="3" /><circle cx="18.5" cy="17" r="3" /><path d="M5.5 17h5l3-6h3l2 6M13.5 11 12 7h3M9 11h4" />
         }
+        @case ('tianguis') {
+          <path d="M3 9h18l-1.5-4h-15L3 9Z" /><path d="M5 9v11h14V9M3 9c0 1.4 1 2.2 2.2 2.2S7.5 10.4 7.5 9c0 1.4 1 2.2 2.2 2.2S12 10.4 12 9c0 1.4 1 2.2 2.2 2.2s2.3-.8 2.3-2.2c0 1.4 1 2.2 2.2 2.2S21 10.4 21 9" /><path d="M10 20v-4.5h4V20" />
+        }
+        @case ('celular') {
+          <rect x="7" y="3" width="10" height="18" rx="2" /><path d="M11 18h2" />
+        }
+        @case ('mueble') {
+          <path d="M5 11V8a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3" /><path d="M3 11h18v6H3zM5 17v3M19 17v3" />
+        }
+        @case ('herramienta') {
+          <path d="M14.5 5.5a4 4 0 0 0-5 5L4 16l4 4 5.5-5.5a4 4 0 0 0 5-5l-2.5 2.5-2.5-.5-.5-2.5 2.5-2.5Z" />
+        }
+        @case ('ropa') {
+          <path d="M9 4 4 7l2 4 2-1v10h8V10l2 1 2-4-5-3a3 3 0 0 1-6 0Z" />
+        }
+        @case ('oficio') {
+          <path d="M3 11 12 4l9 7M5 9.5V20h14V9.5" /><path d="M14.5 13.5a2 2 0 0 0-2.6 2.6L9 19l1 1 2.9-2.9a2 2 0 0 0 2.6-2.6l-1.2 1.2-1-.2-.2-1 1.2-1.2Z" />
+        }
+        @case ('clases') {
+          <path d="M3 5.5C5.5 4.5 9 4.5 12 6.5c3-2 6.5-2 9-1V19c-2.5-1-6-1-9 1-3-2-6.5-2-9-1V5.5Z" /><path d="M12 6.5V20" />
+        }
+        @case ('flete') {
+          <path d="M2 6h11v10H2zM13 9h4.5l3.5 3.5V16h-8" /><circle cx="6" cy="17.5" r="1.8" /><circle cx="17" cy="17.5" r="1.8" />
+        }
+        @case ('caja') {
+          <path d="M3 8 12 4l9 4-9 4-9-4Z" /><path d="M3 8v8l9 4 9-4V8M12 12v8" />
+        }
         @default {
           <path d="M3 10 5 4h14l2 6M4 10v10h16V10M3 10h18M9 20v-5h6v5" />
         }

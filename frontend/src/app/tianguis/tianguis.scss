@@ -1,0 +1,50 @@
+// Estilos compartidos de las páginas del Tianguis Sierra Sur (paleta base del sitio).
+:host { display: block; padding: clamp(1.25rem, 4vw, 2rem) 0 3rem; }
+
+h1, h2 { font-family: var(--font-display); font-weight: 600; letter-spacing: -.015em; margin: 0; }
+h1 { font-size: clamp(1.7rem, 4.5vw, 2.5rem); line-height: 1.08; }
+h2 { font-size: clamp(1.2rem, 3vw, 1.5rem); }
+
+:focus-visible { outline: 3px solid var(--follaje); outline-offset: 2px; }
+
+.solo-lector {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+
+.migas { font-size: .88rem; color: var(--tinta-suave); margin-bottom: .6rem;
+  a { color: inherit; text-underline-offset: .2em; } }
+
+.btn.primario { background: var(--follaje); color: #fff; }
+// Verde de WhatsApp más oscuro: texto blanco con contraste ≥ 4.5:1.
+.btn.whatsapp { background: #0f7a3d; color: #fff; }
+@media (prefers-color-scheme: dark) { .btn.primario { color: #10261b; } }
+
+.etiqueta {
+  display: inline-block; font-size: .75rem; font-weight: 700; line-height: 1.2; padding: .2rem .55rem;
+  border-radius: 999px; background: var(--fondo-alt); color: var(--tinta);
+  &.vendido { background: #2a1f1a; color: #fff; }
+  &.verificado { background: #2f6b4f; color: #fff; }
+  &.negociable { background: #f5a524; color: #2b1d00; }
+}
+@media (prefers-color-scheme: dark) { .etiqueta.vendido { background: #f1e9e3; color: #2a1f1a; } }
+
+.campo {
+  display: grid; gap: .3rem; font-size: .9rem; font-weight: 600;
+  input, select, textarea {
+    font: inherit; font-weight: 400; font-size: 1rem; color: var(--tinta); background: var(--superficie);
+    border: 1px solid var(--linea); border-radius: .6rem; padding: .6rem .75rem; width: 100%; box-sizing: border-box;
+    &:focus { outline: none; border-color: var(--follaje); box-shadow: 0 0 0 3px color-mix(in srgb, var(--follaje) 25%, transparent); }
+  }
+  textarea { min-height: 7rem; resize: vertical; }
+  small { font-weight: 400; color: var(--tinta-suave); }
+  .opcional { font-weight: 400; color: var(--tinta-suave); }
+}
+
+.error { color: #b42318; font-weight: 600; }
+@media (prefers-color-scheme: dark) { .error { color: #ff9b8f; } }
+.exito { color: var(--follaje); font-weight: 600; }
+
+.aviso {
+  border-radius: .8rem; padding: .8rem 1rem; background: var(--fondo-alt); border: 1px solid var(--linea);
+  p { margin: .2rem 0; }
+}

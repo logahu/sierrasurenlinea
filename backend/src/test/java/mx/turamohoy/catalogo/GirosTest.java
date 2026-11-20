@@ -38,13 +38,15 @@ class GirosTest {
     @Test
     void losGirosVanEnOrdenConCuantosNegociosVisiblesTienen() {
         given().when().get("/api/giros").then().statusCode(200)
-                .body("slug", contains("flores", "belleza", "fiestas", "bebidas", "comida", "autos", "servicios"))
+                .body("slug", contains("flores", "belleza", "fiestas", "bebidas", "comida", "autos", "servicios", "tianguis"))
                 .body("[0].nombre", equalTo("Flores y regalos"))
                 .body("[0].icono", equalTo("flor"))
                 .body("find { it.slug == 'flores' }.negocios", equalTo(1))
                 // Estudio Melgarejo está en pruebas: el público solo cuenta Belleza.
                 .body("find { it.slug == 'belleza' }.negocios", equalTo(1))
-                .body("find { it.slug == 'comida' }.negocios", equalTo(0));
+                .body("find { it.slug == 'comida' }.negocios", equalTo(0))
+                // El tianguis nace en pruebas.
+                .body("find { it.slug == 'tianguis' }.negocios", equalTo(0));
     }
 
     @Test

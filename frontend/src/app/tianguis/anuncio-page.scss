@@ -1,0 +1,52 @@
+.cargando, .no-esta { padding: 2rem 0; }
+.no-esta p { color: var(--tinta-suave); }
+
+.ficha { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 1.5rem; align-items: start;
+  @media (max-width: 52rem) { grid-template-columns: 1fr; } }
+
+.galeria { position: relative; }
+// Servicio sin fotos: el dibujo de su categoría.
+.sin-fotos { aspect-ratio: 16 / 9; display: grid; place-items: center; border-radius: 1rem; background: var(--fondo-alt);
+  color: var(--tinta-suave); font-size: 5rem; }
+.carrusel {
+  display: flex; overflow-x: auto; scroll-snap-type: x mandatory; border-radius: 1rem; background: var(--fondo-alt);
+  scrollbar-width: none; &::-webkit-scrollbar { display: none; }
+  img { flex: 0 0 100%; width: 100%; aspect-ratio: 4 / 3; object-fit: contain; scroll-snap-align: center; }
+}
+.sello { position: absolute; top: .8rem; left: .8rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;
+  padding: .35rem .8rem; border-radius: 999px; background: #2a1f1a; color: #fff; }
+.flecha { position: absolute; top: calc(50% - 2.5rem); width: 2.6rem; height: 2.6rem; border-radius: 50%; border: 0;
+  background: rgb(255 255 255 / .9); color: #2a1f1a; font-size: 1.6rem; line-height: 1; cursor: pointer; box-shadow: 0 2px 8px rgb(0 0 0 / .2);
+  &.izq { left: .6rem; } &.der { right: .6rem; }
+  @media (hover: none) { display: none; } }
+.contador { position: absolute; top: .8rem; right: .8rem; font-size: .8rem; font-weight: 700; padding: .2rem .55rem;
+  border-radius: 999px; background: rgb(0 0 0 / .65); color: #fff; }
+.miniaturas { display: flex; gap: .4rem; margin-top: .5rem; overflow-x: auto;
+  button { flex: none; padding: 0; border: 2px solid transparent; border-radius: .45rem; overflow: hidden; background: none; cursor: pointer; opacity: .7;
+    &.activa { border-color: var(--follaje); opacity: 1; } }
+  img { display: block; width: 4rem; height: 3rem; object-fit: cover; } }
+
+.info { display: grid; gap: .8rem; align-content: start;
+  h1 { font-size: clamp(1.5rem, 3.8vw, 2.1rem); }
+  .precio { margin: 0; font-size: clamp(1.6rem, 4vw, 2.1rem); font-weight: 800; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+  .datos { margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .9rem; color: var(--tinta-suave); font-size: .92rem;
+    small { font-size: .8rem; } }
+  .btn.grande { width: 100%; }
+}
+.vendedor { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.seguridad { border-radius: .8rem; padding: .8rem 1rem; background: var(--fondo-alt); border-left: 4px solid var(--cempasuchil);
+  font-size: .92rem; ul { margin: .35rem 0 0; padding-left: 1.1rem; } li { margin: .15rem 0; } }
+
+.atributos, .descripcion { margin-top: 2rem; }
+.atributos table { width: 100%; max-width: 36rem; border-collapse: collapse; margin-top: .6rem;
+  th, td { text-align: left; padding: .55rem .2rem; border-bottom: 1px solid var(--linea); }
+  th { font-weight: 600; color: var(--tinta-suave); width: 45%; } }
+.descripcion p { white-space: pre-line; line-height: 1.6; max-width: 46rem; }
+
+.reportar { margin-top: 2.5rem; border-top: 1px solid var(--linea); padding-top: 1rem;
+  summary { cursor: pointer; color: var(--tinta-suave); font-weight: 600; }
+  form { display: grid; gap: .8rem; margin-top: .8rem; max-width: 30rem; }
+  fieldset { border: 0; padding: 0; margin: 0; display: grid; gap: .35rem; }
+  legend { font-weight: 700; margin-bottom: .3rem; }
+  .opcion { display: flex; gap: .45rem; align-items: center; }
+  .btn { justify-self: start; } }

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Puesto de tianguis">
+  <rect width="400" height="300" fill="#fbf1e6"/>
+  <circle cx="330" cy="62" r="30" fill="#f5a524" opacity=".85"/>
+  <!-- Toldo -->
+  <path d="M60 110 L340 110 L320 70 L80 70 Z" fill="#b5562f"/>
+  <g fill="#fbf1e6">
+    <path d="M110 70 L104 110 L132 110 L134 70 Z"/>
+    <path d="M182 70 L180 110 L208 110 L206 70 Z"/>
+    <path d="M254 70 L256 110 L284 110 L278 70 Z"/>
+  </g>
+  <path d="M60 110 q17.5 22 35 0 q17.5 22 35 0 q17.5 22 35 0 q17.5 22 35 0 q17.5 22 35 0 q17.5 22 35 0 q17.5 22 35 0 q17.5 22 35 0" fill="#b5562f"/>
+  <!-- Postes -->
+  <rect x="72" y="110" width="8" height="140" fill="#6b3a22"/>
+  <rect x="320" y="110" width="8" height="140" fill="#6b3a22"/>
+  <!-- Mesa -->
+  <rect x="62" y="200" width="276" height="16" rx="3" fill="#8a4b2c"/>
+  <rect x="80" y="216" width="240" height="34" fill="#2f6b4f"/>
+  <!-- Artículos -->
+  <rect x="98" y="166" width="22" height="34" rx="4" fill="#2a1f1a"/>
+  <rect x="102" y="171" width="14" height="22" rx="2" fill="#7fb8d6"/>
+  <path d="M138 200 v-30 h46 v30" fill="#d9a066"/>
+  <path d="M134 170 h54 l-6 -10 h-42 z" fill="#c2884f"/>
+  <circle cx="222" cy="186" r="14" fill="none" stroke="#2a1f1a" stroke-width="5"/>
+  <circle cx="258" cy="186" r="14" fill="none" stroke="#2a1f1a" stroke-width="5"/>
+  <path d="M222 186 l14 -18 h14 l8 18 M236 168 l-4 -8" fill="none" stroke="#2a1f1a" stroke-width="5" stroke-linecap="round"/>
+  <path d="M284 200 l10 -34 h22 l10 34 z" fill="#d6336c"/>
+  <!-- Etiqueta de precio -->
+  <g transform="rotate(-12 160 140)">
+    <path d="M140 130 h40 l10 10 l-10 10 h-40 z" fill="#f5a524"/>
+    <circle cx="146" cy="140" r="3" fill="#fbf1e6"/>
+    <text x="164" y="145" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#2b1d00" text-anchor="middle">$</text>
+  </g>
+</svg>
