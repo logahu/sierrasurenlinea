@@ -23,7 +23,8 @@ $salvia: #7d8b74;
   --t-radio-contacto: 2px;
   --t-borde-card: 1px solid var(--t-linea);
   --t-sombra-card: none;
-  --acento: #{$tinta};
+  // El tema manda: el acento es la tinta negra aunque el color del negocio sea claro (marfil para su tarjeta).
+  --acento: #{$tinta} !important;
 }
 
 @mixin catalogo {

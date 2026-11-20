@@ -9,6 +9,7 @@ import { CatalogoService } from './catalogo.service';
 import { soloEnWeb } from '../modo-app';
 import { ContactoNegocio } from './contacto-negocio';
 import { enlaceTelefono, enlaceWhatsapp, mensajeProducto, precioConUnidad } from './contacto';
+import { acentoLegible } from '../color';
 
 /** Detalle de un producto: /turamohoy/producto/5 */
 @Component({
@@ -17,11 +18,14 @@ import { enlaceTelefono, enlaceWhatsapp, mensajeProducto, precioConUnidad } from
   templateUrl: './producto-page.html',
   styleUrl: './producto-page.scss',
   host: {
-    '[style.--acento]': 'negocio.value()?.colorPrimario',
+    '[style.--acento]': 'acento()',
     '[attr.data-tema]': 'negocio.value()?.slug',
   },
 })
 export class ProductoPage {
+  /** Color del negocio, oscurecido si es muy claro para botones con texto blanco. */
+  protected readonly acento = computed(() => acentoLegible(this.negocio.value()?.colorPrimario));
+
   private readonly api = inject(CatalogoService);
   private readonly title = inject(Title);
 

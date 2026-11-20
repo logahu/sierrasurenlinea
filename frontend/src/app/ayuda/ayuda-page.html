@@ -19,7 +19,7 @@
   }
   <div class="guias">
     @for (g of guias(); track g.slug) {
-      <details class="guia" [id]="'guia-' + g.slug" [open]="negocio() === g.slug" [style.--acento]="g.color">
+      <details class="guia" [id]="'guia-' + g.slug" [open]="negocio() === g.slug" [style.--acento]="acento(g.color)">
         <summary>
           <span class="punto" aria-hidden="true"></span>
           <span class="titulo-guia">

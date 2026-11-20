@@ -13,6 +13,7 @@ import { CarritoService, modoDe, textosDe } from './carrito';
 import { Producto } from './catalogo.model';
 import { precioConUnidad } from './contacto';
 import { direccionCorta, horarioCorto } from './ubicacion-negocio';
+import { acentoLegible } from '../color';
 
 /** Catálogo de un negocio: /turamohoy, /inflables?categoria=brincolines, etc. */
 @Component({
@@ -22,12 +23,15 @@ import { direccionCorta, horarioCorto } from './ubicacion-negocio';
   templateUrl: './catalogo-page.html',
   styleUrl: './catalogo-page.scss',
   host: {
-    '[style.--acento]': 'negocio.value()?.colorPrimario',
+    '[style.--acento]': 'acento()',
     // Cada negocio tiene su propio tema visual (src/temas/).
     '[attr.data-tema]': 'negocio.value()?.slug',
   },
 })
 export class CatalogoPage {
+  /** Color del negocio, oscurecido si es muy claro para botones con texto blanco. */
+  protected readonly acento = computed(() => acentoLegible(this.negocio.value()?.colorPrimario));
+
   protected readonly direccionCorta = direccionCorta;
   protected readonly horarioCorto = horarioCorto;
 

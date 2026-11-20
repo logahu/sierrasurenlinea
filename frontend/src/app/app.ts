@@ -10,6 +10,7 @@ import { InstalarApp } from './instalar';
 import { UltimoPedido } from './cuenta/ultimo-pedido';
 import { Avatar } from './compartido/avatar';
 import { VisitasService, esRutaDelPanel, folio, rutaDeUrl } from './visitas';
+import { acentoLegible } from './color';
 
 @Component({
   selector: 'app-root',
@@ -18,6 +19,8 @@ import { VisitasService, esRutaDelPanel, folio, rutaDeUrl } from './visitas';
   styleUrl: './app.scss',
 })
 export class App {
+  protected readonly acento = acentoLegible;
+
   private readonly api = inject(CatalogoService);
 
   /** Negocios para el menú del encabezado. */

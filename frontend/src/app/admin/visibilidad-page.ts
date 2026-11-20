@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { NegocioAdmin } from './admin.model';
 import { AdminApi } from './admin.api';
 import { mensajeDeError } from './autorizacion';
+import { acentoLegible } from '../color';
 
 /** Qué negocios se ven en el sitio: público, en pruebas (solo probadores) u oculto. Solo el administrador. */
 @Component({
@@ -32,7 +33,7 @@ import { mensajeDeError } from './autorizacion';
 
     <ul class="lista">
       @for (n of negocios.value() ?? []; track n.id) {
-        <li class="fila-visible" [class.inactivo]="n.estado === 'OCULTO'" [style.--acento]="n.colorPrimario">
+        <li class="fila-visible" [class.inactivo]="n.estado === 'OCULTO'" [style.--acento]="acento(n.colorPrimario)">
           <span class="punto" aria-hidden="true"></span>
           <div>
             <strong>{{ n.nombre }}</strong>
@@ -63,6 +64,8 @@ import { mensajeDeError } from './autorizacion';
   `,
 })
 export class VisibilidadPage {
+  protected readonly acento = acentoLegible;
+
   private readonly api = inject(AdminApi);
   protected readonly mensaje = mensajeDeError;
   protected readonly negocios = rxResource({ stream: () => this.api.negocios() });

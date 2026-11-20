@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { AdminApi } from './admin.api';
 import { mensajeDeError } from './autorizacion';
 import { SesionService } from './sesion';
+import { acentoLegible } from '../color';
 
 @Component({
   selector: 'app-inicio-panel',
@@ -30,7 +31,7 @@ import { SesionService } from './sesion';
 
     <ul class="tarjetas">
       @for (n of negocios.value() ?? []; track n.id) {
-        <li class="tarjeta" [style.--acento]="n.colorPrimario">
+        <li class="tarjeta" [style.--acento]="acento(n.colorPrimario)">
           <a [routerLink]="['/admin/negocios', n.slug]" [attr.aria-label]="'Abrir ' + n.nombre">
             <span class="tarjeta-nombre">{{ n.nombre }}</span>
             @if (!n.visible) {
@@ -52,6 +53,8 @@ import { SesionService } from './sesion';
   `,
 })
 export class InicioPanel {
+  protected readonly acento = acentoLegible;
+
   protected readonly sesion = inject(SesionService);
   private readonly api = inject(AdminApi);
   protected readonly negocios = rxResource({ stream: () => this.api.negocios() });
