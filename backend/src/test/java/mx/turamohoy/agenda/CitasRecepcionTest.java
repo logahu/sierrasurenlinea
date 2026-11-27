@@ -105,7 +105,8 @@ class CitasRecepcionTest {
         // Un servicio de 2 bloques: dura 2 horas y la última cita empieza a las 17:00.
         bloques(largo, 2);
         assertEquals(120, recepcion.disponibilidad(SLUG, List.of(largo), DIA, 1, null).duracionMinutos());
-        assertEquals("17:00", horasDeCarla(List.of(largo)).getLast());
+        List<String> horas = horasDeCarla(List.of(largo));
+        assertEquals("17:00", horas.get(horas.size() - 1));
         assertEquals(180, recepcion.disponibilidad(SLUG, List.of(corto, largo), DIA, 1, null).duracionMinutos());
 
         // Cliente nuevo: sin aceptar el aviso de privacidad no se aparta.
