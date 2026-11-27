@@ -1,6 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
+import { ActivatedRoute } from '@angular/router';
 import { finalize } from 'rxjs';
 import { RenglonHistorial } from './admin.model';
 import { AdminApi } from './admin.api';
@@ -120,6 +121,8 @@ export class HistorialPage {
   private pagina = 0;
 
   constructor() {
+    // Desde un negocio («Actividad») llega con ?negocio=slug.
+    this.negocio.set(inject(ActivatedRoute).snapshot.queryParamMap.get('negocio') ?? '');
     this.cargar();
   }
 

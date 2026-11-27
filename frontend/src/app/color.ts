@@ -37,3 +37,38 @@ export function acentoLegible(hex: string | null | undefined): string | null {
   }
   return '#1a1a1a';
 }
+
+/** Contraste WCAG entre dos colores (#rrggbb); 1 si alguno no es válido. */
+export function contraste(a: string, b: string): number {
+  const x = rgb(a);
+  const y = rgb(b);
+  if (!x || !y) return 1;
+  const [l1, l2] = [luminancia(x), luminancia(y)].sort((p, q) => q - p);
+  return (l1 + 0.05) / (l2 + 0.05);
+}
+
+/** Fondos del sitio en modo claro y oscuro (los mismos de styles.scss). */
+export const FONDO_CLARO = '#fbf7f2';
+export const FONDO_OSCURO = '#1a1412';
+
+/**
+ * Si el color del negocio se distingue del fondo (3:1, lo mínimo para puntos, franjas y bordes)
+ * en modo claro y en modo oscuro. Un negro o un marfil desaparecen en uno de los dos.
+ */
+export function colorSeVe(hex: string | null | undefined): { claro: boolean; oscuro: boolean } {
+  if (!hex || !rgb(hex)) return { claro: false, oscuro: false };
+  return { claro: contraste(hex, FONDO_CLARO) >= 3, oscuro: contraste(hex, FONDO_OSCURO) >= 3 };
+}
+
+/** Colores sugeridos para un negocio: todos se distinguen del fondo en modo claro y en modo oscuro. */
+export const COLORES_SUGERIDOS: { nombre: string; hex: string }[] = [
+  { nombre: 'Verde follaje', hex: '#2f8a5b' },
+  { nombre: 'Rosa', hex: '#d6336c' },
+  { nombre: 'Morado', hex: '#9c36b5' },
+  { nombre: 'Azul', hex: '#1971c2' },
+  { nombre: 'Turquesa', hex: '#0c8599' },
+  { nombre: 'Naranja', hex: '#e8590c' },
+  { nombre: 'Barro', hex: '#b35c1e' },
+  { nombre: 'Dorado viejo', hex: '#8a6d3b' },
+  { nombre: 'Vino', hex: '#c2255c' },
+];
