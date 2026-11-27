@@ -11,6 +11,8 @@ export interface LineaCarrito {
   unidadPrecio: string | null;
   imagenUrl: string;
   cantidad: number;
+  /** En citas: bloques de la agenda que ocupa el servicio (carritos guardados antes no lo traen = 1). */
+  bloquesCita?: number;
 }
 
 export type Entrega = 'DOMICILIO' | 'RECOGER';
@@ -29,6 +31,12 @@ export interface DatosPedido {
 }
 
 export const MAXIMO_POR_PRODUCTO = 99;
+
+/** Bloques de agenda que ocupa una cita con estos servicios (como lo calcula el servidor, máximo 8). */
+export function bloquesDeCita(lineas: Pick<LineaCarrito, 'bloquesCita'>[]): number {
+  const total = lineas.reduce((s, l) => s + Math.max(1, l.bloquesCita ?? 1), 0);
+  return Math.max(1, Math.min(total, 8));
+}
 
 /** Textos que cambian según cómo se pide en cada negocio. */
 export interface TextosPedido { agregar: string; titulo: string; ver: string; enviar: string; pieza: [string, string]; nota: string }
@@ -214,6 +222,7 @@ export class CarritoService {
           precio: p.precio,
           unidadPrecio: p.unidadPrecio,
           imagenUrl: p.imagenUrl,
+          bloquesCita: p.bloquesCita ?? 1,
           cantidad: modo === 'CITA' ? 1 : Math.max(1, Math.min(MAXIMO_POR_PRODUCTO, cantidad)),
         },
       ];

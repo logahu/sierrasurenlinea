@@ -40,13 +40,16 @@ public record NegocioAdminDto(
         /** Citas con horarios libres. */
         boolean agendaActiva,
         /** Slug de su giro (su calle en la portada). */
-        String giro) {
+        String giro,
+        /** Minutos de cada bloque de la agenda (los servicios ocupan 1 o más). */
+        int minutosCita) {
 
     public static NegocioAdminDto de(Negocio n, long productosActivos, String encargado) {
         return new NegocioAdminDto(n.id, n.slug, n.nombre, n.eslogan, n.descripcion, n.tipo,
                 n.colorPrimario, n.portadaUrl, n.whatsapp, n.telefono, n.direccion, n.horario,
                 n.atencionEnLocal, n.colonia, n.referencias, n.lat, n.lng,
                 n.googleMapsUrl, n.googleResenasUrl, n.soloMayoresEdad, n.publico(), n.estado, n.visibleApp, n.topeAdelanto, n.orden, productosActivos, encargado,
-                n.modoPedido(), n.agendaActiva, n.giro == null ? null : n.giro.slug);
+                n.modoPedido(), n.agendaActiva, n.giro == null ? null : n.giro.slug,
+                n.minutosCita);
     }
 }

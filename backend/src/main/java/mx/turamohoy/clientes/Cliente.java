@@ -51,8 +51,13 @@ public class Cliente extends PanacheEntityBase {
     @Column(precision = 9, scale = 6)
     public java.math.BigDecimal lng;
 
-    @Column(name = "contrasena_hash", nullable = false, length = 100)
+    /** Vacío en clientes que llegaron por WhatsApp y aún no crean su contraseña. */
+    @Column(name = "contrasena_hash", length = 100)
     public String contrasenaHash;
+
+    /** Por dónde se registró: WEB o WHATSAPP. */
+    @Column(nullable = false, length = 10)
+    public String origen = "WEB";
 
     @Column(nullable = false)
     public boolean activo = true;
@@ -74,6 +79,11 @@ public class Cliente extends PanacheEntityBase {
 
     @Column(name = "ultimo_acceso")
     public Instant ultimoAcceso;
+
+    /** ¿Ya puede entrar al sitio? Los de WhatsApp no, hasta que crean su contraseña. */
+    public boolean tieneContrasena() {
+        return contrasenaHash != null && !contrasenaHash.isBlank();
+    }
 
     public static Optional<Cliente> porTelefono(String telefono) {
         return find("telefono", telefono).firstResultOptional();

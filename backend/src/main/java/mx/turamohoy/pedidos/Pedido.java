@@ -38,6 +38,9 @@ public class Pedido extends PanacheEntityBase {
     /** El cliente pasa al negocio (recoger o ver el producto). */
     public static final String RECOGER = "RECOGER";
 
+    public static final String WEB = "WEB";
+    public static final String WHATSAPP = "WHATSAPP";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
@@ -118,6 +121,10 @@ public class Pedido extends PanacheEntityBase {
     /** Pedido de un cliente probador: no cuenta en el tablero y se marca en el panel. */
     @Column(nullable = false)
     public boolean prueba;
+
+    /** Por dónde llegó: {@link #WEB} (sitio o app) o {@link #WHATSAPP} (recepcionista IA). */
+    @Column(nullable = false, length = 10)
+    public String origen = WEB;
 
     /** Punto de entrega marcado en el mapa (opcional). */
     @Column(precision = 9, scale = 6)

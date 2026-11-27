@@ -73,6 +73,21 @@ import { PLANTILLAS_CARACTERISTICAS, renglones, textosCatalogo } from './textos'
           </label>
         </fieldset>
 
+        @if (negocio.value()?.agendaActiva) {
+          <fieldset>
+            <legend>Agenda</legend>
+            <label>
+              Duración de la cita
+              <select formControlName="bloquesCita">
+                @for (b of opcionesBloques; track b) {
+                  <option [ngValue]="b">{{ textoDuracion(b) }}</option>
+                }
+              </select>
+            </label>
+            <small>Cuánto tiempo aparta este servicio en la agenda. Si el cliente elige varios servicios, se suman.</small>
+          </fieldset>
+        }
+
         <fieldset>
           <legend>Dónde aparece</legend>
           <label class="en-linea">
@@ -139,7 +154,18 @@ export class ProductoForm {
     caracteristicas: [''],
     disponible: [true],
     destacado: [false],
+    bloquesCita: [1],
   });
+  protected readonly opcionesBloques = [1, 2, 3, 4, 5, 6, 7, 8];
+
+  /** «1 bloque · 30 min», «3 bloques · 1 h 30 min». */
+  protected textoDuracion(bloques: number): string {
+    const minutos = bloques * (this.negocio.value()?.minutosCita ?? 60);
+    const h = Math.floor(minutos / 60);
+    const m = minutos % 60;
+    const tiempo = h === 0 ? `${m} min` : m === 0 ? `${h} h` : `${h} h ${m} min`;
+    return `${bloques} ${bloques === 1 ? 'bloque' : 'bloques'} · ${tiempo}`;
+  }
   protected readonly guardando = signal(false);
   protected readonly guardado = signal(false);
   protected readonly error = signal<string | null>(null);
@@ -206,6 +232,7 @@ export class ProductoForm {
       caracteristicas: p.caracteristicas.join('\n'),
       disponible: p.disponible,
       destacado: p.destacado,
+      bloquesCita: p.bloquesCita ?? 1,
     });
   }
 
@@ -230,6 +257,7 @@ export class ProductoForm {
       destacado: !!v.destacado,
       imagenUrl: this.foto(),
       galeria: this.galeria(),
+      bloquesCita: Number(v.bloquesCita) || 1,
     };
     this.guardando.set(true);
     const op = this.esNuevo()

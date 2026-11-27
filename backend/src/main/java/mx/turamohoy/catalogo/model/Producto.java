@@ -73,6 +73,13 @@ public class Producto extends PanacheEntityBase {
     @Column(nullable = false)
     public boolean disponible;
 
+    /**
+     * En negocios con agenda: cuántos bloques de {@code negocio.minutosCita} ocupa este servicio
+     * (p. ej. con bloques de 30 min, una limpieza 1 y una ortodoncia 2). Entre 1 y 8.
+     */
+    @Column(name = "bloques_cita", nullable = false)
+    public int bloquesCita = 1;
+
     public static List<Producto> disponibles(boolean probador) {
         return list(BASE + "where p.disponible = true and n.estado in ?1" + ORDEN, Negocio.estadosVisibles(probador));
     }

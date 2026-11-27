@@ -235,7 +235,7 @@ public class PedidoResource {
     }
 
     /** ¿Otro cliente apartó la misma hora al mismo tiempo? (la llave única de cita_bloque lo detuvo) */
-    static boolean choqueDeAgenda(Throwable e) {
+    public static boolean choqueDeAgenda(Throwable e) {
         for (Throwable t = e; t != null; t = t.getCause()) {
             if (t instanceof org.hibernate.exception.ConstraintViolationException
                     || (t.getMessage() != null && t.getMessage().toLowerCase().contains("uk_cita_bloque"))) {
@@ -343,8 +343,8 @@ public class PedidoResource {
                 } catch (java.time.format.DateTimeParseException e) {
                     throw Errores.de(Status.BAD_REQUEST, "Fecha u hora no válida.");
                 }
-                // Un servicio = un bloque de la agenda.
-                Agenda.apartar(p, fecha, hora, req.cita().empleadoId(), lineas.size());
+                // Cada servicio ocupa sus bloques de la agenda (1 por defecto).
+                Agenda.apartar(p, fecha, hora, req.cita().empleadoId(), Agenda.bloquesDe(lineas));
                 CitaBloque.flush();
             }
             Bitacora.anotar(p.cliente, n, Bitacora.PEDIDO, p.id, "Hizo el pedido " + p.folio + " · " + p.tipo,
@@ -447,7 +447,7 @@ public class PedidoResource {
     }
 
     /** Lo que se ve en el panel y en la notificación: "Pedido · 3 productos", "Cita · Pickup 2012". */
-    static String tipo(String modo, List<PedidoLinea> lineas) {
+    public static String tipo(String modo, List<PedidoLinea> lineas) {
         int piezas = lineas.stream().mapToInt(l -> l.cantidad).sum();
         String t = switch (modo) {
             case ModoPedido.CITA -> "Cita · " + lineas.get(0).nombre;
