@@ -19,7 +19,7 @@ import { PLANTILLAS_CARACTERISTICAS, renglones, textosCatalogo } from './textos'
   template: `
     <app-negocio-tabs [slug]="slug()" [negocio]="negocio.value()" />
 
-    <p class="migas"><a [routerLink]="['/admin/negocios', slug()]">← {{ textos().plural }}</a></p>
+    <p class="migas"><a [routerLink]="['/admin/negocios', slug(), 'catalogo']">← {{ textos().plural }}</a></p>
     <h2 class="subtitulo">{{ esNuevo() ? 'Agregar ' + textos().singular : 'Editar ' + textos().singular }}</h2>
 
     @if (producto.error(); as e) {
@@ -238,7 +238,7 @@ export class ProductoForm {
     op.pipe(finalize(() => this.guardando.set(false))).subscribe({
       next: (p) => {
         if (this.esNuevo()) {
-          void this.router.navigate(['/admin/negocios', this.slug()]);
+          void this.router.navigate(['/admin/negocios', this.slug(), 'catalogo']);
         } else {
           this.producto.set(p);
           this.guardado.set(true);

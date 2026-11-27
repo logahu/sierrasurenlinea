@@ -32,39 +32,168 @@
   .btn:disabled { opacity: .55; cursor: default; filter: none; }
 }
 
-.panel-nav {
+// ---- Marco: menú lateral agrupado (escritorio) o barra de abajo + «Más» (celular)
+.panel-marco {
+  --barra-alto: 4.25rem;
+  // Los enlaces del panel van en el verde de la plaza; cada negocio usa su color en su encabezado.
+  --acento: var(--follaje);
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: .25rem .65rem;
-  padding: .5rem 0 1rem;
-  margin-bottom: 1rem;
-  border-bottom: 1px solid var(--linea);
+  align-items: flex-start;
+  gap: 2rem;
+}
+.panel-contenido { flex: 1 1 0; min-width: 0; }
+
+.panel-lateral {
+  position: sticky;
+  top: 1rem;
+  flex: none;
+  width: 14.5rem;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  box-sizing: border-box;
+  margin-top: 1rem;
+  padding: .9rem .6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: 1rem;
 
   a {
-    color: var(--tinta-suave);
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    min-height: 2.5rem;
+    padding: .35rem .6rem;
+    border-radius: .6rem;
+    color: var(--tinta);
     text-decoration: none;
-    font-weight: 600;
+    font-weight: 500;
     font-size: .95rem;
-    padding: .35rem 0;
-    border-bottom: 2px solid transparent;
-    &.activo { color: var(--tinta); border-bottom-color: var(--follaje); }
+    &:hover { background: var(--fondo-alt); }
+    &.activo { background: color-mix(in srgb, var(--follaje) 14%, var(--superficie)); color: var(--tinta); font-weight: 700; }
+    &.activo app-icono-panel { color: var(--follaje); }
+    &:focus-visible { outline: 3px solid var(--follaje); outline-offset: 1px; }
+    .marca-nuevos { margin-left: auto; }
   }
 }
-.panel-quien { margin-left: auto; color: var(--tinta-suave); font-size: .85rem; }
-@media (max-width: 30rem) {
-  .panel-quien { display: none; }
-  .panel-salir { margin-left: auto; }
+.panel-grupo { display: flex; flex-direction: column; gap: 1px; }
+.panel-grupo-titulo {
+  margin: 0 .6rem .3rem;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--tinta-suave);
+}
+.panel-yo {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  padding-top: .75rem;
+  border-top: 1px solid var(--linea);
+  .panel-perfil { flex: 1; min-width: 0; }
+  .panel-perfil span { display: grid; min-width: 0; }
+  .panel-perfil small { color: var(--tinta-suave); font-size: .8rem; font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }
 .panel-salir {
+  flex: none;
   font: inherit;
   font-size: .85rem;
   background: none;
   border: 1px solid var(--linea);
   border-radius: 999px;
-  padding: .3rem .8rem;
+  padding: .35rem .8rem;
   color: var(--tinta);
   cursor: pointer;
+}
+.panel-perfil { display: inline-flex; align-items: center; gap: .5rem; color: var(--tinta); text-decoration: none; app-avatar { width: 2rem; height: 2rem; } }
+
+// Celular
+.panel-barra, .panel-mas, .panel-mas-fondo { display: none; }
+@media (max-width: 61.99rem) {
+  .panel-marco { display: block; }
+  .panel-lateral { display: none; }
+  .panel-marco.con-menu .panel-contenido { padding-bottom: calc(var(--barra-alto) + 1rem + env(safe-area-inset-bottom)); }
+  .panel-barra {
+    position: fixed;
+    z-index: 30;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    height: calc(var(--barra-alto) + env(safe-area-inset-bottom));
+    padding: .3rem .25rem env(safe-area-inset-bottom);
+    box-sizing: border-box;
+    background: var(--superficie);
+    border-top: 1px solid var(--linea);
+    box-shadow: 0 -.25rem 1rem rgb(0 0 0 / .06);
+
+    a, button {
+      position: relative;
+      flex: 1 1 0;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: .15rem;
+      border: 0;
+      background: none;
+      color: var(--tinta-suave);
+      font: inherit;
+      font-size: .72rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      span:not(.marca-nuevos) { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      app-icono-panel svg { width: 1.45rem; height: 1.45rem; }
+      &.activo { color: var(--follaje); }
+      &:focus-visible { outline: 3px solid var(--follaje); outline-offset: -3px; border-radius: .5rem; }
+      .marca-nuevos { position: absolute; top: .1rem; left: calc(50% + .3rem); margin: 0; }
+    }
+  }
+  .panel-mas-fondo { display: block; position: fixed; z-index: 28; inset: 0; background: rgb(20 14 10 / .45); }
+  .panel-mas {
+    position: fixed;
+    z-index: 29;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--barra-alto) + env(safe-area-inset-bottom));
+    max-height: 75vh;
+    overflow-y: auto;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: .6rem;
+    padding: 1rem 1rem 1.1rem;
+    background: var(--superficie);
+    border-radius: 1.25rem 1.25rem 0 0;
+    .panel-yo { order: -1; margin: 0 0 .25rem; padding: 0 0 .75rem; border-top: 0; border-bottom: 1px solid var(--linea); }
+    .panel-grupo-titulo { margin: .35rem 0 0; }
+  }
+  .panel-mas-rejilla {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .5rem;
+    a {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      min-height: 3rem;
+      padding: .5rem .7rem;
+      border: 1px solid var(--linea);
+      border-radius: .75rem;
+      color: var(--tinta);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: .92rem;
+      &.activo { border-color: var(--follaje); }
+      .marca-nuevos { margin-left: auto; }
+    }
+  }
 }
 
 .panel-titulo { margin-bottom: 1.25rem; }
@@ -532,5 +661,207 @@
 // En la app del celular no hay barra de direcciones: siempre hay forma de regresar al sitio.
 .volver-sitio { display: inline-block; margin-top: 1.25rem; color: var(--tinta-suave); font-size: .9rem; }
 
-// «Mi perfil» con su avatar en la barra del panel.
-.panel-perfil { display: inline-flex; align-items: center; gap: .4rem; app-avatar { width: 1.7rem; height: 1.7rem; } }
+
+// ---- Un negocio: encabezado con su visibilidad y menú agrupado a la izquierda del contenido.
+.panel:has(app-negocio-tabs) { max-width: 64rem; }
+.negocio-cabeza {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .75rem 1.25rem;
+  margin: 0 0 1rem;
+  padding: 1rem 1.1rem;
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: 1rem;
+  h1 { margin: 0; }
+  .ayuda { margin: .1rem 0 0; }
+  label.interruptor { margin: 0; }
+  .negocio-error { flex-basis: 100%; margin: 0; }
+}
+.negocio-sello {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: .8rem;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  // Si el color del negocio se pierde con el fondo, el borde lo marca.
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / .18), 0 0 0 1px var(--linea);
+}
+.negocio-nombre { flex: 1 1 12rem; min-width: 0; }
+.negocio-estado {
+  display: flex;
+  border: 1px solid var(--linea);
+  border-radius: 999px;
+  overflow: hidden;
+  button {
+    border: 0;
+    background: var(--superficie);
+    color: var(--tinta);
+    font: inherit;
+    font-size: .88rem;
+    font-weight: 600;
+    padding: .5rem .85rem;
+    cursor: pointer;
+    & + button { border-left: 1px solid var(--linea); }
+    &.elegido[data-estado='PUBLICO'] { background: #1e6b3c; color: #fff; }
+    &.elegido[data-estado='PRUEBAS'] { background: #9a6700; color: #fff; }
+    &.elegido[data-estado='OCULTO'] { background: var(--tinta); color: var(--fondo); }
+    &:focus-visible { outline: 3px solid var(--follaje); outline-offset: -3px; }
+  }
+}
+.negocio-chip {
+  padding: .25rem .7rem;
+  border-radius: 999px;
+  font-size: .85rem;
+  font-weight: 700;
+  background: var(--fondo-alt);
+  &[data-estado='PUBLICO'] { background: color-mix(in srgb, #1e6b3c 16%, var(--superficie)); }
+  &[data-estado='PRUEBAS'] { background: color-mix(in srgb, #c27a00 22%, var(--superficie)); }
+}
+.negocio-menu {
+  display: flex;
+  gap: .25rem .4rem;
+  margin: 0 0 1rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  padding-bottom: .25rem;
+  a {
+    flex: none;
+    display: block;
+    padding: .45rem .85rem;
+    border-radius: 999px;
+    border: 1px solid var(--linea);
+    color: var(--tinta);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: .9rem;
+    &.activo { background: var(--tinta); border-color: var(--tinta); color: var(--fondo); }
+    &:focus-visible { outline: 3px solid var(--follaje); outline-offset: 2px; }
+  }
+}
+.negocio-grupo { display: contents; }
+.negocio-grupo-titulo { display: none; }
+
+// Escritorio: el menú del negocio en columna, con sus grupos, a la izquierda del contenido.
+@media (min-width: 52rem) {
+  .panel :has(> app-negocio-tabs),
+  .panel *:has(> app-negocio-tabs) {
+    display: grid;
+    grid-template-columns: 13.5rem minmax(0, 1fr);
+    column-gap: 1.75rem;
+    align-items: start;
+    > * { grid-column: 2; min-width: 0; }
+    > app-negocio-tabs { display: contents; }
+  }
+  .negocio-migas, .negocio-cabeza { grid-column: 1 / -1; }
+  .negocio-menu {
+    grid-column: 1;
+    grid-row: 3 / span 60;
+    align-self: start;
+    position: sticky;
+    top: 1rem;
+    flex-direction: column;
+    gap: .9rem;
+    overflow: visible;
+    margin: 0;
+    a { border: 0; border-radius: .6rem; padding: .5rem .7rem; font-weight: 500; }
+    a:hover { background: var(--fondo-alt); }
+    a.activo { background: var(--follaje); color: #fff; font-weight: 700; }
+  }
+  .negocio-grupo { display: flex; flex-direction: column; gap: 1px; }
+  .negocio-grupo-titulo {
+    display: block;
+    margin: 0 .7rem .25rem;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--tinta-suave);
+  }
+}
+
+// ---- Inicio y Mis negocios
+.panel:has(app-inicio-panel), .panel:has(app-negocios-page) { max-width: 60rem; }
+.pendientes { margin-bottom: 1.75rem; }
+.pendientes-rejilla { display: grid; grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); gap: .75rem; }
+.pendiente {
+  display: grid;
+  gap: .15rem;
+  padding: .95rem 1.1rem;
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: 1rem;
+  color: var(--tinta);
+  text-decoration: none;
+  strong { font-family: var(--font-display); font-size: 1.9rem; line-height: 1.1; color: var(--tinta-suave); }
+  span { font-weight: 600; }
+  small { color: var(--tinta-suave); font-weight: 600; }
+  &.hay strong { color: var(--tinta); }
+  &.hay small { color: var(--follaje); }
+  &:hover { border-color: var(--follaje); }
+  &:focus-visible { outline: 3px solid var(--follaje); outline-offset: 2px; }
+}
+.tabla-negocios {
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: 1rem;
+  overflow: hidden;
+}
+.fila-negocio {
+  display: grid;
+  grid-template-columns: minmax(0, 2.2fr) minmax(0, 1.3fr) minmax(0, .8fr) minmax(0, 1.7fr) auto;
+  gap: .75rem;
+  align-items: center;
+  padding: .8rem 1.1rem;
+  border-top: 1px solid var(--linea);
+  font-size: .92rem;
+  &.encabezado {
+    border-top: 0;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--tinta-suave);
+  }
+}
+.tn-nombre {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  font-weight: 700;
+  a { color: var(--tinta); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+}
+.tn-punto { flex: none; width: .8rem; height: .8rem; border-radius: 50%; box-shadow: 0 0 0 2px var(--superficie), 0 0 0 3px var(--linea); }
+.tn-app { color: var(--tinta-suave); }
+.tn-avance { display: flex; align-items: center; gap: .5rem; color: var(--tinta-suave); white-space: nowrap; }
+.tn-barra {
+  flex: 1;
+  min-width: 2.5rem;
+  height: .4rem;
+  border-radius: 99px;
+  background: var(--fondo-alt);
+  span { display: block; height: 100%; border-radius: 99px; background: #c27a00; }
+  span.completa { background: var(--follaje); }
+}
+.tn-accion a { font-weight: 700; color: var(--follaje); text-decoration: none; white-space: nowrap; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (max-width: 40rem) {
+  .fila-negocio {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas: 'nombre accion' 'estado avance';
+    row-gap: .4rem;
+    &.encabezado { display: none; }
+    .tn-nombre { grid-area: nombre; }
+    .tn-accion { grid-area: accion; }
+    > :nth-child(2) { grid-area: estado; }
+    .tn-app { display: none; }
+    .tn-avance { grid-area: avance; justify-self: end; }
+  }
+}

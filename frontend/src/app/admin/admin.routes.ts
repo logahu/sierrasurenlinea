@@ -45,7 +45,18 @@ export const ADMIN_ROUTES: Routes = [
                 loadComponent: () => import('./inicio-panel').then((m) => m.InicioPanel),
               },
               {
+                path: 'negocios',
+                title: 'Mis negocios · Panel',
+                canActivate: [soloDueno],
+                loadComponent: () => import('./negocios-page').then((m) => m.NegociosPage),
+              },
+              {
                 path: 'negocios/:slug',
+                title: 'Resumen del negocio · Panel',
+                loadComponent: () => import('./resumen-negocio').then((m) => m.ResumenNegocio),
+              },
+              {
+                path: 'negocios/:slug/catalogo',
                 title: 'Catálogo · Panel',
                 loadComponent: () => import('./productos-page').then((m) => m.ProductosPage),
               },
@@ -74,8 +85,9 @@ export const ADMIN_ROUTES: Routes = [
                 title: 'Equipo y agenda · Panel',
                 loadComponent: () => import('./equipo-page').then((m) => m.EquipoPage),
               },
+              { path: 'negocios/:slug/datos', pathMatch: 'full', redirectTo: 'negocios/:slug/datos/identidad' },
               {
-                path: 'negocios/:slug/datos',
+                path: 'negocios/:slug/datos/:seccion',
                 title: 'Datos del negocio · Panel',
                 loadComponent: () => import('./editar-negocio').then((m) => m.EditarNegocio),
               },
@@ -94,12 +106,8 @@ export const ADMIN_ROUTES: Routes = [
                 title: 'Historial · Panel',
                 loadComponent: () => import('./historial-page').then((m) => m.HistorialPage),
               },
-              {
-                path: 'visibilidad',
-                title: 'Negocios en el sitio · Panel',
-                canActivate: [soloDueno],
-                loadComponent: () => import('./visibilidad-page').then((m) => m.VisibilidadPage),
-              },
+              // «En el sitio» ahora vive en Mis negocios y en el encabezado de cada negocio.
+              { path: 'visibilidad', redirectTo: 'negocios' },
               {
                 path: 'tianguis',
                 title: 'Tianguis · Panel',

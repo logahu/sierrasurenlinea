@@ -1,10 +1,12 @@
-import { Component, effect, DestroyRef, ViewEncapsulation, inject } from '@angular/core';
+import { Component, computed, effect, DestroyRef, ViewEncapsulation, inject, signal } from '@angular/core';
 import { Meta } from '@angular/platform-browser';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { TianguisAdminApi } from './tianguis/tianguis-admin.api';
 import { PedidosService } from './pedidos';
 import { Avatar } from '../compartido/avatar';
 import { SesionService } from './sesion';
+import { IconoPanel } from './icono-panel';
+import { Contador, menuDe, principales, secundarias } from './menu-panel';
 
 /**
  * Marco del panel: barra con las secciones y "Salir". Sus estilos (encapsulation
@@ -12,50 +14,83 @@ import { SesionService } from './sesion';
  */
 @Component({
   selector: 'app-panel-layout',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, Avatar],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, Avatar, IconoPanel],
   encapsulation: ViewEncapsulation.None,
   styleUrl: './panel.scss',
   template: `
-    <div class="panel">
+    <div class="panel-marco" [class.con-menu]="!!sesion.usuario()">
       @if (sesion.usuario(); as u) {
-        <nav class="panel-nav" aria-label="Panel">
-@if (sesion.esEmpleado()) {
-            <a routerLink="/admin/agenda" routerLinkActive="activo">Mi agenda</a>
-          } @else {
-                    <a routerLink="/admin/pedidos" routerLinkActive="activo">
-            Pedidos @if (pedidos.nuevos()) { <span class="marca-nuevos">{{ pedidos.nuevos() }}</span> }
-          </a>
+        <!-- Escritorio: menú lateral agrupado -->
+        <nav class="panel-lateral" aria-label="Panel">
+          @for (g of menu(); track g.titulo) {
+            <div class="panel-grupo">
+              <p class="panel-grupo-titulo">{{ g.titulo }}</p>
+              @for (o of g.opciones; track o.ruta) {
+                <a [routerLink]="o.ruta" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: !!o.exacta }"
+                   ariaCurrentWhenActive="page">
+                  <app-icono-panel [nombre]="o.icono" />
+                  <span>{{ o.texto }}</span>
+                  @if (cuenta(o.contador); as c) { <span class="marca-nuevos" [attr.aria-label]="c + ' por atender'">{{ c }}</span> }
+                </a>
+              }
+            </div>
           }
-          @if (sesion.veAgenda() && !sesion.esEmpleado()) {
-            <a routerLink="/admin/agenda" routerLinkActive="activo">Agenda</a>
-          }
-          @if (!sesion.esRepartidor() && !sesion.esEmpleado()) {
-            <a routerLink="/admin" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }">Negocios</a>
-          }
-          @if (!sesion.esRepartidor() && !sesion.esEmpleado()) {
-            <a routerLink="/admin/tablero" routerLinkActive="activo">Tablero</a>
-            <a routerLink="/admin/historial" routerLinkActive="activo">Historial</a>
-          }
-          @if (sesion.veTianguis()) {
-            <a routerLink="/admin/tianguis" routerLinkActive="activo">
-              Tianguis @if (tianguis.porAtender()) { <span class="marca-nuevos" [attr.aria-label]="tianguis.porAtender() + ' por atender'">{{ tianguis.porAtender() }}</span> }
+          <div class="panel-yo">
+            <a routerLink="/admin/cuenta" routerLinkActive="activo" ariaCurrentWhenActive="page" class="panel-perfil">
+              <app-avatar [avatar]="u.avatar" [nombre]="u.nombre" />
+              <span><strong>Mi perfil</strong><small>{{ u.nombre }}</small></span>
+            </a>
+            <button type="button" class="panel-salir" (click)="salir()">Salir</button>
+          </div>
+        </nav>
+
+        <!-- Celular: barra de abajo con lo de todos los días y «Más» con el resto -->
+        <nav class="panel-barra" aria-label="Panel">
+          @for (o of barra(); track o.ruta) {
+            <a [routerLink]="o.ruta" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: !!o.exacta }"
+               ariaCurrentWhenActive="page" (click)="masAbierto.set(false)">
+              <app-icono-panel [nombre]="o.icono" />
+              <span>{{ o.texto }}</span>
+              @if (cuenta(o.contador); as c) { <span class="marca-nuevos" [attr.aria-label]="c + ' por atender'">{{ c }}</span> }
             </a>
           }
-          @if (sesion.esDueno()) {
-            <a routerLink="/admin/visibilidad" routerLinkActive="activo">En el sitio</a>
-            <a routerLink="/admin/colonias" routerLinkActive="activo">Colonias</a>
-            <a routerLink="/admin/publicidad" routerLinkActive="activo">Publicidad</a>
-            <a routerLink="/admin/usuarios" routerLinkActive="activo">Usuarios</a>
-          }
-          <a class="panel-perfil" routerLink="/admin/cuenta" routerLinkActive="activo" [attr.aria-label]="'Mi perfil (' + u.nombre + ')'">
-            <app-avatar [avatar]="u.avatar" [nombre]="u.nombre" />
-            <span>Mi perfil</span>
-          </a>
-          <span class="panel-quien">{{ u.nombre }}</span>
-          <button type="button" class="panel-salir" (click)="salir()">Salir</button>
+          <button type="button" [class.activo]="masAbierto()" [attr.aria-expanded]="masAbierto()" aria-controls="panel-mas"
+                  (click)="masAbierto.set(!masAbierto())">
+            <app-icono-panel nombre="mas" />
+            <span>Más</span>
+            @if (cuentaMas(); as c) { <span class="marca-nuevos" [attr.aria-label]="c + ' por atender'">{{ c }}</span> }
+          </button>
         </nav>
+        @if (masAbierto()) {
+          <div class="panel-mas-fondo" (click)="masAbierto.set(false)" aria-hidden="true"></div>
+          <section id="panel-mas" class="panel-mas" aria-label="Más opciones">
+            <div class="panel-yo">
+              <a routerLink="/admin/cuenta" class="panel-perfil" (click)="masAbierto.set(false)">
+                <app-avatar [avatar]="u.avatar" [nombre]="u.nombre" />
+                <span><strong>{{ u.nombre }}</strong><small>Mi perfil</small></span>
+              </a>
+              <button type="button" class="panel-salir" (click)="salir()">Salir</button>
+            </div>
+            @for (g of mas(); track g.titulo) {
+              <p class="panel-grupo-titulo">{{ g.titulo }}</p>
+              <div class="panel-mas-rejilla">
+                @for (o of g.opciones; track o.ruta) {
+                  <a [routerLink]="o.ruta" routerLinkActive="activo" (click)="masAbierto.set(false)">
+                    <app-icono-panel [nombre]="o.icono" />
+                    <span>{{ o.texto }}</span>
+                    @if (cuenta(o.contador); as c) { <span class="marca-nuevos">{{ c }}</span> }
+                  </a>
+                }
+              </div>
+            }
+          </section>
+        }
       }
-      <router-outlet />
+      <div class="panel-contenido">
+        <div class="panel">
+          <router-outlet />
+        </div>
+      </div>
     </div>
   `,
 })
@@ -64,6 +99,27 @@ export class PanelLayout {
   protected readonly pedidos = inject(PedidosService);
   protected readonly tianguis = inject(TianguisAdminApi);
   private readonly router = inject(Router);
+
+  /** Menú según quién entra (grupos: día a día, negocios, el sitio, personas y números). */
+  protected readonly menu = computed(() => {
+    const u = this.sesion.usuario();
+    return u
+      ? menuDe({ rol: u.rol, negocioSlug: u.negocioSlug, veAgenda: this.sesion.veAgenda(), veTianguis: this.sesion.veTianguis() })
+      : [];
+  });
+  protected readonly barra = computed(() => principales(this.menu()));
+  protected readonly mas = computed(() => secundarias(this.menu()));
+  protected readonly masAbierto = signal(false);
+  /** Pendientes que quedan escondidos en «Más» (para avisar en el botón). */
+  protected readonly cuentaMas = computed(() =>
+    this.mas().flatMap((g) => g.opciones).reduce((s, o) => s + this.cuenta(o.contador), 0),
+  );
+
+  protected cuenta(c: Contador | undefined): number {
+    if (c === 'pedidos') return this.pedidos.nuevos();
+    if (c === 'tianguis') return this.tianguis.porAtender();
+    return 0;
+  }
 
   constructor() {
     // Que los buscadores no indexen el panel (y quitarlo al volver al sitio).
@@ -88,6 +144,7 @@ export class PanelLayout {
   }
 
   protected salir(): void {
+    this.masAbierto.set(false);
     this.sesion.salir();
     void this.router.navigate(['/admin/entrar']);
   }

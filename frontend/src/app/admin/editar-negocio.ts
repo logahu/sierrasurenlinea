@@ -1,4 +1,3 @@
-import { RouterLink } from '@angular/router';
 import { Component, computed, effect, inject, input, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -13,7 +12,7 @@ import { MapaUbicacion } from '../mapa/mapa-ubicacion';
 import { Punto, puntoDe } from '../mapa/ubicacion';
 import { CatalogoService } from '../catalogo/catalogo.service';
 import { ColoniasService, agrupar } from '../colonias/colonias';
-import { contrasteConBlanco } from '../color';
+import { COLORES_SUGERIDOS, colorSeVe } from '../color';
 
 /** Muestra el número como se ve en México: 55 4048 5363 (sin el 52). */
 export function whatsappLegible(numero: string): string {
@@ -34,7 +33,7 @@ export function whatsappValido(texto: string): boolean {
 
 @Component({
   selector: 'app-editar-negocio',
-  imports: [ReactiveFormsModule, NegocioTabs, FotoCampo, RouterLink, MapaUbicacion],
+  imports: [ReactiveFormsModule, NegocioTabs, FotoCampo, MapaUbicacion],
   styles: `
     .atencion { display: flex; border: 1px solid var(--linea); border-radius: 999px; overflow: hidden; margin-bottom: .4rem; }
     .atencion button { flex: 1; border: 0; background: var(--superficie); color: var(--tinta); font: inherit; font-weight: 600; padding: .55rem .5rem; cursor: pointer; }
@@ -42,15 +41,33 @@ export function whatsappValido(texto: string): boolean {
     .campo-mapa { display: grid; gap: .3rem; font-weight: 600; font-size: .9rem; }
     .campo-mapa small { font-weight: 400; color: var(--tinta-suave); }
     .nota-atencion { margin: .2rem 0 0; color: var(--tinta-suave); font-size: .92rem; }
+    .campo-color { border: 0; padding: 0; margin: 0; display: grid; gap: .5rem; min-width: 0; }
+    .campo-color legend { font-weight: 600; font-size: .92rem; padding: 0; margin-bottom: .4rem; }
+    .colores { display: flex; flex-wrap: wrap; gap: .45rem; align-items: center; }
+    .color { width: 2.4rem; height: 2.4rem; border-radius: 50%; border: 3px solid var(--superficie); box-shadow: 0 0 0 1px var(--linea); cursor: pointer; padding: 0; }
+    .color[aria-pressed='true'] { box-shadow: 0 0 0 3px var(--tinta); }
+    .color:focus-visible { outline: 3px solid var(--follaje); outline-offset: 2px; }
+    .color-otro { display: inline-flex !important; align-items: center; gap: .35rem; padding: .2rem .7rem .2rem .3rem; border: 1px dashed var(--linea); border-radius: 999px; font-size: .85rem; font-weight: 600; }
+    .color-otro input { width: 1.8rem; height: 1.8rem; padding: 0; border: 0; background: none; }
+    .color-aviso { margin: 0 !important; }
+    .vista-color { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+    .vista { display: flex; padding: .7rem; border-radius: .75rem; }
+    .vista.claro { background: #fbfbf8; border: 1px solid #e8ddd0; }
+    .vista.oscuro { background: #141a33; }
+    .fachada { flex: 1; padding: .8rem .5rem 1rem; color: #fff; text-align: center; font-family: var(--font-display); font-weight: 700; font-size: .95rem; overflow-wrap: anywhere; }
+    .barra-guardar { position: sticky; bottom: 0; z-index: 2; padding: .75rem 0; background: var(--fondo); border-top: 1px solid var(--linea); }
+    @media (max-width: 61.99rem) { .barra-guardar { bottom: calc(4.25rem + env(safe-area-inset-bottom)); } }
   `,
   template: `
-    <app-negocio-tabs [slug]="slug()" [negocio]="negocio.value()" seccion="datos" />
+    <app-negocio-tabs [slug]="slug()" [negocio]="negocio.value()" [seccion]="parte()" />
 
     @if (negocio.error(); as e) {
       <p class="error" role="alert">{{ mensaje(e) }}</p>
     } @else if (negocio.value(); as n) {
 
       <form class="ficha" [formGroup]="form" (ngSubmit)="guardar(n)" novalidate>
+        @switch (parte()) {
+          @case ('contacto') {
         <fieldset>
           <legend>Contacto</legend>
           <label>
@@ -67,7 +84,6 @@ export function whatsappValido(texto: string): boolean {
             <input formControlName="horario" maxlength="120" placeholder="Lun a sáb, 9:00 a 19:00" />
           </label>
         </fieldset>
-
         <fieldset>
           <legend>Ubicación y atención</legend>
           <div class="atencion" role="radiogroup" aria-label="¿Cómo atiende?">
@@ -109,7 +125,18 @@ export function whatsappValido(texto: string): boolean {
             </p>
           }
         </fieldset>
-
+        @if (n.tipo === 'SERVICIO') {
+          <fieldset>
+            <legend>Mandados</legend>
+            <label>
+              Tope que adelanta el repartidor (MXN)
+              <input type="number" formControlName="topeAdelanto" min="0" step="50" inputmode="numeric" />
+              <small>En compras y pagos, el repartidor pone hasta esta cantidad de su bolsa. El cliente lo ve en el formulario.</small>
+            </label>
+          </fieldset>
+        }
+          }
+          @case ('google') {
         <fieldset>
           <legend>Google</legend>
           <label>
@@ -123,20 +150,10 @@ export function whatsappValido(texto: string): boolean {
             <small>En tu Perfil de Negocio de Google → «Pedir reseñas» → copia el enlace. Muestra «Déjanos tu reseña».</small>
           </label>
         </fieldset>
-
-        @if (n.tipo === 'SERVICIO') {
-          <fieldset>
-            <legend>Mandados</legend>
-            <label>
-              Tope que adelanta el repartidor (MXN)
-              <input type="number" formControlName="topeAdelanto" min="0" step="50" inputmode="numeric" />
-              <small>En compras y pagos, el repartidor pone hasta esta cantidad de su bolsa. El cliente lo ve en el formulario.</small>
-            </label>
-          </fieldset>
-        }
-
+          }
+          @default {
         <fieldset>
-          <legend>Presentación</legend>
+          <legend>Identidad y apariencia</legend>
           <div>
             <strong class="etiqueta-campo">Foto de portada</strong>
             <app-foto-campo [slug]="n.slug" [url]="portada() ?? n.portadaUrl" (urlChange)="cambiarPortada($event)" />
@@ -164,20 +181,35 @@ export function whatsappValido(texto: string): boolean {
               </select>
               <small>Su calle en la portada (por ejemplo, «Flores y regalos»).</small>
             </label>
-            <label class="en-linea">
-              <input type="color" formControlName="colorPrimario" />
-              Color del negocio
-            </label>
-            @if (contraste(form.value.colorPrimario ?? '') < 4.5) {
-              <small>Es un color claro: se usa tal cual en su tarjeta de la portada, y en botones y enlaces se usa una versión más oscura para que el texto se lea.</small>
-            }
-            <p class="ayuda">
-              Visibilidad:
-              <strong>{{ n.estado === 'PUBLICO' ? 'Pública' : n.estado === 'PRUEBAS' ? '🧪 En pruebas (solo probadores)' : 'Oculto' }}</strong>
-              · se cambia en <a routerLink="/admin/visibilidad">En el sitio</a>.
-            </p>
+            <fieldset class="campo-color">
+              <legend>Color del negocio</legend>
+              <div class="colores" role="group" aria-label="Colores sugeridos">
+                @for (c of sugeridos; track c.hex) {
+                  <button type="button" class="color" [style.background]="c.hex" [attr.aria-label]="c.nombre" [title]="c.nombre"
+                          [attr.aria-pressed]="colorActual() === c.hex" (click)="elegirColor(c.hex)"></button>
+                }
+                <label class="color-otro"><input type="color" formControlName="colorPrimario" /> Otro</label>
+              </div>
+              @if (seVe(); as v) {
+                @if (v.claro && v.oscuro) {
+                  <p class="exito color-aviso">✓ Se distingue en modo claro y en modo oscuro.</p>
+                } @else {
+                  <p class="aviso color-aviso">
+                    Este color casi no se ve en modo {{ !v.oscuro ? 'oscuro' : 'claro' }}: el punto, la franja y la fachada del
+                    negocio se pierden con el fondo. Elige uno de los sugeridos o uno {{ !v.oscuro ? 'más claro' : 'más oscuro' }}.
+                  </p>
+                }
+              }
+              <div class="vista-color" aria-label="Vista previa en la portada">
+                <span class="vista claro"><span class="fachada" [style.background]="colorActual()">{{ form.controls.nombre.value }}</span></span>
+                <span class="vista oscuro"><span class="fachada" [style.background]="colorActual()">{{ form.controls.nombre.value }}</span></span>
+              </div>
+              <small>Vista previa en la portada: modo claro y oscuro.</small>
+            </fieldset>
           }
         </fieldset>
+          }
+        }
 
         @if (error()) {
           <p class="error" role="alert">{{ error() }}</p>
@@ -185,11 +217,11 @@ export function whatsappValido(texto: string): boolean {
         @if (guardado()) {
           <p class="exito" role="status">Guardado. El sitio ya muestra los cambios.</p>
         }
-        <div class="acciones">
+        <div class="acciones barra-guardar">
           <button class="btn primario grande" type="submit" [disabled]="guardando() || form.pristine">
             {{ guardando() ? 'Guardando…' : 'Guardar cambios' }}
           </button>
-          @if (whatsappActual(); as w) {
+          @if (parte() === 'contacto' && whatsappActual(); as w) {
             <span class="ayuda">WhatsApp actual: {{ w }}</span>
           }
         </div>
@@ -200,9 +232,24 @@ export function whatsappValido(texto: string): boolean {
   `,
 })
 export class EditarNegocio {
-  protected readonly contraste = contrasteConBlanco;
-
   readonly slug = input.required<string>();
+  /** Parte de los datos: identidad (con giro y color), contacto (y ubicación) o google. */
+  readonly seccion = input<string>('identidad');
+  protected readonly parte = computed<'identidad' | 'contacto' | 'google'>(() => {
+    const s = this.seccion();
+    return s === 'contacto' || s === 'google' ? s : 'identidad';
+  });
+  protected readonly sugeridos = COLORES_SUGERIDOS;
+  /** El color elegido (en el formulario, aún sin guardar). */
+  private readonly colorForm = signal('#000000');
+  protected readonly colorActual = computed(() => this.colorForm().toLowerCase());
+  protected readonly seVe = computed(() => colorSeVe(this.colorActual()));
+
+  protected elegirColor(hex: string): void {
+    this.form.controls.colorPrimario.setValue(hex);
+    this.form.markAsDirty();
+    this.guardado.set(false);
+  }
 
   protected readonly sesion = inject(SesionService);
   private readonly api = inject(AdminApi);
@@ -242,6 +289,7 @@ export class EditarNegocio {
   protected readonly error = signal<string | null>(null);
 
   constructor() {
+    this.form.controls.colorPrimario.valueChanges.subscribe((c) => this.colorForm.set(c));
     effect(() => {
       const n = this.negocio.value();
       if (n) this.cargar(n);

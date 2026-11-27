@@ -1,62 +1,77 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { AdminApi } from './admin.api';
 import { mensajeDeError } from './autorizacion';
+import { avanceDe } from './configuracion';
+import { NegociosTabla } from './negocios-tabla';
+import { PedidosService } from './pedidos';
 import { SesionService } from './sesion';
-import { acentoLegible } from '../color';
+import { TianguisAdminApi } from './tianguis/tianguis-admin.api';
 
+/** Inicio del panel: lo que necesita atención hoy y el estado de cada negocio. */
 @Component({
   selector: 'app-inicio-panel',
-  imports: [RouterLink],
+  imports: [RouterLink, NegociosTabla],
   template: `
     <header class="panel-titulo">
-      <h1>Hola, {{ sesion.usuario()?.nombre }}</h1>
-      <p class="ayuda">
-        @if (sesion.esDueno()) {
-          Elige un negocio para editar su catálogo y sus datos. En <a routerLink="/admin/visibilidad">En el sitio</a>
-          muestras u ocultas negocios.
-        } @else {
-          Aquí editas el catálogo y los datos de tu negocio.
-        }
-      </p>
+      <h1>Hola, {{ primerNombre() }}</h1>
+      <p class="ayuda">Lo que necesita tu atención y el estado de {{ sesion.esDueno() ? 'cada negocio' : 'tu negocio' }}.</p>
     </header>
 
-    @if (negocios.error(); as e) {
-      <p class="error" role="alert">{{ mensaje(e) }}</p>
-      <button class="btn secundario" type="button" (click)="negocios.reload()">Reintentar</button>
-    } @else if (negocios.isLoading() && !negocios.hasValue()) {
-      <p class="ayuda" role="status">Cargando negocios…</p>
-    }
-
-    <ul class="tarjetas">
-      @for (n of negocios.value() ?? []; track n.id) {
-        <li class="tarjeta" [style.--acento]="acento(n.colorPrimario)">
-          <a [routerLink]="['/admin/negocios', n.slug]" [attr.aria-label]="'Abrir ' + n.nombre">
-            <span class="tarjeta-nombre">{{ n.nombre }}</span>
-            @if (!n.visible) {
-              <span class="etiqueta">Oculto</span>
-            }
-            <span class="tarjeta-dato">{{ n.productosActivos }} {{ n.productosActivos === 1 ? 'producto' : 'productos' }} a la vista</span>
-            <span class="tarjeta-dato">
-              @if (n.encargado) {
-                Encargado: {{ n.encargado }}
-              } @else {
-                Sin encargado
-              }
-            </span>
-            <span class="tarjeta-accion">{{ n.tipo === 'SERVICIO' ? 'Tarifas' : 'Productos' }} y datos →</span>
+    <section class="pendientes" aria-labelledby="titulo-pendientes">
+      <h2 id="titulo-pendientes" class="subtitulo">Pendientes</h2>
+      <div class="pendientes-rejilla">
+        <a class="pendiente" routerLink="/admin/pedidos" [class.hay]="pedidos.nuevos() > 0">
+          <strong>{{ pedidos.nuevos() }}</strong>
+          <span>{{ pedidos.nuevos() === 1 ? 'Pedido nuevo' : 'Pedidos nuevos' }}</span>
+          <small>{{ pedidos.nuevos() ? 'Atender →' : 'Ver pedidos →' }}</small>
+        </a>
+        @if (sesion.veTianguis()) {
+          <a class="pendiente" routerLink="/admin/tianguis" [class.hay]="tianguis.porAtender() > 0">
+            <strong>{{ tianguis.porAtender() }}</strong>
+            <span>Del tianguis por revisar</span>
+            <small>Revisar →</small>
           </a>
-        </li>
+        }
+        @if (porCompletar(); as p) {
+          <a class="pendiente hay" [routerLink]="['/admin/negocios', p.slug]">
+            <strong>{{ p.cuantos }}</strong>
+            <span>{{ p.cuantos === 1 ? 'Negocio por completar' : 'Negocios por completar' }}</span>
+            <small>{{ p.cuantos === 1 ? 'Completar →' : 'Empezar por ' + p.nombre + ' →' }}</small>
+          </a>
+        }
+      </div>
+    </section>
+
+    <section aria-labelledby="titulo-negocios">
+      <h2 id="titulo-negocios" class="subtitulo">{{ sesion.esDueno() ? 'Tus negocios' : 'Tu negocio' }}</h2>
+      @if (negocios.error(); as e) {
+        <p class="error" role="alert">{{ mensaje(e) }}</p>
+        <button class="btn secundario" type="button" (click)="negocios.reload()">Reintentar</button>
+      } @else if (negocios.hasValue()) {
+        <app-negocios-tabla [negocios]="negocios.value() ?? []" />
+      } @else {
+        <p class="ayuda" role="status">Cargando negocios…</p>
       }
-    </ul>
+    </section>
   `,
 })
 export class InicioPanel {
-  protected readonly acento = acentoLegible;
-
   protected readonly sesion = inject(SesionService);
+  protected readonly pedidos = inject(PedidosService);
+  protected readonly tianguis = inject(TianguisAdminApi);
   private readonly api = inject(AdminApi);
   protected readonly negocios = rxResource({ stream: () => this.api.negocios() });
   protected readonly mensaje = mensajeDeError;
+  protected readonly primerNombre = computed(() => (this.sesion.usuario()?.nombre ?? '').trim().split(/\s+/)[0]);
+
+  /** Negocios visibles (público o en pruebas) a los que les falta algo; el primero, para ir directo. */
+  protected readonly porCompletar = computed(() => {
+    const lista = (this.negocios.hasValue() ? (this.negocios.value() ?? []) : []).filter((n) => {
+      const a = avanceDe(n);
+      return n.estado !== 'OCULTO' && a.listos < a.total;
+    });
+    return lista.length ? { cuantos: lista.length, slug: lista[0].slug, nombre: lista[0].nombre } : null;
+  });
 }
