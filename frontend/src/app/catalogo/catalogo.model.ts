@@ -128,6 +128,8 @@ export interface Producto {
   categoriaSlug: string;
   categoriaNombre: string;
   destacado: boolean;
+  /** En negocios con agenda: cuántos bloques de la agenda ocupa el servicio. */
+  bloquesCita?: number;
 }
 
 /** Encarguitos: lugar de comida con su menú. */

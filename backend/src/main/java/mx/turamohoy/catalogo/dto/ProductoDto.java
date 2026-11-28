@@ -24,13 +24,15 @@ public record ProductoDto(
         String negocioNombre,
         String categoriaSlug,
         String categoriaNombre,
-        boolean destacado) {
+        boolean destacado,
+        /** En negocios con agenda: cuántos bloques de la agenda ocupa (1 por defecto). */
+        int bloquesCita) {
 
     public static ProductoDto de(Producto p) {
         return new ProductoDto(p.id, p.nombre, p.descripcion, p.precio, p.unidadPrecio,
                 separar(p.caracteristicas), p.imagenUrl, separar(p.galeria),
                 p.categoria.negocio.slug, p.categoria.negocio.nombre,
-                p.categoria.slug, p.categoria.nombre, p.destacado);
+                p.categoria.slug, p.categoria.nombre, p.destacado, p.bloquesCita);
     }
 
     public static List<String> separar(String texto) {

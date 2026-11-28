@@ -17,7 +17,7 @@ import { soloEnWeb } from '../modo-app';
 import { CatalogoService } from './catalogo.service';
 import { ModoPedido } from './catalogo.model';
 import {
-  CarritoService, DatosPedido, Entrega, LineaCarrito, TEXTOS_PEDIDO, armarMensajeCarrito, textosDe, faltantesPedido, modoDe,
+  CarritoService, DatosPedido, Entrega, LineaCarrito, TEXTOS_PEDIDO, armarMensajeCarrito, bloquesDeCita, textosDe, faltantesPedido, modoDe,
   piezasDe, textoCuando, textoPiezas, totalDe,
 } from './carrito';
 import { enlaceWhatsapp, precioConUnidad } from './contacto';
@@ -65,6 +65,8 @@ export class PedidoPage {
 
   protected readonly lineas = this.carrito.de(() => this.slug());
   protected readonly total = computed(() => totalDe(this.lineas()));
+  /** Bloques de la agenda que ocupa la cita (cada servicio dice cuántos). */
+  protected readonly bloquesCita = computed(() => bloquesDeCita(this.lineas()));
   protected readonly cuantos = computed(() => {
     const m = this.modo() ?? 'COMPRA';
     return textoPiezas(this.textos(), m === 'CITA' ? this.lineas().length : piezasDe(this.lineas()));

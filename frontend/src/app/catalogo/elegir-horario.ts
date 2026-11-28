@@ -229,7 +229,7 @@ export function tarjetaDia(fecha: string, nombre: string): { arriba: string; num
 })
 export class ElegirHorario {
   readonly slug = input.required<string>();
-  /** Cuántos servicios lleva la cita (cada uno ocupa un bloque). */
+  /** Cuántos bloques de la agenda ocupa la cita (la suma de los de cada servicio). */
   readonly servicios = input(1);
   readonly seleccion = model<CitaElegida | null>(null);
 

@@ -162,7 +162,7 @@
           }
           @if (conAgenda()) {
             <div class="campo-agenda" [class.con-error]="falta('el horario de tu cita')">
-              <app-elegir-horario [slug]="n.slug" [servicios]="lineas().length" [(seleccion)]="cita" />
+              <app-elegir-horario [slug]="n.slug" [servicios]="bloquesCita()" [(seleccion)]="cita" />
             </div>
           } @else if (m !== 'COMPRA' || programado()) {
             <div class="par">

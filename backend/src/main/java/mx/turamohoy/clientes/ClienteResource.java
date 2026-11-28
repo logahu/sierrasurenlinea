@@ -100,8 +100,21 @@ public class ClienteResource {
         }
         Contrasenas.validarNueva(r.contrasena());
         Cliente c = QuarkusTransaction.requiringNew().call(() -> {
-            if (Cliente.porTelefono(telefono).isPresent()) {
+            Cliente existente = Cliente.porTelefono(telefono).orElse(null);
+            if (existente != null && (existente.tieneContrasena() || !existente.activo)) {
                 throw Errores.de(Status.CONFLICT, "Ya hay una cuenta con ese teléfono. Inicia sesión.");
+            }
+            if (existente != null) {
+                // Llegó antes por WhatsApp (sin contraseña): completa su cuenta y conserva su historial.
+                existente.nombre = r.nombre().trim();
+                existente.correo = limpio(r.correo());
+                existente.contrasenaHash = Contrasenas.cifrar(r.contrasena());
+                existente.privacidadAceptada = Instant.now();
+                existente.privacidadVersion = VERSION_PRIVACIDAD;
+                existente.ultimoAcceso = Instant.now();
+                mx.turamohoy.historial.Bitacora.anotar(existente, null, mx.turamohoy.historial.Bitacora.CLIENTE, existente.id,
+                        "Creó su contraseña (ya era cliente por WhatsApp)", null);
+                return existente;
             }
             Cliente n = new Cliente();
             n.nombre = r.nombre().trim();

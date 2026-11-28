@@ -77,11 +77,11 @@ public class AdminCatalogoResource {
                                    String unidadPrecio, List<String> caracteristicas, String imagenUrl,
                                    List<String> galeria,
                                    Long categoriaId, String categoriaNombre, boolean destacado,
-                                   boolean disponible) {
+                                   boolean disponible, int bloquesCita) {
         static ProductoAdminDto de(Producto p) {
             return new ProductoAdminDto(p.id, p.nombre, p.descripcion, p.precio, p.unidadPrecio,
                     separar(p.caracteristicas), p.imagenUrl, separar(p.galeria), p.categoria.id, p.categoria.nombre,
-                    p.destacado, p.disponible);
+                    p.destacado, p.disponible, p.bloquesCita);
         }
     }
 
@@ -101,7 +101,11 @@ public class AdminCatalogoResource {
             /** Foto subida con /fotos o una de ejemplo (img/...); vacío = no cambia. */
             String imagenUrl,
             /** Fotos adicionales en orden; null = no cambia, lista vacía = sin galería. */
-            @Size(max = MAX_GALERIA, message = "La galería puede tener hasta 8 fotos.") List<String> galeria) {
+            @Size(max = MAX_GALERIA, message = "La galería puede tener hasta 8 fotos.") List<String> galeria,
+            /** Negocios con agenda: bloques que ocupa el servicio; null = no cambia. */
+            @jakarta.validation.constraints.Min(value = 1, message = "La duración es de 1 a 8 bloques.")
+            @jakarta.validation.constraints.Max(value = 8, message = "La duración es de 1 a 8 bloques.")
+            Integer bloquesCita) {
     }
 
     public record Disponibilidad(boolean disponible) {
@@ -203,6 +207,7 @@ public class AdminCatalogoResource {
         String categoria = p.categoria.nombre;
         boolean destacado = p.destacado;
         boolean disponible = p.disponible;
+        int bloques = p.bloquesCita;
         String descripcion = p.descripcion;
         String caracteristicas = p.caracteristicas;
         String imagen = p.imagenUrl;
@@ -210,7 +215,7 @@ public class AdminCatalogoResource {
         aplicar(n, p, e);
         cambios.campo("Nombre", nombre, p.nombre).campo("Precio", precio, p.precio).campo("Unidad", unidad, p.unidadPrecio)
                 .campo("Categoría", categoria, p.categoria.nombre).campo("Destacado", destacado, p.destacado)
-                .campo("Disponible", disponible, p.disponible).largo("Descripción", descripcion, p.descripcion)
+                .campo("Disponible", disponible, p.disponible).campo("Bloques de agenda", bloques, p.bloquesCita).largo("Descripción", descripcion, p.descripcion)
                 .largo("Características", caracteristicas, p.caracteristicas).largo("Foto principal", imagen, p.imagenUrl)
                 .largo("Galería", galeria, p.galeria);
         if (cambios.hay()) {
@@ -247,6 +252,9 @@ public class AdminCatalogoResource {
         p.destacado = e.destacado();
         if (e.disponible() != null) {
             p.disponible = e.disponible();
+        }
+        if (e.bloquesCita() != null) {
+            p.bloquesCita = e.bloquesCita();
         }
         String imagen = imagenes.validar(n, e.imagenUrl());
         if (imagen != null) {

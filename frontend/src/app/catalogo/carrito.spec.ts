@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { Producto } from './catalogo.model';
 import {
-  CarritoService, DatosPedido, LineaCarrito, armarMensajeCarrito, faltantesPedido, modoDe, textoCuando, totalDe,
+  CarritoService, DatosPedido, LineaCarrito, armarMensajeCarrito, bloquesDeCita, faltantesPedido, modoDe, textoCuando, totalDe,
 } from './carrito';
 
 const ramo = { id: 1, nombre: 'Ramo de rosas', precio: 450, unidadPrecio: null, imagenUrl: 'a.svg' } as Producto;
@@ -77,5 +77,16 @@ describe('carrito', () => {
     const conPunto = armarMensajeCarrito({ nombre: 'TuRamoHoy' }, 'COMPRA', l, datos({ punto: { lat: 16.33, lng: -96.6 } }),
       { nombre: 'Rosa', telefono: '9511234567' });
     expect(conPunto).toContain('*Ubicación:* https://maps.google.com/?q=16.330000,-96.600000');
+  });
+
+  it('la cita ocupa la suma de los bloques de sus servicios (máximo 8)', () => {
+    const c = TestBed.inject(CarritoService);
+    c.agregar('dentista', { ...ramo, bloquesCita: 1 }, 1, 'CITA');
+    c.agregar('dentista', { ...girasol, bloquesCita: 2 }, 1, 'CITA');
+    expect(bloquesDeCita(c.lineas('dentista'))).toBe(3);
+    // Carritos guardados antes del cambio no traen bloques: cuentan como 1.
+    expect(bloquesDeCita([{}, {}])).toBe(2);
+    expect(bloquesDeCita([{ bloquesCita: 6 }, { bloquesCita: 5 }])).toBe(8);
+    expect(bloquesDeCita([])).toBe(1);
   });
 });

@@ -249,6 +249,8 @@ export interface NegocioAdmin {
   agendaActiva?: boolean;
   /** Slug de su giro (su calle en la portada). */
   giro?: string | null;
+  /** Minutos de cada bloque de la agenda. */
+  minutosCita?: number;
 }
 
 /** Lo que se manda al guardar un negocio. */
@@ -280,6 +282,8 @@ export interface ProductoAdmin {
   categoriaNombre: string;
   destacado: boolean;
   disponible: boolean;
+  /** En negocios con agenda: cuántos bloques ocupa el servicio. */
+  bloquesCita?: number;
 }
 
 export interface ProductoEdicion {
@@ -295,6 +299,8 @@ export interface ProductoEdicion {
   imagenUrl: string | null;
   /** Fotos adicionales en orden. */
   galeria: string[];
+  /** En negocios con agenda: bloques que ocupa el servicio (1 a 8). */
+  bloquesCita?: number;
 }
 
 export interface CategoriaEdicion {

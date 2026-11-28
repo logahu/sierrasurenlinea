@@ -31,6 +31,8 @@ public final class Agenda {
     public static final ZoneId ZONA = ZoneId.of("America/Mexico_City");
     /** Hasta cuántos días adelante se puede apartar. */
     public static final int DIAS_ADELANTE = 30;
+    /** Lo más larga que puede ser una cita, en bloques. */
+    public static final int MAX_BLOQUES = 8;
     private static final Locale ES = Locale.forLanguageTag("es-MX");
 
     /** Para las pruebas: la hora «de ahora». */
@@ -188,6 +190,12 @@ public final class Agenda {
         }
         return candidatos.stream().min(Comparator.comparing((Usuario u) -> carga.getOrDefault(u.id, 0L))
                 .thenComparing(u -> u.id)).orElseThrow();
+    }
+
+    /** Bloques que ocupa una cita con estos servicios: la suma de los de cada uno (al menos 1). */
+    public static int bloquesDe(List<mx.turamohoy.pedidos.PedidoLinea> lineas) {
+        int total = lineas.stream().mapToInt(l -> l.producto == null ? 1 : Math.max(1, l.producto.bloquesCita)).sum();
+        return Math.max(1, Math.min(total, MAX_BLOQUES));
     }
 
     /** Libera las horas (al cancelar). */
