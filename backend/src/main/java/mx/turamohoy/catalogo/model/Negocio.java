@@ -77,6 +77,14 @@ public class Negocio extends PanacheEntityBase {
     @Column(name = "agenda_activa", nullable = false)
     public boolean agendaActiva;
 
+    /** "Phone number ID" de Meta con el que contesta la recepcionista de WhatsApp; null = sin conectar. */
+    @Column(name = "wa_phone_number_id", length = 30, unique = true)
+    public String waPhoneNumberId;
+
+    /** Si la recepcionista IA contesta los mensajes de WhatsApp de este negocio. */
+    @Column(name = "bot_activo", nullable = false)
+    public boolean botActivo;
+
     /** {"1":["10:00","19:00"], ... "7":null}; 1 = lunes. Ver {@link mx.turamohoy.agenda.HorarioCitas}. */
     @Column(name = "horario_citas", length = 500)
     public String horarioCitas;
